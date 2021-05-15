@@ -1,7 +1,8 @@
 <script>
-  import SvelteTable from "svelte-table";
+  import {slide} from "svelte/transition"
+  import SvelteTable from "./SvelteTable.svelte"
   import MHRiseCharmManager from './mhrise-charm-manager.js'
-  import {skillToSlotLevel} from './decorations.js'
+  import {skillToSlotLevel} from './mhrise-charm-decorations.js'
 
   // props
   export const updateCharmTable = async () => {
@@ -33,12 +34,13 @@
       value: v => v.id,
       sortable: true,
       filterOptions: rows => {
+        const UNIT = 50
         // generate groupings of 0-10, 10-20 etc...
         let nums = {}
         rows.forEach(row => {
-          let num = Math.floor(row.id / 10)
+          let num = Math.floor(row.id / UNIT)
           if (nums[num] === undefined)
-            nums[num] = { name: `${num * 10} 〜 ${(num + 1) * 10}`, value: num }
+            nums[num] = { name: `${num * UNIT + 1} 〜 ${(num + 1) * UNIT}`, value: num }
         })
         // fix order
         nums = Object.entries(nums)
@@ -46,7 +48,7 @@
           .reduce((o, [k, v]) => ((o[k] = v), o), {})
         return Object.values(nums)
       },
-      filterValue: v => Math.floor(v.id / 10),
+      filterValue: v => Math.floor((v.id - 1) / 50),
     },
     // {
     //   key: "first_name",
@@ -110,14 +112,23 @@
       value:    v => v.evaluation,
       sortable: true,
     },
-    // {
-    //   key: "gender",
-    //   title: "GENDER",
-    //   value: v => v.gender,
-    //   renderValue: v => v.gender.charAt(0).toUpperCase() + v.gender.substring(1), // capitalize
-    //   sortable: true,
-    //   filterOptions: ["male", "female"] // provide array
-    // }
+    {
+      key:           "image",
+      title:         "画像",
+      value:         v => v.imagename ? '有り' : '無し',
+      renderValue:   v => v.imagename ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-camera-fill" viewBox="0 0 16 16"> <path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/> <path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/> </svg>' : '',
+      sortable:      true,
+      filterOptions: ["有り", "無し"],
+      onClick:       toggleScreenshot,
+    },
+    {
+      key:           "substitutableCharms",
+      title:         "代替",
+      value:         v => v.substitutableCharms ? '有り' : '無し',
+      renderValue:   v => v.substitutableCharms ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-square-fill" viewBox="0 0 16 16"> <path d="M2 16a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2zm6.5-4.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 1 0z"/> </svg>' : '',
+      sortable:      true,
+      filterOptions: ["有り", "無し"],
+    },
   ]
 
 
@@ -138,6 +149,28 @@
   init()
 
 
+  // handlers
+  function onClickRow({e, index}) {
+    console.log('called!!!')
+    charms[index].isSubstitutableCharmsShown = !charms[index].isSubstitutableCharmsShown
+  }
+
+
+  async function toggleScreenshot({e, index}) {
+    e.stopPropagation()
+
+    const toShow = ! charms[index].isScrennshotShown
+    charms[index].isScrennshotShown = toShow
+
+    if ( toShow ) {
+      // console.log(charms[index].imagename)
+      const screenshot = await charmManager.getScreenshot(charms[index].imagename)
+
+      // await new Promise((resolve) => requestAnimationFrame(resolve))
+      cv.imshow(`charm-table-row-${index}-screenshot`, screenshot)
+    }
+
+  }
 </script>
 
 
@@ -151,6 +184,33 @@
                  rows="{charms}"
                  classNameTable={['table table-striped table-hover table-responsible']}
                  classNameThead={['table-dark hide-first-child.disabled']}>
+      <tr slot="row" let:row let:n on:click={(e) => onClickRow({e, index: n})}>
+        {#each columns as col}
+          <td on:click={(e) => { if (col.onClick) {col.onClick({e, row, col, index: n})} }}
+              class={[col.class].join(' ')}
+              >
+            {#if col.renderComponent}
+              <svelte:component
+                this={col.renderComponent.component || col.renderComponent} {...(col.renderComponent.props || {})}
+                row={row}
+                col={col}
+                />
+            {:else}
+              {@html col.renderValue ? col.renderValue(row) : col.value(row)}
+            {/if}
+          </td>
+        {/each}
+      </tr>
+      <div slot="after-row" let:row let:n id="charm-table-row-{n}" style="width: 100%" transition:slide={{duration: 300}}>
+        {#if charms[n].isSubstitutableCharmsShown}
+          <div style="width: 100%; border-bottom: solid 1px #ddd">上位互換護石の表示は準備中です</div>
+        {/if}
+        {#if charms[n].isScrennshotShown}
+          <div style="width: 100%; border-bottom: solid 1px #ddd">
+            <canvas id="charm-table-row-{n}-screenshot"></canvas>
+          </div>
+        {/if}
+      </div>
     </SvelteTable>
   {/if}
 </div>
@@ -180,6 +240,7 @@
     #charm-list table tr
   ) {
     display: flex;
+    flex-shrink: 0;
   }
 
   :global(
@@ -195,8 +256,9 @@
   }
 
   :global(#charm-list > table > tbody) {
-    height:   calc(100% - 8rem);
-    overflow: scroll;
+    height:     calc(100% - 8rem);
+    overflow-x: auto;
+    overflow-y: scroll;
 
     align-content: flex-start;
   }
@@ -218,24 +280,31 @@
   }
 
   :global(#charm-list > table > * > tr > *:nth-child(1)) { width: 6rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(2)) { width: calc((100% - 54rem) / 2); }
+  :global(
+    #charm-list > table > * > tr > *:nth-child(2),
+    #charm-list > table > * > tr > *:nth-child(4)
+  ) {
+    width: calc((100% - 54rem - 5rem) / 2);
+    min-width: 10rem;
+  }
   :global(#charm-list > table > * > tr > *:nth-child(3)) { width: 8rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(4)) { width: calc((100% - 54rem) / 2); }
   :global(#charm-list > table > * > tr > *:nth-child(5)) { width: 8rem; }
   :global(#charm-list > table > * > tr > *:nth-child(6)) { width: 8rem; }
   :global(#charm-list > table > * > tr > *:nth-child(7)) { width: 8rem; }
   :global(#charm-list > table > * > tr > *:nth-child(8)) { width: 8rem; }
   :global(#charm-list > table > * > tr > *:nth-child(9)) { width: 8rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(10)) { width: 2.5rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(11)) { width: 2.5rem; }
 
+  :global(#charm-list > table > tbody > tr > td:nth-child(11)) { color: mediumseagreen; }
+
+  :global(#charm-list > table > :not(caption) > * > *) {
+    padding-left:  0;
+    padding-right: 0;
+  }
 
   #charm-list {
     margin-top: 2px;
     height:     100%;
   }
-
-  #charm-list > table {
-    height: 100%;
-    width:  100%;
-  }
-
 </style>

@@ -1,10 +1,14 @@
 export default class MHRiseCharmManager {
-  db = null
+  db        = null              // WebSQL
+  indexeddb = null              // IndexedDB
 
 
   constructor() {
     this.db = openDatabase('mhrise-charm-manager', '', 'MHRise charm manager', 5000)
     this._createTable()
+
+    this.indexeddb = new Dexie('charms')
+    this.indexeddb.version(1).stores({images: 'name'})
   }
 
 
@@ -30,9 +34,10 @@ export default class MHRiseCharmManager {
 
   async registerCharms(charms) {
     const values = charms
-      .map(c => `("${c.skills[0]}", ${c.skillLevels[0]}, "${c.skills[1]}", ${c.skillLevels[1]}, ${c.slots.replace(/-/g, ', ')})`)
+      .map(c => `("${c.skills[0]}", ${c.skillLevels[0]}, "${c.skills[1]}", ${c.skillLevels[1]}, ${c.slots.replace(/-/g, ', ')}, "${c.imageName}")`)
       .join(',\n')
 
+    console.log(values)
     await this.sql(`insert or ignore into charms values ${values}`)
   }
 
@@ -52,6 +57,15 @@ export default class MHRiseCharmManager {
                slot1       int,
                slot2       int,
                slot3       int,
+               imagename   varchar(128),
                unique (skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3))`)
+  }
+
+
+  async getScreenshot(name) {
+    const result = await this.indexeddb.images.get(name)
+    const img = cv.matFromArray(result.rows, result.cols, result.type, result.data)
+
+    return img
   }
 }
