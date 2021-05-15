@@ -7,12 +7,16 @@
 
   let scanner
   let fInitialized = false
+  let fFinished    = false
   let domInput  // input 要素
   let files     // 選択されたローカルファイル
   let domVideo  // video 要素
   let video     // data uri
   let capture   // opencv の VideoCapture
-  // let progress = 0
+
+  let domTextareaForScript
+  let insertScript
+
   const progress = writable(0)
 
   const onFileSelected = async (e) => {
@@ -55,20 +59,19 @@
       }
       progress.set(1)
       console.log(scanner.charms)
-      // console.log(screenshot)
-      // cv.imshow('canvasInput', screenshot)
+      fFinished = true
 
       screenshot.delete()
     }
 
-    scanner.exportToJson()
+    insertScript = scanner.generateInsertScript()
   }
 
-  setTimeout(async () => {
+  window.addEventListener('load', async () => {
     scanner = new MHRiseCharmScanner()
     await scanner.init()
     fInitialized = true
-  }, 1000)
+  })
 
   const seekFrames = (video, nFrames, fps = 29.97) => {
 	  const currentFrame = video.currentTime * fps
@@ -107,7 +110,14 @@
   {:else}
   <div>Loading Files...</div>
   {/if}
+
+  <div id="result">
+    {#if fFinished}
+      <textarea bind:this={domTextareaForScript}>{insertScript}</textarea>
+    {/if}
+  </div>
 </main>
+
 
 <style>
 	main {
@@ -149,6 +159,18 @@
   #upload > img {
     height:50px;
 		width:50px;
+  }
+
+  #result {
+    margin: 0.5rem auto;
+		width: 960px;
+    max-width: 100%;
+  }
+
+  #result textarea {
+    width: 100%;
+    height: 10rem;
+    font-family: monospace;
   }
 
 	@media (min-width: 640px) {

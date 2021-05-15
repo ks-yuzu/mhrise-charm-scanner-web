@@ -213,17 +213,39 @@ export default class MHRiseCharmScanner {
     // return {col, row, match, page, rarity, slots, skills, skillLevels}
   }
 
-  exportToJson() {
+  generateInsertScript() {
+    const buf = []
+
     for (let p = 1; p <= this.MAX_PAGE; p++) {
       for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
         for (let c = 1; c <= this.COLUMNS_PER_PAGE; c++) {
           const charm = this.charms[p][r][c]
           if ( charm == null ) { continue }
 
-          console.log(`${charm.slots} ${charm.skills[0]} ${charm.skillLevels[0]} ${charm.skills[1]} ${charm.skillLevels[1]}`)
+          // console.log(`${charm.slots} ${charm.skills[0]} ${charm.skillLevels[0]} ${charm.skills[1]} ${charm.skillLevels[1]}`)
+          buf.push({
+            "第一スキル":         charm.skills[0],
+            "第一スキルポイント": charm.skillLevels[0],
+            "第二スキル":         charm.skills[1],
+            "第二スキルポイント": charm.skillLevels[1],
+            "スロット":           charm.slots,
+          })
         }
       }
     }
+
+    return `const inputs = ${JSON.stringify(buf)}
+
+eval( await (await fetch('https://code.jquery.com/jquery-3.6.0.slim.min.js')).text() )
+
+for (const input of inputs) {
+  Object.entries(input).forEach(([key, value]) => {
+    \$(\`select[aria-label="\${key}"]\`).val(value)
+    \$(\`select[aria-label="\${key}"]\`)[0].dispatchEvent(new Event('change', { bubbles: true }))
+  })
+
+  \$('button:contains("追加")').click()
+}`
   }
 
   _getRarity(screenshot) {
