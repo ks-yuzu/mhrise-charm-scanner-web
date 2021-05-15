@@ -7,6 +7,7 @@
 
   export let nSplits
   export let index
+  export let videoName
   export let videoData
   export let isVideoVisible = false
   export let charmScanner
@@ -55,7 +56,7 @@
     }
 
     capture.read(frame)
-    const result = charmScanner.scan(frame)
+    const result = charmScanner.scan(frame, videoName) // TODO: コールバックにして汎用クラスにする
 
     seekFrames(1, FRAME_RATE)
     progress = ((domVideo.currentTime - beginTime) / (endTime - beginTime))

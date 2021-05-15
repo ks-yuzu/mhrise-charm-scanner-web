@@ -1,3 +1,4 @@
+// import moment from 'moment'
 import {fetchImage, countImageDiffAtPoint, getMostMatchedImage, promiseAllRecursive} from './util.js'
 
 export default class MHRiseCharmScanner {
@@ -16,6 +17,7 @@ export default class MHRiseCharmScanner {
   POINT_CHARM_AREA_LEFT_TOP = new cv.Point(634, 359)
   SIZE_CHARM_AREA           = new cv.Size(357, 199)
 
+  indexeddb = null
   nCharms = 0
   charms = {}
   templates = null
@@ -170,6 +172,9 @@ export default class MHRiseCharmScanner {
 
     this.templates = await promiseAllRecursive(this.templates)
     this.reset()
+
+    this.indexeddb = new Dexie('charms')
+    this.indexeddb.version(1).stores({images: 'name'})
   }
 
   reset() {
@@ -187,13 +192,25 @@ export default class MHRiseCharmScanner {
     return this.charms[page][row][col] != null
   }
 
-  store(params) {
-    const {page, row, col} = params
-    this.charms[page][row][col] = params
+  store(charmData, metadata) {
+    const {page, row, col} = charmData
+    const {screenshot, movieName} = metadata
+
+    const name = `${movieName}_${page}-${row}-${col}`
+    // console.log({movieName, row, col})
+
+    this.indexeddb.images.put({
+      name,
+      rows: screenshot.rows,
+      cols: screenshot.cols,
+      type: screenshot.type(),
+      data: screenshot.data.slice(0),
+    })
+    this.charms[page][row][col] = {...charmData, imageName: name}
     this.nCharms++
   }
 
-  scan(screenshot) {
+  scan(screenshot, movieName) {
     const page          = this._getCurrentPage(screenshot)
     const [pos, match]  = this._getCurrentCharmPos(screenshot)
 
@@ -218,7 +235,7 @@ export default class MHRiseCharmScanner {
     // console.log(`scaned ${row} ${col}`)
 
     // console.log({col, row, match, page, rarity, slots, skills, skillLevels})
-    this.store({page, row, col, rarity, slots, skills, skillLevels})
+    this.store({page, row, col, rarity, slots, skills, skillLevels}, {screenshot, movieName})
   }
 
   countCharms() {

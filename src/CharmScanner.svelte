@@ -43,9 +43,10 @@
 
     // console.log(files)
     for (let i = 0; i < files.length; i++) {
-      console.log(Date())
       currentFileIndex = i
       const file = files[i]
+
+      console.log(file.name, Date())
 
       initVideoReaders()
 
@@ -58,6 +59,7 @@
 
         $videoReaderProps[index] = {
           index: index,
+          videoName: file.name,
           videoData: reader.result,
           charmScanner: charmScanner,
           nSplits: N_VIDEO_SPLITS,
@@ -76,12 +78,15 @@
           if ( isVideoReadFinished ) { resolve() }
         }, 1000)
       })
+
+      const charms = charmScanner.getCharms()
+      await charmManager.registerCharms(charms)
     }
 
     const charms = charmScanner.getCharms()
     console.log(JSON.stringify(charms))
 
-    await charmManager.registerCharms(charms)
+    // await charmManager.registerCharms(charms)
     isScanFinished = true
   }
 
