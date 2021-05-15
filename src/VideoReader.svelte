@@ -110,8 +110,8 @@
 		width:   calc(100% - 5rem);
 	}
 
-  .video-reader progress-text {
-    width:   4rem;
-    display: inline-block;
+  .video-reader .progress-text {
+    width:      4rem;
+    display:    inline-block;
   }
 </style>

@@ -541,7 +541,7 @@ var app = (function () {
     			attr_dev(track, "kind", "captions");
     			add_location(track, file$1, 84, 4, 2189);
     			attr_dev(video, "id", video_id_value = "video" + /*index*/ ctx[0]);
-    			attr_dev(video, "class", "video-preview svelte-11sf1gl");
+    			attr_dev(video, "class", "video-preview svelte-syjktf");
     			if (video.src !== (video_src_value = /*videoData*/ ctx[1])) attr_dev(video, "src", video_src_value);
     			attr_dev(video, "width", videoWidth);
     			attr_dev(video, "height", videoHeight);
@@ -549,12 +549,12 @@ var app = (function () {
     			attr_dev(video, "style", video_style_value = /*isVideoVisible*/ ctx[2] ? "" : "display: none");
     			add_location(video, file$1, 76, 2, 1922);
     			progress_1.value = /*progress*/ ctx[4];
-    			attr_dev(progress_1, "class", "svelte-11sf1gl");
+    			attr_dev(progress_1, "class", "svelte-syjktf");
     			add_location(progress_1, file$1, 88, 4, 2237);
-    			attr_dev(span, "class", "progress-text");
+    			attr_dev(span, "class", "progress-text svelte-syjktf");
     			add_location(span, file$1, 89, 4, 2280);
     			add_location(div0, file$1, 87, 2, 2227);
-    			attr_dev(div1, "class", "video-reader svelte-11sf1gl");
+    			attr_dev(div1, "class", "video-reader svelte-syjktf");
     			add_location(div1, file$1, 75, 0, 1893);
     		},
     		l: function claim(nodes) {
