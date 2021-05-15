@@ -6,7 +6,13 @@
   // props
   export const updateCharmTable = async () => {
     const allCharms = await charmManager.searchCharms('select * from charms')
-    charms = [...allCharms].map((elm, index) => ({...elm, id: 1 + index}))
+    charms = [...allCharms].map((elm, index) => {
+      return {
+        ...elm,
+        id:         1 + index,
+        evaluation: 0,
+      }
+    })
   }
 
 
@@ -83,13 +89,19 @@
       sortable: true,
     },
     ...Array.from({length: N_CHARM_SLOT_MAX}, (_, i) => i + 1).map(i => ({
-      key:        `slot${i}`,
-      title:      `スロット${i}`,
-      value:       v => v[`slot${i}`],
-      renderValue: v => v[`slot${i}`] || '-',
-      sortable:    true,
+      key:           `slot${i}`,
+      title:         `スロット${i}`,
+      value:         v => v[`slot${i}`],
+      renderValue:   v => v[`slot${i}`] || '-',
+      sortable:      true,
       filterOptions: [0,1,2,3],
     })),
+    {
+      key:      'evaluation',
+      title:    '合計Lv',
+      value:    () => 0,
+      sortable: true,
+    },
     // {
     //   key: "gender",
     //   title: "GENDER",
@@ -103,7 +115,7 @@
 
   // fields
   let charmManager = new MHRiseCharmManager()
-  let charms = []
+  let charms = null
 
 
   // init
@@ -120,20 +132,102 @@
 
 </script>
 
+
 <div id="charm-list">
-  <SvelteTable columns="{columns}"
-               rows="{charms}"
-               classNameTable={['table table-striped table-hover table-responsible']}
-               classNameThead={['table-dark hide-first-child.disabled']}>
-  </SvelteTable>
+  {#if charms == null}
+    <div style="margin-top: 20%" class="spinner-border text-info" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  {:else}
+    <SvelteTable columns="{columns}"
+                 rows="{charms}"
+                 classNameTable={['table table-striped table-hover table-responsible']}
+                 classNameThead={['table-dark hide-first-child.disabled']}>
+    </SvelteTable>
+  {/if}
 </div>
 
+
 <style>
-    :global(.hide-first-child > *:first-child) {
+  :global(.hide-first-child > *:first-child) {
     display: none;
   }
 
   :global(#charm-list td) {
     padding: 0.3rem;
   }
+
+  :global(#charm-list td) {
+    padding: 0.3rem;
+  }
+
+  :global(#charm-list table) {
+    display: block;
+    height:  100%;
+  }
+
+  :global(
+    #charm-list table thead,
+    #charm-list table tbody,
+    #charm-list table tr
+  ) {
+    display: flex;
+  }
+
+  :global(
+    #charm-list thead,
+    #charm-list tbody
+  ) {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  :global(#charm-list > table > thead) {
+    padding-right: 15px; /* tbody のスクロールバーに合わせる */
+  }
+
+  :global(#charm-list > table > tbody) {
+    height:   100%;
+    overflow: scroll;
+
+    align-content: flex-start;
+  }
+
+  :global(#charm-list > table tr) {
+    width:  100%;
+  }
+
+  :global(#charm-list > table tbody tr) {
+    height: 1.9rem;
+  }
+
+  :global(
+    #charm-list > table th,
+    #charm-list > table td
+  ) {
+    text-align: center;
+    display:    inline-block;
+  }
+
+  :global(#charm-list > table > * > tr > *:nth-child(1)) { width: 6rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(2)) { width: calc((100% - 54rem) / 2); }
+  :global(#charm-list > table > * > tr > *:nth-child(3)) { width: 8rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(4)) { width: calc((100% - 54rem) / 2); }
+  :global(#charm-list > table > * > tr > *:nth-child(5)) { width: 8rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(6)) { width: 8rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(7)) { width: 8rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(8)) { width: 8rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(9)) { width: 8rem; }
+
+
+  #charm-list {
+    margin-top: 2px;
+    height:     100%;
+  }
+
+  #charm-list > table {
+    height: 100%;
+    width:  100%;
+  }
+
 </style>
