@@ -210,7 +210,7 @@ export default class MHRiseCharmScanner {
     const skills        = this._getSkills(screenshot)
     const skillLevels   = this._getSkillLevels(screenshot)
 
-    console.log(`scaned ${row} ${col}`)
+    // console.log(`scaned ${row} ${col}`)
 
     this.store({page, row, col, rarity, slots, skills, skillLevels})
     // return {col, row, match, page, rarity, slots, skills, skillLevels}

@@ -1,7 +1,8 @@
 <script lang:ts>
+  import {writable} from 'svelte/store'
   import MHRiseCharmScanner from './mhrise-charm-scanner.js'
   import {fetchImage} from './util.js'
-  import { writable } from 'svelte/store';
+
 
   const title = 'MHRise Charm Scanner'
 
@@ -20,6 +21,14 @@
   let insertScript
 
   const progress = writable(0)
+
+
+  window.addEventListener('load', async () => {
+    scanner = new MHRiseCharmScanner()
+    await scanner.init()
+    fInitialized = true
+  })
+
 
   const onFileSelected = async (e) => {
     const VIDEO_WIDTH = 1280
@@ -49,16 +58,11 @@
         capture.read(screenshot)
         const result = scanner.scan(screenshot)
 
-        // if ( result != null ) {
-        //   const {col, row, match, page, rarity, slots, skills, skillLevels} = result
-        //   // store
-        // }
-
+        const promiseSeek = new Promise(r => domVideo.addEventListener('seeked', r))
         seekFrames(domVideo, 1, FRAME_RATE)
         progress.set(domVideo.currentTime / domVideo.duration)
 
-        await new Promise(r => setTimeout(r, 100))
-        // await new Promise(r => requestAnimationFrame(r))
+        await promiseSeek
       }
       progress.set(1)
       console.log(scanner.charms)
@@ -71,11 +75,6 @@
     insertScript = scanner.generateInsertScript()
   }
 
-  window.addEventListener('load', async () => {
-    scanner = new MHRiseCharmScanner()
-    await scanner.init()
-    fInitialized = true
-  })
 
   const seekFrames = (video, nFrames, fps = 29.97) => {
 	  const currentFrame = video.currentTime * fps
@@ -107,7 +106,6 @@
       </div>
     </div>
   {/if}
-  <!-- <canvas id="canvasInput"></canvas> -->
 
   {#if fInitialized}
   <div id="upload">
