@@ -4882,8 +4882,15 @@ for (const input of inputs) {
     	let main;
     	let h1;
     	let t1;
+<<<<<<< Updated upstream
     	let div;
     	let nav;
+=======
+    	let div0;
+    	let nav;
+    	let t2;
+    	let div1;
+>>>>>>> Stashed changes
     	let current;
 
     	const nav_spread_levels = [
@@ -4908,6 +4915,7 @@ for (const input of inputs) {
     			h1 = element("h1");
     			h1.textContent = `${TITLE}`;
     			t1 = space();
+<<<<<<< Updated upstream
     			div = element("div");
     			create_component(nav.$$.fragment);
     			attr_dev(h1, "class", "svelte-1x3znbp");
@@ -4917,6 +4925,23 @@ for (const input of inputs) {
     			add_location(div, file, 26, 2, 567);
     			attr_dev(main, "class", "svelte-1x3znbp");
     			add_location(main, file, 24, 0, 540);
+=======
+    			div0 = element("div");
+    			create_component(nav.$$.fragment);
+    			t2 = space();
+    			div1 = element("div");
+    			div1.textContent = `v${VERSION}`;
+    			attr_dev(h1, "class", "svelte-16zfz7q");
+    			add_location(h1, file, 26, 1, 572);
+    			attr_dev(div0, "id", "nav-wrapper");
+    			attr_dev(div0, "class", "svelte-16zfz7q");
+    			add_location(div0, file, 27, 2, 591);
+    			attr_dev(div1, "id", "version");
+    			attr_dev(div1, "class", "svelte-16zfz7q");
+    			add_location(div1, file, 30, 2, 689);
+    			attr_dev(main, "class", "svelte-16zfz7q");
+    			add_location(main, file, 25, 0, 564);
+>>>>>>> Stashed changes
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4925,8 +4950,15 @@ for (const input of inputs) {
     			insert_dev(target, main, anchor);
     			append_dev(main, h1);
     			append_dev(main, t1);
+<<<<<<< Updated upstream
     			append_dev(main, div);
     			mount_component(nav, div, null);
+=======
+    			append_dev(main, div0);
+    			mount_component(nav, div0, null);
+    			append_dev(main, t2);
+    			append_dev(main, div1);
+>>>>>>> Stashed changes
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
@@ -4969,6 +5001,10 @@ for (const input of inputs) {
     }
 
     const TITLE = "MHRise Charm Scanner";
+<<<<<<< Updated upstream
+=======
+    const VERSION = 0.2;
+>>>>>>> Stashed changes
 
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
@@ -4996,6 +5032,10 @@ for (const input of inputs) {
     		MHRiseCharmScanner,
     		Nav,
     		TITLE,
+<<<<<<< Updated upstream
+=======
+    		VERSION,
+>>>>>>> Stashed changes
     		fInitialized,
     		charmScanner,
     		charmManager

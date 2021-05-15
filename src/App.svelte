@@ -3,7 +3,8 @@
   import MHRiseCharmScanner from './mhrise-charm-scanner.js'
   import Nav from './Nav.svelte'
 
-  const TITLE = 'MHRise Charm Scanner'
+  const TITLE   = 'MHRise Charm Scanner'
+  const VERSION = 0.2
 
   let fInitialized = false
   let charmScanner
@@ -27,6 +28,7 @@
   <div id="nav-wrapper">
     <Nav {...{fInitialized, charmScanner, charmManager}}></Nav>
   </div>
+  <div id="version">v{VERSION}</div>
 </main>
 
 
@@ -53,6 +55,15 @@
 
   #nav-wrapper {
     height: calc(100% - 5rem);
+  }
+
+  #version {
+    position:      fixed;
+    bottom:        0;
+    right:         0;
+    padding-right: 0.5rem;
+
+    font-size: small;
   }
 
 	@media (min-width: 640px) {
