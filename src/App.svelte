@@ -167,7 +167,7 @@
   }
 
   #result {
-    margin: 1rem auto;
+    margin: 2rem auto;
 		width: 960px;
     max-width: 100%;
   }
