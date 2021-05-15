@@ -4,7 +4,7 @@
   import Nav from './Nav.svelte'
 
   const TITLE   = 'MHRise Charm Scanner'
-  const VERSION = 0.2
+  const VERSION = '0.2.1'
 
   let fInitialized = false
   let charmScanner
@@ -42,7 +42,6 @@
 		text-align: center;
 		padding:    1rem;
 		max-width:  240px;
-
 	}
 
 	h1 {

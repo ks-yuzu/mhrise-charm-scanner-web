@@ -191,7 +191,7 @@
   }
 
   :global(#charm-list > table > tbody) {
-    height:   100%;
+    height:   calc(100% - 8rem);
     overflow: scroll;
 
     align-content: flex-start;
