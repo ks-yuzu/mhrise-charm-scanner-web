@@ -880,7 +880,7 @@ var app = (function () {
         const values = charms
           .map(c => `("${c.skills[0]}", ${c.skillLevels[0]}, "${c.skills[1]}", ${c.skillLevels[1]}, ${c.slots.replace(/-/g, ', ')})`)
           .join(',\n');
-        console.log(`insert or ignore into charms values ${values}`);
+
         await this.sql(`insert or ignore into charms values ${values}`);
       }
 
@@ -946,13 +946,14 @@ var app = (function () {
     }
 
 
-    function getMostMatchedImage(image, templates, point, maskBinaryThreshold = 63, diffBinaryThreshold = 63) {
+    function getMostMatchedImage(image, templates, point, maskBinaryThreshold = 63, diffBinaryThreshold = 63, debug = ()=>{}) {
       let minDiffCount = Number.MAX_SAFE_INTEGER;
       let candidate = null;
 
       // console.log(templates)
       for (const [name, template] of Object.entries(templates)) {
         const diff = countImageDiffAtPoint(image, template, point, maskBinaryThreshold, diffBinaryThreshold);
+        debug(diff, name);
         const diffCount = cv.countNonZero(diff);
 
         if ( minDiffCount > diffCount ) {
@@ -1006,7 +1007,7 @@ var app = (function () {
       POINT_SLOTS        = new cv.Point(1160, 200)
       POINT_SKILL1       = new cv.Point(1033, 266)
       POINT_SKILL2       = new cv.Point(1033, 317)
-      POINT_SKILL_LEVEL1 = new cv.Point(1190, 289)
+      POINT_SKILL_LEVEL1 = new cv.Point(1190, 290)
       POINT_SKILL_LEVEL2 = new cv.Point(1190, 340)
       POINT_PAGE         = new cv.Point(787, 582)
 
@@ -1016,6 +1017,10 @@ var app = (function () {
       nCharms = 0
       charms = {}
       templates = null
+
+      // page = -1
+      // col = -1
+      // row = -1
 
       async init() {
         this.templates = {
@@ -1197,6 +1202,7 @@ var app = (function () {
         }
 
         const [col, row]    = pos;
+        // this.page = page; this.col = col; this.row = row
         if (this.isScaned(page, row, col)) {
           // console.log(`this charm is already scanned. skip: p${page} (${row}, ${col})`);
           return null
@@ -1302,6 +1308,10 @@ for (const input of inputs) {
       }
 
       _getSkillLevels(screenshot) {
+        // const debug = (this.page === "1" && this.row === 1 && this.col === 7)
+        //       ? ((diff, name) => { console.log(`debug${name}`); cv.imshow(document.getElementById(`debug${name}`), diff) })
+        //       : (() => {})
+
         return [
           getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL1, 0, 127),
           getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL2, 0, 127),
@@ -1347,7 +1357,7 @@ for (const input of inputs) {
     	return child_ctx;
     }
 
-    // (119:6) {#each $videoReaderProps as props}
+    // (120:6) {#each $videoReaderProps as props}
     function create_each_block(ctx) {
     	let videoreader;
     	let current;
@@ -1393,14 +1403,14 @@ for (const input of inputs) {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(119:6) {#each $videoReaderProps as props}",
+    		source: "(120:6) {#each $videoReaderProps as props}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (122:6) {#if files.length > 0}
+    // (123:6) {#if files.length > 0}
     function create_if_block_1(ctx) {
     	let t0;
     	let t1_value = 1 + Number(/*currentFileIndex*/ ctx[4]) + "";
@@ -1442,14 +1452,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(122:6) {#if files.length > 0}",
+    		source: "(123:6) {#if files.length > 0}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (172:2) {:else}
+    // (173:2) {:else}
     function create_else_block(ctx) {
     	let div;
 
@@ -1457,7 +1467,7 @@ for (const input of inputs) {
     		c: function create() {
     			div = element("div");
     			div.textContent = "Loading Files...";
-    			add_location(div, file, 172, 2, 5020);
+    			add_location(div, file, 173, 2, 5037);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -1472,14 +1482,14 @@ for (const input of inputs) {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(172:2) {:else}",
+    		source: "(173:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (160:2) {#if fInitialized}
+    // (161:2) {#if fInitialized}
     function create_if_block(ctx) {
     	let div1;
     	let input;
@@ -1504,17 +1514,17 @@ for (const input of inputs) {
     			attr_dev(input, "type", "file");
     			attr_dev(input, "accept", ".mp4");
     			input.multiple = true;
-    			attr_dev(input, "class", "svelte-1697s2b");
-    			add_location(input, file, 161, 4, 4617);
+    			attr_dev(input, "class", "svelte-117wlfm");
+    			add_location(input, file, 162, 4, 4634);
     			if (img.src !== (img_src_value = "https://static.thenounproject.com/png/625182-200.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "");
-    			attr_dev(img, "class", "svelte-1697s2b");
-    			add_location(img, file, 168, 4, 4820);
-    			attr_dev(div0, "class", "svelte-1697s2b");
-    			add_location(div0, file, 169, 4, 4932);
+    			attr_dev(img, "class", "svelte-117wlfm");
+    			add_location(img, file, 169, 4, 4837);
+    			attr_dev(div0, "class", "svelte-117wlfm");
+    			add_location(div0, file, 170, 4, 4949);
     			attr_dev(div1, "id", "upload");
-    			attr_dev(div1, "class", "svelte-1697s2b");
-    			add_location(div1, file, 160, 2, 4595);
+    			attr_dev(div1, "class", "svelte-117wlfm");
+    			add_location(div1, file, 161, 2, 4612);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
@@ -1549,7 +1559,7 @@ for (const input of inputs) {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(160:2) {#if fInitialized}",
+    		source: "(161:2) {#if fInitialized}",
     		ctx
     	});
 
@@ -1656,42 +1666,42 @@ for (const input of inputs) {
     			t17 = text(" charms.");
     			t18 = space();
     			textarea = element("textarea");
-    			attr_dev(h1, "class", "svelte-1697s2b");
-    			add_location(h1, file, 103, 1, 2558);
-    			add_location(br0, file, 106, 33, 2725);
+    			attr_dev(h1, "class", "svelte-117wlfm");
+    			add_location(h1, file, 104, 1, 2575);
+    			add_location(br0, file, 107, 33, 2742);
     			attr_dev(a0, "href", "sample/input.mp4");
-    			add_location(a0, file, 108, 4, 2796);
-    			add_location(br1, file, 108, 39, 2831);
-    			add_location(br2, file, 109, 3, 2839);
-    			add_location(br3, file, 110, 116, 2960);
+    			add_location(a0, file, 109, 4, 2813);
+    			add_location(br1, file, 109, 39, 2848);
+    			add_location(br2, file, 110, 3, 2856);
+    			add_location(br3, file, 111, 116, 2977);
     			attr_dev(a1, "href", "https://mhrise.wiki-db.com/sim/");
-    			add_location(a1, file, 111, 3, 2968);
-    			add_location(br4, file, 111, 72, 3037);
+    			add_location(a1, file, 112, 3, 2985);
+    			add_location(br4, file, 112, 72, 3054);
     			set_style(p, "margin", "auto");
     			set_style(p, "max-width", "100%");
     			set_style(p, "width", "54rem");
     			set_style(p, "height", "6rem");
     			set_style(p, "text-align", "left");
-    			add_location(p, file, 105, 4, 2604);
+    			add_location(p, file, 106, 4, 2621);
     			attr_dev(div0, "id", "description");
-    			attr_dev(div0, "class", "svelte-1697s2b");
-    			add_location(div0, file, 104, 2, 2577);
+    			attr_dev(div0, "class", "svelte-117wlfm");
+    			add_location(div0, file, 105, 2, 2594);
     			attr_dev(div1, "id", "status");
-    			attr_dev(div1, "class", "svelte-1697s2b");
-    			add_location(div1, file, 117, 4, 3086);
+    			attr_dev(div1, "class", "svelte-117wlfm");
+    			add_location(div1, file, 118, 4, 3103);
     			attr_dev(div2, "id", "status");
-    			attr_dev(div2, "class", "svelte-1697s2b");
-    			add_location(div2, file, 116, 2, 3064);
-    			add_location(div3, file, 177, 6, 5112);
+    			attr_dev(div2, "class", "svelte-117wlfm");
+    			add_location(div2, file, 117, 2, 3081);
+    			add_location(div3, file, 178, 6, 5129);
     			attr_dev(textarea, "placeholder", "charms will be exported here");
     			textarea.value = /*exportData*/ ctx[6];
-    			attr_dev(textarea, "class", "svelte-1697s2b");
-    			add_location(textarea, file, 178, 6, 5159);
+    			attr_dev(textarea, "class", "svelte-117wlfm");
+    			add_location(textarea, file, 179, 6, 5176);
     			attr_dev(div4, "id", "result");
-    			attr_dev(div4, "class", "svelte-1697s2b");
-    			add_location(div4, file, 175, 2, 5059);
-    			attr_dev(main, "class", "svelte-1697s2b");
-    			add_location(main, file, 102, 0, 2550);
+    			attr_dev(div4, "class", "svelte-117wlfm");
+    			add_location(div4, file, 176, 2, 5076);
+    			attr_dev(main, "class", "svelte-117wlfm");
+    			add_location(main, file, 103, 0, 2567);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1940,7 +1950,7 @@ for (const input of inputs) {
     		}
 
     		const charms = charmScanner.getCharms();
-    		console.log(charms);
+    		console.log(JSON.stringify(charms));
     		charmManager.registerCharms(charms);
     	};
 

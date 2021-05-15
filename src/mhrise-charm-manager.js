@@ -32,7 +32,7 @@ export default class MHRiseCharmManager {
     const values = charms
       .map(c => `("${c.skills[0]}", ${c.skillLevels[0]}, "${c.skills[1]}", ${c.skillLevels[1]}, ${c.slots.replace(/-/g, ', ')})`)
       .join(',\n')
-    console.log(`insert or ignore into charms values ${values}`)
+
     await this.sql(`insert or ignore into charms values ${values}`)
   }
 

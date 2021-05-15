@@ -89,7 +89,8 @@
     }
 
     const charms = charmScanner.getCharms()
-    console.log(charms)
+    console.log(JSON.stringify(charms))
+
     charmManager.registerCharms(charms)
   }
 
@@ -231,6 +232,11 @@
     z-index: 1;
 		cursor:pointer;
 	}
+
+  #upload {
+    width:  11rem;
+    margin: auto;
+  }
 
   #upload img {
 		width:  60px;

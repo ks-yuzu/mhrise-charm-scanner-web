@@ -9,7 +9,7 @@ export default class MHRiseCharmScanner {
   POINT_SLOTS        = new cv.Point(1160, 200)
   POINT_SKILL1       = new cv.Point(1033, 266)
   POINT_SKILL2       = new cv.Point(1033, 317)
-  POINT_SKILL_LEVEL1 = new cv.Point(1190, 289)
+  POINT_SKILL_LEVEL1 = new cv.Point(1190, 290)
   POINT_SKILL_LEVEL2 = new cv.Point(1190, 340)
   POINT_PAGE         = new cv.Point(787, 582)
 
@@ -19,6 +19,10 @@ export default class MHRiseCharmScanner {
   nCharms = 0
   charms = {}
   templates = null
+
+  // page = -1
+  // col = -1
+  // row = -1
 
   async init() {
     this.templates = {
@@ -200,6 +204,7 @@ export default class MHRiseCharmScanner {
     }
 
     const [col, row]    = pos
+    // this.page = page; this.col = col; this.row = row
     if (this.isScaned(page, row, col)) {
       // console.log(`this charm is already scanned. skip: p${page} (${row}, ${col})`);
       return null
@@ -305,6 +310,10 @@ for (const input of inputs) {
   }
 
   _getSkillLevels(screenshot) {
+    // const debug = (this.page === "1" && this.row === 1 && this.col === 7)
+    //       ? ((diff, name) => { console.log(`debug${name}`); cv.imshow(document.getElementById(`debug${name}`), diff) })
+    //       : (() => {})
+
     return [
       getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL1, 0, 127),
       getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL2, 0, 127),

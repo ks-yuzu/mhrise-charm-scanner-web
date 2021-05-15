@@ -40,13 +40,14 @@ export function countImageDiffAtPoint(image, templateImage, point, maskBinaryThr
 }
 
 
-export function getMostMatchedImage(image, templates, point, maskBinaryThreshold = 63, diffBinaryThreshold = 63) {
+export function getMostMatchedImage(image, templates, point, maskBinaryThreshold = 63, diffBinaryThreshold = 63, debug = ()=>{}) {
   let minDiffCount = Number.MAX_SAFE_INTEGER
   let candidate = null
 
   // console.log(templates)
   for (const [name, template] of Object.entries(templates)) {
     const diff = countImageDiffAtPoint(image, template, point, maskBinaryThreshold, diffBinaryThreshold)
+    debug(diff, name)
     const diffCount = cv.countNonZero(diff)
 
     if ( minDiffCount > diffCount ) {
