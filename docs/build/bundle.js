@@ -4,6 +4,7 @@ var app = (function () {
     'use strict';
 
     function noop() { }
+    const identity = x => x;
     function assign(tar, src) {
         // @ts-ignore
         for (const k in src)
@@ -87,6 +88,41 @@ var app = (function () {
     function set_store_value(store, ret, value = ret) {
         store.set(value);
         return ret;
+    }
+
+    const is_client = typeof window !== 'undefined';
+    let now = is_client
+        ? () => window.performance.now()
+        : () => Date.now();
+    let raf = is_client ? cb => requestAnimationFrame(cb) : noop;
+
+    const tasks = new Set();
+    function run_tasks(now) {
+        tasks.forEach(task => {
+            if (!task.c(now)) {
+                tasks.delete(task);
+                task.f();
+            }
+        });
+        if (tasks.size !== 0)
+            raf(run_tasks);
+    }
+    /**
+     * Creates a new task that runs on each raf frame
+     * until it returns a falsy value or is aborted
+     */
+    function loop(callback) {
+        let task;
+        if (tasks.size === 0)
+            raf(run_tasks);
+        return {
+            promise: new Promise(fulfill => {
+                tasks.add(task = { c: callback, f: fulfill });
+            }),
+            abort() {
+                tasks.delete(task);
+            }
+        };
     }
 
     function append(target, node) {
@@ -185,6 +221,67 @@ var app = (function () {
         }
     }
 
+    const active_docs = new Set();
+    let active = 0;
+    // https://github.com/darkskyapp/string-hash/blob/master/index.js
+    function hash(str) {
+        let hash = 5381;
+        let i = str.length;
+        while (i--)
+            hash = ((hash << 5) - hash) ^ str.charCodeAt(i);
+        return hash >>> 0;
+    }
+    function create_rule(node, a, b, duration, delay, ease, fn, uid = 0) {
+        const step = 16.666 / duration;
+        let keyframes = '{\n';
+        for (let p = 0; p <= 1; p += step) {
+            const t = a + (b - a) * ease(p);
+            keyframes += p * 100 + `%{${fn(t, 1 - t)}}\n`;
+        }
+        const rule = keyframes + `100% {${fn(b, 1 - b)}}\n}`;
+        const name = `__svelte_${hash(rule)}_${uid}`;
+        const doc = node.ownerDocument;
+        active_docs.add(doc);
+        const stylesheet = doc.__svelte_stylesheet || (doc.__svelte_stylesheet = doc.head.appendChild(element('style')).sheet);
+        const current_rules = doc.__svelte_rules || (doc.__svelte_rules = {});
+        if (!current_rules[name]) {
+            current_rules[name] = true;
+            stylesheet.insertRule(`@keyframes ${name} ${rule}`, stylesheet.cssRules.length);
+        }
+        const animation = node.style.animation || '';
+        node.style.animation = `${animation ? `${animation}, ` : ''}${name} ${duration}ms linear ${delay}ms 1 both`;
+        active += 1;
+        return name;
+    }
+    function delete_rule(node, name) {
+        const previous = (node.style.animation || '').split(', ');
+        const next = previous.filter(name
+            ? anim => anim.indexOf(name) < 0 // remove specific animation
+            : anim => anim.indexOf('__svelte') === -1 // remove all Svelte animations
+        );
+        const deleted = previous.length - next.length;
+        if (deleted) {
+            node.style.animation = next.join(', ');
+            active -= deleted;
+            if (!active)
+                clear_rules();
+        }
+    }
+    function clear_rules() {
+        raf(() => {
+            if (active)
+                return;
+            active_docs.forEach(doc => {
+                const stylesheet = doc.__svelte_stylesheet;
+                let i = stylesheet.cssRules.length;
+                while (i--)
+                    stylesheet.deleteRule(i);
+                doc.__svelte_rules = {};
+            });
+            active_docs.clear();
+        });
+    }
+
     let current_component;
     function set_current_component(component) {
         current_component = component;
@@ -275,6 +372,20 @@ var app = (function () {
             $$.after_update.forEach(add_render_callback);
         }
     }
+
+    let promise;
+    function wait() {
+        if (!promise) {
+            promise = Promise.resolve();
+            promise.then(() => {
+                promise = null;
+            });
+        }
+        return promise;
+    }
+    function dispatch(node, direction, kind) {
+        node.dispatchEvent(custom_event(`${direction ? 'intro' : 'outro'}${kind}`));
+    }
     const outroing = new Set();
     let outros;
     function group_outros() {
@@ -311,6 +422,112 @@ var app = (function () {
             });
             block.o(local);
         }
+    }
+    const null_transition = { duration: 0 };
+    function create_bidirectional_transition(node, fn, params, intro) {
+        let config = fn(node, params);
+        let t = intro ? 0 : 1;
+        let running_program = null;
+        let pending_program = null;
+        let animation_name = null;
+        function clear_animation() {
+            if (animation_name)
+                delete_rule(node, animation_name);
+        }
+        function init(program, duration) {
+            const d = program.b - t;
+            duration *= Math.abs(d);
+            return {
+                a: t,
+                b: program.b,
+                d,
+                duration,
+                start: program.start,
+                end: program.start + duration,
+                group: program.group
+            };
+        }
+        function go(b) {
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
+            const program = {
+                start: now() + delay,
+                b
+            };
+            if (!b) {
+                // @ts-ignore todo: improve typings
+                program.group = outros;
+                outros.r += 1;
+            }
+            if (running_program || pending_program) {
+                pending_program = program;
+            }
+            else {
+                // if this is an intro, and there's a delay, we need to do
+                // an initial tick and/or apply CSS animation immediately
+                if (css) {
+                    clear_animation();
+                    animation_name = create_rule(node, t, b, duration, delay, easing, css);
+                }
+                if (b)
+                    tick(0, 1);
+                running_program = init(program, duration);
+                add_render_callback(() => dispatch(node, b, 'start'));
+                loop(now => {
+                    if (pending_program && now > pending_program.start) {
+                        running_program = init(pending_program, duration);
+                        pending_program = null;
+                        dispatch(node, running_program.b, 'start');
+                        if (css) {
+                            clear_animation();
+                            animation_name = create_rule(node, t, running_program.b, running_program.duration, 0, easing, config.css);
+                        }
+                    }
+                    if (running_program) {
+                        if (now >= running_program.end) {
+                            tick(t = running_program.b, 1 - t);
+                            dispatch(node, running_program.b, 'end');
+                            if (!pending_program) {
+                                // we're done
+                                if (running_program.b) {
+                                    // intro — we can tidy up immediately
+                                    clear_animation();
+                                }
+                                else {
+                                    // outro — needs to be coordinated
+                                    if (!--running_program.group.r)
+                                        run_all(running_program.group.c);
+                                }
+                            }
+                            running_program = null;
+                        }
+                        else if (now >= running_program.start) {
+                            const p = now - running_program.start;
+                            t = running_program.a + running_program.d * easing(p / running_program.duration);
+                            tick(t, 1 - t);
+                        }
+                    }
+                    return !!(running_program || pending_program);
+                });
+            }
+        }
+        return {
+            run(b) {
+                if (is_function(config)) {
+                    wait().then(() => {
+                        // @ts-ignore
+                        config = config();
+                        go(b);
+                    });
+                }
+                else {
+                    go(b);
+                }
+            },
+            end() {
+                clear_animation();
+                running_program = pending_program = null;
+            }
+        };
     }
 
     const globals = (typeof window !== 'undefined'
@@ -573,12 +790,16 @@ var app = (function () {
     }
 
     class MHRiseCharmManager {
-      db = null
+      db        = null              // WebSQL
+      indexeddb = null              // IndexedDB
 
 
       constructor() {
         this.db = openDatabase('mhrise-charm-manager', '', 'MHRise charm manager', 5000);
         this._createTable();
+
+        this.indexeddb = new Dexie('charms');
+        this.indexeddb.version(1).stores({images: 'name'});
       }
 
 
@@ -604,9 +825,10 @@ var app = (function () {
 
       async registerCharms(charms) {
         const values = charms
-          .map(c => `("${c.skills[0]}", ${c.skillLevels[0]}, "${c.skills[1]}", ${c.skillLevels[1]}, ${c.slots.replace(/-/g, ', ')})`)
+          .map(c => `("${c.skills[0]}", ${c.skillLevels[0]}, "${c.skills[1]}", ${c.skillLevels[1]}, ${c.slots.replace(/-/g, ', ')}, "${c.imageName}")`)
           .join(',\n');
 
+        console.log(values);
         await this.sql(`insert or ignore into charms values ${values}`);
       }
 
@@ -626,7 +848,16 @@ var app = (function () {
                slot1       int,
                slot2       int,
                slot3       int,
+               imagename   varchar(128),
                unique (skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3))`);
+      }
+
+
+      async getScreenshot(name) {
+        const result = await this.indexeddb.images.get(name);
+        const img = cv.matFromArray(result.rows, result.cols, result.type, result.data);
+
+        return img
       }
     }
 
@@ -724,6 +955,8 @@ var app = (function () {
       })
     }
 
+    // import moment from 'moment'
+
     class MHRiseCharmScanner {
       MAX_PAGE = 34
       COLUMNS_PER_PAGE = 10
@@ -740,6 +973,7 @@ var app = (function () {
       POINT_CHARM_AREA_LEFT_TOP = new cv.Point(634, 359)
       SIZE_CHARM_AREA           = new cv.Size(357, 199)
 
+      indexeddb = null
       nCharms = 0
       charms = {}
       templates = null
@@ -894,6 +1128,9 @@ var app = (function () {
 
         this.templates = await promiseAllRecursive(this.templates);
         this.reset();
+
+        this.indexeddb = new Dexie('charms');
+        this.indexeddb.version(1).stores({images: 'name'});
       }
 
       reset() {
@@ -911,13 +1148,25 @@ var app = (function () {
         return this.charms[page][row][col] != null
       }
 
-      store(params) {
-        const {page, row, col} = params;
-        this.charms[page][row][col] = params;
+      store(charmData, metadata) {
+        const {page, row, col} = charmData;
+        const {screenshot, movieName} = metadata;
+
+        const name = `${movieName}_${page}-${row}-${col}`;
+        // console.log({movieName, row, col})
+
+        this.indexeddb.images.put({
+          name,
+          rows: screenshot.rows,
+          cols: screenshot.cols,
+          type: screenshot.type(),
+          data: screenshot.data.slice(0),
+        });
+        this.charms[page][row][col] = {...charmData, imageName: name};
         this.nCharms++;
       }
 
-      scan(screenshot) {
+      scan(screenshot, movieName) {
         const page          = this._getCurrentPage(screenshot);
         const [pos, match]  = this._getCurrentCharmPos(screenshot);
 
@@ -942,7 +1191,7 @@ var app = (function () {
         // console.log(`scaned ${row} ${col}`)
 
         // console.log({col, row, match, page, rarity, slots, skills, skillLevels})
-        this.store({page, row, col, rarity, slots, skills, skillLevels});
+        this.store({page, row, col, rarity, slots, skills, skillLevels}, {screenshot, movieName});
       }
 
       countCharms() {
@@ -1115,17 +1364,19 @@ for (const input of inputs) {
     	let t20;
     	let br10;
     	let t21;
-    	let span0;
     	let br11;
-    	let t23;
+    	let t22;
+    	let span0;
     	let br12;
     	let t24;
     	let br13;
     	let t25;
     	let br14;
     	let t26;
-    	let span1;
     	let br15;
+    	let t27;
+    	let span1;
+    	let br16;
 
     	const block = {
     		c: function create() {
@@ -1164,26 +1415,28 @@ for (const input of inputs) {
     			p2 = element("p");
     			t17 = text("スキャンした護石の一覧を見ることができます。");
     			br7 = element("br");
-    			t18 = text("\n      護石データは蓄積され、次回、同じブラウザで開いた時にも保持されます。");
+    			t18 = text("\n      右端の画像ボタンを押すことで、スキャン時のスクリーンショットを確認できます。");
     			br8 = element("br");
-    			t19 = space();
+    			t19 = text("\n      護石データは蓄積され、次回、同じブラウザで開いた時にも保持されます。");
     			br9 = element("br");
-    			t20 = text("\n      表中の \"合計スキルレベル\" は、");
+    			t20 = space();
     			br10 = element("br");
-    			t21 = space();
+    			t21 = text("\n      表中の \"合計スキルレベル\" は、");
+    			br11 = element("br");
+    			t22 = space();
     			span0 = element("span");
     			span0.textContent = "(スキルを装飾品換算した場合のスロットLv) × (スキルLv) + (スロットLv)";
-    			br11 = element("br");
-    			t23 = text("\n      として計算しています。");
     			br12 = element("br");
-    			t24 = space();
+    			t24 = text("\n      として計算しています。");
     			br13 = element("br");
-    			t25 = text("\n      例) 納刀術2, ひるみ軽減1, スロット 3-1-0 の場合");
+    			t25 = space();
     			br14 = element("br");
-    			t26 = space();
+    			t26 = text("\n      例) 納刀術2, ひるみ軽減1, スロット 3-1-0 の場合");
+    			br15 = element("br");
+    			t27 = space();
     			span1 = element("span");
     			span1.textContent = "2 × 2 + 1 × 1 + 3 + 1 + 0 = 9";
-    			br15 = element("br");
+    			br16 = element("br");
     			add_location(br0, file$6, 4, 28, 215);
     			add_location(br1, file$6, 5, 26, 246);
     			attr_dev(p0, "class", "svelte-15kmx5q");
@@ -1204,18 +1457,19 @@ for (const input of inputs) {
     			attr_dev(h31, "class", "svelte-15kmx5q");
     			add_location(h31, file$6, 18, 4, 657);
     			add_location(br7, file$6, 20, 28, 709);
-    			add_location(br8, file$6, 21, 40, 754);
-    			add_location(br9, file$6, 22, 6, 765);
-    			add_location(br10, file$6, 23, 23, 793);
+    			add_location(br8, file$6, 21, 44, 758);
+    			add_location(br9, file$6, 22, 40, 803);
+    			add_location(br10, file$6, 23, 6, 814);
+    			add_location(br11, file$6, 24, 23, 842);
     			attr_dev(span0, "class", "px-3 font-weight-bold");
-    			add_location(span0, file$6, 24, 6, 804);
-    			add_location(br11, file$6, 24, 92, 890);
-    			add_location(br12, file$6, 25, 17, 912);
-    			add_location(br13, file$6, 26, 6, 923);
-    			add_location(br14, file$6, 27, 37, 965);
+    			add_location(span0, file$6, 25, 6, 853);
+    			add_location(br12, file$6, 25, 92, 939);
+    			add_location(br13, file$6, 26, 17, 961);
+    			add_location(br14, file$6, 27, 6, 972);
+    			add_location(br15, file$6, 28, 37, 1014);
     			attr_dev(span1, "class", "px-3");
-    			add_location(span1, file$6, 28, 6, 976);
-    			add_location(br15, file$6, 28, 61, 1031);
+    			add_location(span1, file$6, 29, 6, 1025);
+    			add_location(br16, file$6, 29, 61, 1080);
     			attr_dev(p2, "class", "svelte-15kmx5q");
     			add_location(p2, file$6, 19, 4, 677);
     			attr_dev(div0, "class", "card-body");
@@ -1266,17 +1520,19 @@ for (const input of inputs) {
     			append_dev(p2, t20);
     			append_dev(p2, br10);
     			append_dev(p2, t21);
-    			append_dev(p2, span0);
     			append_dev(p2, br11);
-    			append_dev(p2, t23);
+    			append_dev(p2, t22);
+    			append_dev(p2, span0);
     			append_dev(p2, br12);
     			append_dev(p2, t24);
     			append_dev(p2, br13);
     			append_dev(p2, t25);
     			append_dev(p2, br14);
     			append_dev(p2, t26);
-    			append_dev(p2, span1);
     			append_dev(p2, br15);
+    			append_dev(p2, t27);
+    			append_dev(p2, span1);
+    			append_dev(p2, br16);
     		},
     		p: noop,
     		i: noop,
@@ -1323,17 +1579,51 @@ for (const input of inputs) {
     	}
     }
 
-    /* node_modules/svelte-table/src/SvelteTable.svelte generated by Svelte v3.38.2 */
+    function cubicOut(t) {
+        const f = t - 1.0;
+        return f * f * f + 1.0;
+    }
+
+    function slide(node, { delay = 0, duration = 400, easing = cubicOut } = {}) {
+        const style = getComputedStyle(node);
+        const opacity = +style.opacity;
+        const height = parseFloat(style.height);
+        const padding_top = parseFloat(style.paddingTop);
+        const padding_bottom = parseFloat(style.paddingBottom);
+        const margin_top = parseFloat(style.marginTop);
+        const margin_bottom = parseFloat(style.marginBottom);
+        const border_top_width = parseFloat(style.borderTopWidth);
+        const border_bottom_width = parseFloat(style.borderBottomWidth);
+        return {
+            delay,
+            duration,
+            easing,
+            css: t => 'overflow: hidden;' +
+                `opacity: ${Math.min(t * 20, 1) * opacity};` +
+                `height: ${t * height}px;` +
+                `padding-top: ${t * padding_top}px;` +
+                `padding-bottom: ${t * padding_bottom}px;` +
+                `margin-top: ${t * margin_top}px;` +
+                `margin-bottom: ${t * margin_bottom}px;` +
+                `border-top-width: ${t * border_top_width}px;` +
+                `border-bottom-width: ${t * border_bottom_width}px;`
+        };
+    }
+
+    /* src/SvelteTable.svelte generated by Svelte v3.38.2 */
 
     const { Object: Object_1$1 } = globals;
-    const file$5 = "node_modules/svelte-table/src/SvelteTable.svelte";
+    const file$5 = "src/SvelteTable.svelte";
 
-    function get_each_context$2(ctx, list, i) {
+    function get_each_context$3(ctx, list, i) {
     	const child_ctx = ctx.slice();
     	child_ctx[33] = list[i];
     	child_ctx[35] = i;
     	return child_ctx;
     }
+
+    const get_after_row_slot_changes = dirty => ({ row: dirty[0] & /*c_rows*/ 8192 });
+    const get_after_row_slot_context = ctx => ({ row: /*row*/ ctx[33], n: /*n*/ ctx[35] });
 
     function get_each_context_1$1(ctx, list, i) {
     	const child_ctx = ctx.slice();
@@ -1374,7 +1664,7 @@ for (const input of inputs) {
     	return child_ctx;
     }
 
-    // (132:4) {#if showFilterHeader}
+    // (117:4) {#if showFilterHeader}
     function create_if_block_4(ctx) {
     	let tr;
     	let each_value_3 = /*columns*/ ctx[3];
@@ -1393,8 +1683,8 @@ for (const input of inputs) {
     				each_blocks[i].c();
     			}
 
-    			attr_dev(tr, "class", "svelte-w7dofd");
-    			add_location(tr, file$5, 132, 6, 3635);
+    			attr_dev(tr, "class", "svelte-uczycn");
+    			add_location(tr, file$5, 117, 6, 3608);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, tr, anchor);
@@ -1438,14 +1728,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_4.name,
     		type: "if",
-    		source: "(132:4) {#if showFilterHeader}",
+    		source: "(117:4) {#if showFilterHeader}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (138:58) 
+    // (123:58) 
     function create_if_block_6(ctx) {
     	let select;
     	let option;
@@ -1475,10 +1765,10 @@ for (const input of inputs) {
 
     			option.__value = undefined;
     			option.value = option.__value;
-    			add_location(option, file$5, 139, 16, 3971);
-    			attr_dev(select, "class", select_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameSelect*/ ctx[9])) + " svelte-w7dofd"));
+    			add_location(option, file$5, 124, 16, 3944);
+    			attr_dev(select, "class", select_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameSelect*/ ctx[9])) + " svelte-uczycn"));
     			if (/*filterSelections*/ ctx[2][/*col*/ ctx[36].key] === void 0) add_render_callback(select_change_handler);
-    			add_location(select, file$5, 138, 14, 3868);
+    			add_location(select, file$5, 123, 14, 3841);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, select, anchor);
@@ -1522,7 +1812,7 @@ for (const input of inputs) {
     				each_blocks.length = each_value_4.length;
     			}
 
-    			if (dirty[0] & /*classNameSelect*/ 512 && select_class_value !== (select_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameSelect*/ ctx[9])) + " svelte-w7dofd"))) {
+    			if (dirty[0] & /*classNameSelect*/ 512 && select_class_value !== (select_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameSelect*/ ctx[9])) + " svelte-uczycn"))) {
     				attr_dev(select, "class", select_class_value);
     			}
 
@@ -1542,14 +1832,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_6.name,
     		type: "if",
-    		source: "(138:58) ",
+    		source: "(123:58) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (136:12) {#if col.searchValue !== undefined}
+    // (121:12) {#if col.searchValue !== undefined}
     function create_if_block_5(ctx) {
     	let input;
     	let mounted;
@@ -1562,7 +1852,7 @@ for (const input of inputs) {
     	const block = {
     		c: function create() {
     			input = element("input");
-    			add_location(input, file$5, 136, 14, 3748);
+    			add_location(input, file$5, 121, 14, 3721);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -1591,14 +1881,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_5.name,
     		type: "if",
-    		source: "(136:12) {#if col.searchValue !== undefined}",
+    		source: "(121:12) {#if col.searchValue !== undefined}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (141:16) {#each filterValues[col.key] as option}
+    // (126:16) {#each filterValues[col.key] as option}
     function create_each_block_4(ctx) {
     	let option;
     	let t_value = /*option*/ ctx[43].name + "";
@@ -1611,7 +1901,7 @@ for (const input of inputs) {
     			t = text(t_value);
     			option.__value = option_value_value = /*option*/ ctx[43].value;
     			option.value = option.__value;
-    			add_location(option, file$5, 141, 18, 4081);
+    			add_location(option, file$5, 126, 18, 4054);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, option, anchor);
@@ -1634,14 +1924,14 @@ for (const input of inputs) {
     		block,
     		id: create_each_block_4.name,
     		type: "each",
-    		source: "(141:16) {#each filterValues[col.key] as option}",
+    		source: "(126:16) {#each filterValues[col.key] as option}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (134:8) {#each columns as col}
+    // (119:8) {#each columns as col}
     function create_each_block_3(ctx) {
     	let th;
     	let t;
@@ -1659,7 +1949,7 @@ for (const input of inputs) {
     			th = element("th");
     			if (if_block) if_block.c();
     			t = space();
-    			add_location(th, file$5, 134, 10, 3681);
+    			add_location(th, file$5, 119, 10, 3654);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, th, anchor);
@@ -1692,22 +1982,22 @@ for (const input of inputs) {
     		block,
     		id: create_each_block_3.name,
     		type: "each",
-    		source: "(134:8) {#each columns as col}",
+    		source: "(119:8) {#each columns as col}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (163:10) {:else}
-    function create_else_block_1(ctx) {
+    // (148:10) {:else}
+    function create_else_block_1$1(ctx) {
     	let th;
     	let t0_value = /*col*/ ctx[36].title + "";
     	let t0;
     	let t1;
     	let t2;
     	let th_class_value;
-    	let if_block = /*sortBy*/ ctx[0] === /*col*/ ctx[36].key && create_if_block_3(ctx);
+    	let if_block = /*sortBy*/ ctx[0] === /*col*/ ctx[36].key && create_if_block_3$1(ctx);
 
     	const block = {
     		c: function create() {
@@ -1716,8 +2006,8 @@ for (const input of inputs) {
     			t1 = space();
     			if (if_block) if_block.c();
     			t2 = space();
-    			attr_dev(th, "class", th_class_value = "" + (null_to_empty(/*col*/ ctx[36].headerClass) + " svelte-w7dofd"));
-    			add_location(th, file$5, 163, 12, 4730);
+    			attr_dev(th, "class", th_class_value = "" + (null_to_empty(/*col*/ ctx[36].headerClass) + " svelte-uczycn"));
+    			add_location(th, file$5, 148, 12, 4703);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, th, anchor);
@@ -1733,7 +2023,7 @@ for (const input of inputs) {
     				if (if_block) {
     					if_block.p(ctx, dirty);
     				} else {
-    					if_block = create_if_block_3(ctx);
+    					if_block = create_if_block_3$1(ctx);
     					if_block.c();
     					if_block.m(th, t2);
     				}
@@ -1742,7 +2032,7 @@ for (const input of inputs) {
     				if_block = null;
     			}
 
-    			if (dirty[0] & /*columns, filterValues*/ 4104 && th_class_value !== (th_class_value = "" + (null_to_empty(/*col*/ ctx[36].headerClass) + " svelte-w7dofd"))) {
+    			if (dirty[0] & /*columns, filterValues*/ 4104 && th_class_value !== (th_class_value = "" + (null_to_empty(/*col*/ ctx[36].headerClass) + " svelte-uczycn"))) {
     				attr_dev(th, "class", th_class_value);
     			}
     		},
@@ -1754,17 +2044,17 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block_1.name,
+    		id: create_else_block_1$1.name,
     		type: "else",
-    		source: "(163:10) {:else}",
+    		source: "(148:10) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (153:10) {#if col.sortable}
-    function create_if_block_1$1(ctx) {
+    // (138:10) {#if col.sortable}
+    function create_if_block_1$2(ctx) {
     	let th;
     	let t0_value = /*col*/ ctx[36].title + "";
     	let t0;
@@ -1773,7 +2063,7 @@ for (const input of inputs) {
     	let th_class_value;
     	let mounted;
     	let dispose;
-    	let if_block = /*sortBy*/ ctx[0] === /*col*/ ctx[36].key && create_if_block_2$1(ctx);
+    	let if_block = /*sortBy*/ ctx[0] === /*col*/ ctx[36].key && create_if_block_2$2(ctx);
 
     	function click_handler(...args) {
     		return /*click_handler*/ ctx[26](/*col*/ ctx[36], ...args);
@@ -1786,8 +2076,8 @@ for (const input of inputs) {
     			t1 = space();
     			if (if_block) if_block.c();
     			t2 = space();
-    			attr_dev(th, "class", th_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](["isSortable", /*col*/ ctx[36].headerClass])) + " svelte-w7dofd"));
-    			add_location(th, file$5, 153, 12, 4399);
+    			attr_dev(th, "class", th_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](["isSortable", /*col*/ ctx[36].headerClass])) + " svelte-uczycn"));
+    			add_location(th, file$5, 138, 12, 4372);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, th, anchor);
@@ -1809,7 +2099,7 @@ for (const input of inputs) {
     				if (if_block) {
     					if_block.p(ctx, dirty);
     				} else {
-    					if_block = create_if_block_2$1(ctx);
+    					if_block = create_if_block_2$2(ctx);
     					if_block.c();
     					if_block.m(th, t2);
     				}
@@ -1818,7 +2108,7 @@ for (const input of inputs) {
     				if_block = null;
     			}
 
-    			if (dirty[0] & /*columns, filterValues*/ 4104 && th_class_value !== (th_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](["isSortable", /*col*/ ctx[36].headerClass])) + " svelte-w7dofd"))) {
+    			if (dirty[0] & /*columns, filterValues*/ 4104 && th_class_value !== (th_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](["isSortable", /*col*/ ctx[36].headerClass])) + " svelte-uczycn"))) {
     				attr_dev(th, "class", th_class_value);
     			}
     		},
@@ -1832,17 +2122,17 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$1.name,
+    		id: create_if_block_1$2.name,
     		type: "if",
-    		source: "(153:10) {#if col.sortable}",
+    		source: "(138:10) {#if col.sortable}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (168:14) {#if sortBy === col.key}
-    function create_if_block_3(ctx) {
+    // (153:14) {#if sortBy === col.key}
+    function create_if_block_3$1(ctx) {
     	let t_value = (/*sortOrder*/ ctx[1] === 1
     	? /*iconAsc*/ ctx[4]
     	: /*iconDesc*/ ctx[5]) + "";
@@ -1868,17 +2158,17 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_3.name,
+    		id: create_if_block_3$1.name,
     		type: "if",
-    		source: "(168:14) {#if sortBy === col.key}",
+    		source: "(153:14) {#if sortBy === col.key}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (159:14) {#if sortBy === col.key}
-    function create_if_block_2$1(ctx) {
+    // (144:14) {#if sortBy === col.key}
+    function create_if_block_2$2(ctx) {
     	let t_value = (/*sortOrder*/ ctx[1] === 1
     	? /*iconAsc*/ ctx[4]
     	: /*iconDesc*/ ctx[5]) + "";
@@ -1904,22 +2194,22 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_2$1.name,
+    		id: create_if_block_2$2.name,
     		type: "if",
-    		source: "(159:14) {#if sortBy === col.key}",
+    		source: "(144:14) {#if sortBy === col.key}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (152:8) {#each columns as col}
+    // (137:8) {#each columns as col}
     function create_each_block_2(ctx) {
     	let if_block_anchor;
 
     	function select_block_type_1(ctx, dirty) {
-    		if (/*col*/ ctx[36].sortable) return create_if_block_1$1;
-    		return create_else_block_1;
+    		if (/*col*/ ctx[36].sortable) return create_if_block_1$2;
+    		return create_else_block_1$1;
     	}
 
     	let current_block_type = select_block_type_1(ctx);
@@ -1957,15 +2247,15 @@ for (const input of inputs) {
     		block,
     		id: create_each_block_2.name,
     		type: "each",
-    		source: "(152:8) {#each columns as col}",
+    		source: "(137:8) {#each columns as col}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (150:62)        
-    function fallback_block_1(ctx) {
+    // (135:62)        
+    function fallback_block_2(ctx) {
     	let tr;
     	let each_value_2 = /*columns*/ ctx[3];
     	validate_each_argument(each_value_2);
@@ -1983,7 +2273,7 @@ for (const input of inputs) {
     				each_blocks[i].c();
     			}
 
-    			add_location(tr, file$5, 150, 6, 4322);
+    			add_location(tr, file$5, 135, 6, 4295);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, tr, anchor);
@@ -2025,16 +2315,16 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: fallback_block_1.name,
+    		id: fallback_block_2.name,
     		type: "fallback",
-    		source: "(150:62)        ",
+    		source: "(135:62)        ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (192:14) {:else}
+    // (177:14) {:else}
     function create_else_block$2(ctx) {
     	let html_tag;
 
@@ -2070,14 +2360,14 @@ for (const input of inputs) {
     		block,
     		id: create_else_block$2.name,
     		type: "else",
-    		source: "(192:14) {:else}",
+    		source: "(177:14) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (186:14) {#if col.renderComponent}
+    // (171:14) {#if col.renderComponent}
     function create_if_block$2(ctx) {
     	let switch_instance;
     	let switch_instance_anchor;
@@ -2173,14 +2463,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block$2.name,
     		type: "if",
-    		source: "(186:14) {#if col.renderComponent}",
+    		source: "(171:14) {#if col.renderComponent}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (181:10) {#each columns as col}
+    // (166:10) {#each columns as col}
     function create_each_block_1$1(ctx) {
     	let td;
     	let current_block_type_index;
@@ -2210,8 +2500,8 @@ for (const input of inputs) {
     			td = element("td");
     			if_block.c();
     			t = space();
-    			attr_dev(td, "class", td_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15]([/*col*/ ctx[36].class, /*classNameCell*/ ctx[11]])) + " svelte-w7dofd"));
-    			add_location(td, file$5, 181, 12, 5265);
+    			attr_dev(td, "class", td_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15]([/*col*/ ctx[36].class, /*classNameCell*/ ctx[11]])) + " svelte-uczycn"));
+    			add_location(td, file$5, 166, 12, 5238);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, td, anchor);
@@ -2252,7 +2542,7 @@ for (const input of inputs) {
     				if_block.m(td, t);
     			}
 
-    			if (!current || dirty[0] & /*columns, classNameCell, filterValues*/ 6152 && td_class_value !== (td_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15]([/*col*/ ctx[36].class, /*classNameCell*/ ctx[11]])) + " svelte-w7dofd"))) {
+    			if (!current || dirty[0] & /*columns, classNameCell, filterValues*/ 6152 && td_class_value !== (td_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15]([/*col*/ ctx[36].class, /*classNameCell*/ ctx[11]])) + " svelte-uczycn"))) {
     				attr_dev(td, "class", td_class_value);
     			}
     		},
@@ -2277,18 +2567,17 @@ for (const input of inputs) {
     		block,
     		id: create_each_block_1$1.name,
     		type: "each",
-    		source: "(181:10) {#each columns as col}",
+    		source: "(166:10) {#each columns as col}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (179:40)          
-    function fallback_block(ctx) {
+    // (164:40)          
+    function fallback_block_1(ctx) {
     	let tr;
     	let tr_class_value;
-    	let t;
     	let current;
     	let mounted;
     	let dispose;
@@ -2316,9 +2605,8 @@ for (const input of inputs) {
     				each_blocks[i].c();
     			}
 
-    			t = space();
-    			attr_dev(tr, "class", tr_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameRow*/ ctx[10])) + " svelte-w7dofd"));
-    			add_location(tr, file$5, 179, 8, 5138);
+    			attr_dev(tr, "class", tr_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameRow*/ ctx[10])) + " svelte-uczycn"));
+    			add_location(tr, file$5, 164, 8, 5111);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, tr, anchor);
@@ -2327,7 +2615,6 @@ for (const input of inputs) {
     				each_blocks[i].m(tr, null);
     			}
 
-    			insert_dev(target, t, anchor);
     			current = true;
 
     			if (!mounted) {
@@ -2366,7 +2653,7 @@ for (const input of inputs) {
     				check_outros();
     			}
 
-    			if (!current || dirty[0] & /*classNameRow*/ 1024 && tr_class_value !== (tr_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameRow*/ ctx[10])) + " svelte-w7dofd"))) {
+    			if (!current || dirty[0] & /*classNameRow*/ 1024 && tr_class_value !== (tr_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameRow*/ ctx[10])) + " svelte-uczycn"))) {
     				attr_dev(tr, "class", tr_class_value);
     			}
     		},
@@ -2391,7 +2678,6 @@ for (const input of inputs) {
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(tr);
     			destroy_each(each_blocks, detaching);
-    			if (detaching) detach_dev(t);
     			mounted = false;
     			dispose();
     		}
@@ -2399,29 +2685,40 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: fallback_block.name,
+    		id: fallback_block_1.name,
     		type: "fallback",
-    		source: "(179:40)          ",
+    		source: "(164:40)          ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (178:4) {#each c_rows as row, n}
-    function create_each_block$2(ctx) {
+    // (163:4) {#each c_rows as row, n}
+    function create_each_block$3(ctx) {
+    	let t;
     	let current;
     	const row_slot_template = /*#slots*/ ctx[23].row;
     	const row_slot = create_slot(row_slot_template, ctx, /*$$scope*/ ctx[22], get_row_slot_context);
-    	const row_slot_or_fallback = row_slot || fallback_block(ctx);
+    	const row_slot_or_fallback = row_slot || fallback_block_1(ctx);
+    	const after_row_slot_template = /*#slots*/ ctx[23]["after-row"];
+    	const after_row_slot = create_slot(after_row_slot_template, ctx, /*$$scope*/ ctx[22], get_after_row_slot_context);
 
     	const block = {
     		c: function create() {
     			if (row_slot_or_fallback) row_slot_or_fallback.c();
+    			t = space();
+    			if (after_row_slot) after_row_slot.c();
     		},
     		m: function mount(target, anchor) {
     			if (row_slot_or_fallback) {
     				row_slot_or_fallback.m(target, anchor);
+    			}
+
+    			insert_dev(target, t, anchor);
+
+    			if (after_row_slot) {
+    				after_row_slot.m(target, anchor);
     			}
 
     			current = true;
@@ -2436,26 +2733,36 @@ for (const input of inputs) {
     					row_slot_or_fallback.p(ctx, dirty);
     				}
     			}
+
+    			if (after_row_slot) {
+    				if (after_row_slot.p && (!current || dirty[0] & /*$$scope, c_rows*/ 4202496)) {
+    					update_slot(after_row_slot, after_row_slot_template, ctx, /*$$scope*/ ctx[22], dirty, get_after_row_slot_changes, get_after_row_slot_context);
+    				}
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
     			transition_in(row_slot_or_fallback, local);
+    			transition_in(after_row_slot, local);
     			current = true;
     		},
     		o: function outro(local) {
     			transition_out(row_slot_or_fallback, local);
+    			transition_out(after_row_slot, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
     			if (row_slot_or_fallback) row_slot_or_fallback.d(detaching);
+    			if (detaching) detach_dev(t);
+    			if (after_row_slot) after_row_slot.d(detaching);
     		}
     	};
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block$2.name,
+    		id: create_each_block$3.name,
     		type: "each",
-    		source: "(178:4) {#each c_rows as row, n}",
+    		source: "(163:4) {#each c_rows as row, n}",
     		ctx
     	});
 
@@ -2475,13 +2782,13 @@ for (const input of inputs) {
     	let if_block = /*showFilterHeader*/ ctx[14] && create_if_block_4(ctx);
     	const header_slot_template = /*#slots*/ ctx[23].header;
     	const header_slot = create_slot(header_slot_template, ctx, /*$$scope*/ ctx[22], get_header_slot_context);
-    	const header_slot_or_fallback = header_slot || fallback_block_1(ctx);
+    	const header_slot_or_fallback = header_slot || fallback_block_2(ctx);
     	let each_value = /*c_rows*/ ctx[13];
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
     	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$3(get_each_context$3(ctx, each_value, i));
     	}
 
     	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -2502,12 +2809,12 @@ for (const input of inputs) {
     				each_blocks[i].c();
     			}
 
-    			attr_dev(thead, "class", thead_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameThead*/ ctx[7])) + " svelte-w7dofd"));
-    			add_location(thead, file$5, 130, 2, 3556);
-    			attr_dev(tbody, "class", tbody_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTbody*/ ctx[8])) + " svelte-w7dofd"));
-    			add_location(tbody, file$5, 176, 2, 5014);
-    			attr_dev(table, "class", table_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTable*/ ctx[6])) + " svelte-w7dofd"));
-    			add_location(table, file$5, 129, 0, 3508);
+    			attr_dev(thead, "class", thead_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameThead*/ ctx[7])) + " svelte-uczycn"));
+    			add_location(thead, file$5, 115, 2, 3529);
+    			attr_dev(tbody, "class", tbody_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTbody*/ ctx[8])) + " svelte-uczycn"));
+    			add_location(tbody, file$5, 161, 2, 4987);
+    			attr_dev(table, "class", table_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTable*/ ctx[6])) + " svelte-uczycn"));
+    			add_location(table, file$5, 114, 0, 3481);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2544,23 +2851,23 @@ for (const input of inputs) {
     				}
     			}
 
-    			if (!current || dirty[0] & /*classNameThead*/ 128 && thead_class_value !== (thead_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameThead*/ ctx[7])) + " svelte-w7dofd"))) {
+    			if (!current || dirty[0] & /*classNameThead*/ 128 && thead_class_value !== (thead_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameThead*/ ctx[7])) + " svelte-uczycn"))) {
     				attr_dev(thead, "class", thead_class_value);
     			}
 
-    			if (dirty[0] & /*asStringArray, classNameRow, handleClickRow, c_rows, columns, classNameCell, handleClickCell, $$scope*/ 4631560) {
+    			if (dirty[0] & /*$$scope, c_rows, asStringArray, classNameRow, handleClickRow, columns, classNameCell, handleClickCell*/ 4631560) {
     				each_value = /*c_rows*/ ctx[13];
     				validate_each_argument(each_value);
     				let i;
 
     				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$2(ctx, each_value, i);
+    					const child_ctx = get_each_context$3(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(child_ctx, dirty);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block$2(child_ctx);
+    						each_blocks[i] = create_each_block$3(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(tbody, null);
@@ -2576,11 +2883,11 @@ for (const input of inputs) {
     				check_outros();
     			}
 
-    			if (!current || dirty[0] & /*classNameTbody*/ 256 && tbody_class_value !== (tbody_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTbody*/ ctx[8])) + " svelte-w7dofd"))) {
+    			if (!current || dirty[0] & /*classNameTbody*/ 256 && tbody_class_value !== (tbody_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTbody*/ ctx[8])) + " svelte-uczycn"))) {
     				attr_dev(tbody, "class", tbody_class_value);
     			}
 
-    			if (!current || dirty[0] & /*classNameTable*/ 64 && table_class_value !== (table_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTable*/ ctx[6])) + " svelte-w7dofd"))) {
+    			if (!current || dirty[0] & /*classNameTable*/ 64 && table_class_value !== (table_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTable*/ ctx[6])) + " svelte-uczycn"))) {
     				attr_dev(table, "class", table_class_value);
     			}
     		},
@@ -2626,7 +2933,7 @@ for (const input of inputs) {
     function instance$5($$self, $$props, $$invalidate) {
     	let c_rows;
     	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots("SvelteTable", slots, ['header','row']);
+    	validate_slots("SvelteTable", slots, ['header','row','after-row']);
     	const dispatch = createEventDispatcher();
     	let { columns } = $$props;
     	let { rows } = $$props;
@@ -3150,10 +3457,16 @@ for (const input of inputs) {
 
     /* src/CharmList.svelte generated by Svelte v3.38.2 */
 
-    const { Object: Object_1 } = globals;
+    const { Object: Object_1, console: console_1$1 } = globals;
     const file$4 = "src/CharmList.svelte";
 
-    // (149:2) {:else}
+    function get_each_context$2(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[12] = list[i];
+    	return child_ctx;
+    }
+
+    // (182:2) {:else}
     function create_else_block$1(ctx) {
     	let sveltetable;
     	let current;
@@ -3163,7 +3476,20 @@ for (const input of inputs) {
     				columns: /*columns*/ ctx[1],
     				rows: /*charms*/ ctx[0],
     				classNameTable: ["table table-striped table-hover table-responsible"],
-    				classNameThead: ["table-dark hide-first-child.disabled"]
+    				classNameThead: ["table-dark hide-first-child.disabled"],
+    				$$slots: {
+    					"after-row": [
+    						create_after_row_slot,
+    						({ n, row }) => ({ 10: n, 11: row }),
+    						({ n, row }) => (n ? 1024 : 0) | (row ? 2048 : 0)
+    					],
+    					row: [
+    						create_row_slot,
+    						({ n, row }) => ({ 10: n, 11: row }),
+    						({ n, row }) => (n ? 1024 : 0) | (row ? 2048 : 0)
+    					]
+    				},
+    				$$scope: { ctx }
     			},
     			$$inline: true
     		});
@@ -3179,6 +3505,11 @@ for (const input of inputs) {
     		p: function update(ctx, dirty) {
     			const sveltetable_changes = {};
     			if (dirty & /*charms*/ 1) sveltetable_changes.rows = /*charms*/ ctx[0];
+
+    			if (dirty & /*$$scope, n, charms, row*/ 35841) {
+    				sveltetable_changes.$$scope = { dirty, ctx };
+    			}
+
     			sveltetable.$set(sveltetable_changes);
     		},
     		i: function intro(local) {
@@ -3199,14 +3530,14 @@ for (const input of inputs) {
     		block,
     		id: create_else_block$1.name,
     		type: "else",
-    		source: "(149:2) {:else}",
+    		source: "(182:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (145:2) {#if charms == null}
+    // (178:2) {#if charms == null}
     function create_if_block$1(ctx) {
     	let div;
     	let span;
@@ -3217,11 +3548,11 @@ for (const input of inputs) {
     			span = element("span");
     			span.textContent = "Loading...";
     			attr_dev(span, "class", "visually-hidden");
-    			add_location(span, file$4, 146, 6, 3821);
+    			add_location(span, file$4, 179, 6, 5651);
     			set_style(div, "margin-top", "20%");
     			attr_dev(div, "class", "spinner-border text-info");
     			attr_dev(div, "role", "status");
-    			add_location(div, file$4, 145, 4, 3738);
+    			add_location(div, file$4, 178, 4, 5568);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3239,7 +3570,508 @@ for (const input of inputs) {
     		block,
     		id: create_if_block$1.name,
     		type: "if",
-    		source: "(145:2) {#if charms == null}",
+    		source: "(178:2) {#if charms == null}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (198:12) {:else}
+    function create_else_block_1(ctx) {
+    	let html_tag;
+
+    	let raw_value = (/*col*/ ctx[12].renderValue
+    	? /*col*/ ctx[12].renderValue(/*row*/ ctx[11])
+    	: /*col*/ ctx[12].value(/*row*/ ctx[11])) + "";
+
+    	let html_anchor;
+
+    	const block = {
+    		c: function create() {
+    			html_anchor = empty();
+    			html_tag = new HtmlTag(html_anchor);
+    		},
+    		m: function mount(target, anchor) {
+    			html_tag.m(raw_value, target, anchor);
+    			insert_dev(target, html_anchor, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*row*/ 2048 && raw_value !== (raw_value = (/*col*/ ctx[12].renderValue
+    			? /*col*/ ctx[12].renderValue(/*row*/ ctx[11])
+    			: /*col*/ ctx[12].value(/*row*/ ctx[11])) + "")) html_tag.p(raw_value);
+    		},
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(html_anchor);
+    			if (detaching) html_tag.d();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block_1.name,
+    		type: "else",
+    		source: "(198:12) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (192:12) {#if col.renderComponent}
+    function create_if_block_3(ctx) {
+    	let switch_instance;
+    	let switch_instance_anchor;
+    	let current;
+
+    	const switch_instance_spread_levels = [
+    		/*col*/ ctx[12].renderComponent.props || {},
+    		{ row: /*row*/ ctx[11] },
+    		{ col: /*col*/ ctx[12] }
+    	];
+
+    	var switch_value = /*col*/ ctx[12].renderComponent.component || /*col*/ ctx[12].renderComponent;
+
+    	function switch_props(ctx) {
+    		let switch_instance_props = {};
+
+    		for (let i = 0; i < switch_instance_spread_levels.length; i += 1) {
+    			switch_instance_props = assign(switch_instance_props, switch_instance_spread_levels[i]);
+    		}
+
+    		return {
+    			props: switch_instance_props,
+    			$$inline: true
+    		};
+    	}
+
+    	if (switch_value) {
+    		switch_instance = new switch_value(switch_props());
+    	}
+
+    	const block = {
+    		c: function create() {
+    			if (switch_instance) create_component(switch_instance.$$.fragment);
+    			switch_instance_anchor = empty();
+    		},
+    		m: function mount(target, anchor) {
+    			if (switch_instance) {
+    				mount_component(switch_instance, target, anchor);
+    			}
+
+    			insert_dev(target, switch_instance_anchor, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const switch_instance_changes = (dirty & /*columns, row*/ 2050)
+    			? get_spread_update(switch_instance_spread_levels, [
+    					dirty & /*columns*/ 2 && get_spread_object(/*col*/ ctx[12].renderComponent.props || {}),
+    					dirty & /*row*/ 2048 && { row: /*row*/ ctx[11] },
+    					dirty & /*columns*/ 2 && { col: /*col*/ ctx[12] }
+    				])
+    			: {};
+
+    			if (switch_value !== (switch_value = /*col*/ ctx[12].renderComponent.component || /*col*/ ctx[12].renderComponent)) {
+    				if (switch_instance) {
+    					group_outros();
+    					const old_component = switch_instance;
+
+    					transition_out(old_component.$$.fragment, 1, 0, () => {
+    						destroy_component(old_component, 1);
+    					});
+
+    					check_outros();
+    				}
+
+    				if (switch_value) {
+    					switch_instance = new switch_value(switch_props());
+    					create_component(switch_instance.$$.fragment);
+    					transition_in(switch_instance.$$.fragment, 1);
+    					mount_component(switch_instance, switch_instance_anchor.parentNode, switch_instance_anchor);
+    				} else {
+    					switch_instance = null;
+    				}
+    			} else if (switch_value) {
+    				switch_instance.$set(switch_instance_changes);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			if (switch_instance) transition_in(switch_instance.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (switch_instance) transition_out(switch_instance.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(switch_instance_anchor);
+    			if (switch_instance) destroy_component(switch_instance, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_3.name,
+    		type: "if",
+    		source: "(192:12) {#if col.renderComponent}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (188:8) {#each columns as col}
+    function create_each_block$2(ctx) {
+    	let td;
+    	let current_block_type_index;
+    	let if_block;
+    	let t;
+    	let current;
+    	let mounted;
+    	let dispose;
+    	const if_block_creators = [create_if_block_3, create_else_block_1];
+    	const if_blocks = [];
+
+    	function select_block_type_1(ctx, dirty) {
+    		if (/*col*/ ctx[12].renderComponent) return 0;
+    		return 1;
+    	}
+
+    	current_block_type_index = select_block_type_1(ctx);
+    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+
+    	function click_handler(...args) {
+    		return /*click_handler*/ ctx[5](/*col*/ ctx[12], /*row*/ ctx[11], /*n*/ ctx[10], ...args);
+    	}
+
+    	const block = {
+    		c: function create() {
+    			td = element("td");
+    			if_block.c();
+    			t = space();
+    			attr_dev(td, "class", [/*col*/ ctx[12].class].join(" "));
+    			add_location(td, file$4, 188, 10, 6075);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, td, anchor);
+    			if_blocks[current_block_type_index].m(td, null);
+    			append_dev(td, t);
+    			current = true;
+
+    			if (!mounted) {
+    				dispose = listen_dev(td, "click", click_handler, false, false, false);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+    			if_block.p(ctx, dirty);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(td);
+    			if_blocks[current_block_type_index].d();
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block$2.name,
+    		type: "each",
+    		source: "(188:8) {#each columns as col}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (187:6) 
+    function create_row_slot(ctx) {
+    	let tr;
+    	let current;
+    	let mounted;
+    	let dispose;
+    	let each_value = /*columns*/ ctx[1];
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
+    	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	function click_handler_1(...args) {
+    		return /*click_handler_1*/ ctx[6](/*n*/ ctx[10], ...args);
+    	}
+
+    	const block = {
+    		c: function create() {
+    			tr = element("tr");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			attr_dev(tr, "slot", "row");
+    			add_location(tr, file$4, 186, 6, 5960);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, tr, anchor);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(tr, null);
+    			}
+
+    			current = true;
+
+    			if (!mounted) {
+    				dispose = listen_dev(tr, "click", click_handler_1, false, false, false);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+
+    			if (dirty & /*columns, row*/ 2050) {
+    				each_value = /*columns*/ ctx[1];
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$2(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block$2(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(tr, null);
+    					}
+    				}
+
+    				group_outros();
+
+    				for (i = each_value.length; i < each_blocks.length; i += 1) {
+    					out(i);
+    				}
+
+    				check_outros();
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			each_blocks = each_blocks.filter(Boolean);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
+
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(tr);
+    			destroy_each(each_blocks, detaching);
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_row_slot.name,
+    		type: "slot",
+    		source: "(187:6) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (205:8) {#if charms[n].isSubstitutableCharmsShown}
+    function create_if_block_2$1(ctx) {
+    	let div;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			div.textContent = "上位互換護石の表示は準備中です";
+    			set_style(div, "width", "100%");
+    			set_style(div, "border-bottom", "solid 1px #ddd");
+    			add_location(div, file$4, 205, 10, 6817);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_2$1.name,
+    		type: "if",
+    		source: "(205:8) {#if charms[n].isSubstitutableCharmsShown}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (208:8) {#if charms[n].isScrennshotShown}
+    function create_if_block_1$1(ctx) {
+    	let div;
+    	let canvas;
+    	let canvas_id_value;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			canvas = element("canvas");
+    			attr_dev(canvas, "id", canvas_id_value = "charm-table-row-" + /*n*/ ctx[10] + "-screenshot");
+    			attr_dev(canvas, "class", "svelte-6zqbt3");
+    			add_location(canvas, file$4, 209, 12, 7030);
+    			set_style(div, "width", "100%");
+    			set_style(div, "border-bottom", "solid 1px #ddd");
+    			add_location(div, file$4, 208, 10, 6961);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, canvas);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*n*/ 1024 && canvas_id_value !== (canvas_id_value = "charm-table-row-" + /*n*/ ctx[10] + "-screenshot")) {
+    				attr_dev(canvas, "id", canvas_id_value);
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_1$1.name,
+    		type: "if",
+    		source: "(208:8) {#if charms[n].isScrennshotShown}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (204:6) 
+    function create_after_row_slot(ctx) {
+    	let div;
+    	let t;
+    	let div_id_value;
+    	let div_transition;
+    	let current;
+    	let if_block0 = /*charms*/ ctx[0][/*n*/ ctx[10]].isSubstitutableCharmsShown && create_if_block_2$1(ctx);
+    	let if_block1 = /*charms*/ ctx[0][/*n*/ ctx[10]].isScrennshotShown && create_if_block_1$1(ctx);
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			if (if_block0) if_block0.c();
+    			t = space();
+    			if (if_block1) if_block1.c();
+    			attr_dev(div, "slot", "after-row");
+    			attr_dev(div, "id", div_id_value = "charm-table-row-" + /*n*/ ctx[10]);
+    			set_style(div, "width", "100%");
+    			attr_dev(div, "class", "svelte-6zqbt3");
+    			add_location(div, file$4, 203, 6, 6639);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			if (if_block0) if_block0.m(div, null);
+    			append_dev(div, t);
+    			if (if_block1) if_block1.m(div, null);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if (/*charms*/ ctx[0][/*n*/ ctx[10]].isSubstitutableCharmsShown) {
+    				if (if_block0) ; else {
+    					if_block0 = create_if_block_2$1(ctx);
+    					if_block0.c();
+    					if_block0.m(div, t);
+    				}
+    			} else if (if_block0) {
+    				if_block0.d(1);
+    				if_block0 = null;
+    			}
+
+    			if (/*charms*/ ctx[0][/*n*/ ctx[10]].isScrennshotShown) {
+    				if (if_block1) {
+    					if_block1.p(ctx, dirty);
+    				} else {
+    					if_block1 = create_if_block_1$1(ctx);
+    					if_block1.c();
+    					if_block1.m(div, null);
+    				}
+    			} else if (if_block1) {
+    				if_block1.d(1);
+    				if_block1 = null;
+    			}
+
+    			if (!current || dirty & /*n*/ 1024 && div_id_value !== (div_id_value = "charm-table-row-" + /*n*/ ctx[10])) {
+    				attr_dev(div, "id", div_id_value);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 300 }, true);
+    				div_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 300 }, false);
+    			div_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			if (if_block0) if_block0.d();
+    			if (if_block1) if_block1.d();
+    			if (detaching && div_transition) div_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_after_row_slot.name,
+    		type: "slot",
+    		source: "(204:6) ",
     		ctx
     	});
 
@@ -3267,8 +4099,8 @@ for (const input of inputs) {
     			div = element("div");
     			if_block.c();
     			attr_dev(div, "id", "charm-list");
-    			attr_dev(div, "class", "svelte-j3r0nf");
-    			add_location(div, file$4, 143, 0, 3689);
+    			attr_dev(div, "class", "svelte-6zqbt3");
+    			add_location(div, file$4, 176, 0, 5519);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3361,14 +4193,16 @@ for (const input of inputs) {
     			value: v => v.id,
     			sortable: true,
     			filterOptions: rows => {
+    				const UNIT = 50;
+
     				// generate groupings of 0-10, 10-20 etc...
     				let nums = {};
 
     				rows.forEach(row => {
-    					let num = Math.floor(row.id / 10);
+    					let num = Math.floor(row.id / UNIT);
 
     					if (nums[num] === undefined) nums[num] = {
-    						name: `${num * 10} 〜 ${(num + 1) * 10}`,
+    						name: `${num * UNIT + 1} 〜 ${(num + 1) * UNIT}`,
     						value: num
     					};
     				});
@@ -3378,7 +4212,7 @@ for (const input of inputs) {
 
     				return Object.values(nums);
     			},
-    			filterValue: v => Math.floor(v.id / 10)
+    			filterValue: v => Math.floor((v.id - 1) / 50)
     		},
     		// {
     		//   key: "first_name",
@@ -3441,16 +4275,30 @@ for (const input of inputs) {
     			title: "合計Lv",
     			value: v => v.evaluation,
     			sortable: true
+    		},
+    		{
+    			key: "image",
+    			title: "画像",
+    			value: v => v.imagename ? "有り" : "無し",
+    			renderValue: v => v.imagename
+    			? "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-camera-fill\" viewBox=\"0 0 16 16\"> <path d=\"M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z\"/> <path d=\"M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z\"/> </svg>"
+    			: "",
+    			sortable: true,
+    			filterOptions: ["有り", "無し"],
+    			onClick: toggleScreenshot
+    		},
+    		{
+    			key: "substitutableCharms",
+    			title: "代替",
+    			value: v => v.substitutableCharms ? "有り" : "無し",
+    			renderValue: v => v.substitutableCharms
+    			? "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-arrow-up-square-fill\" viewBox=\"0 0 16 16\"> <path d=\"M2 16a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2zm6.5-4.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 1 0z\"/> </svg>"
+    			: "",
+    			sortable: true,
+    			filterOptions: ["有り", "無し"]
     		}
-    	]; // {
-    	//   key: "gender",
-    	//   title: "GENDER",
+    	];
 
-    	//   value: v => v.gender,
-    	//   renderValue: v => v.gender.charAt(0).toUpperCase() + v.gender.substring(1), // capitalize
-    	//   sortable: true,
-    	//   filterOptions: ["male", "female"] // provide array
-    	// }
     	// fields
     	let charmManager = new MHRiseCharmManager();
 
@@ -3466,13 +4314,43 @@ for (const input of inputs) {
     	};
 
     	init();
+
+    	// handlers
+    	function onClickRow({ e, index }) {
+    		console.log("called!!!");
+    		$$invalidate(0, charms[index].isSubstitutableCharmsShown = !charms[index].isSubstitutableCharmsShown, charms);
+    	}
+
+    	async function toggleScreenshot({ e, index }) {
+    		e.stopPropagation();
+    		const toShow = !charms[index].isScrennshotShown;
+    		$$invalidate(0, charms[index].isScrennshotShown = toShow, charms);
+
+    		if (toShow) {
+    			// console.log(charms[index].imagename)
+    			const screenshot = await charmManager.getScreenshot(charms[index].imagename);
+
+    			// await new Promise((resolve) => requestAnimationFrame(resolve))
+    			cv.imshow(`charm-table-row-${index}-screenshot`, screenshot);
+    		}
+    	}
+
     	const writable_props = [];
 
     	Object_1.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<CharmList> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1$1.warn(`<CharmList> was created with unknown prop '${key}'`);
     	});
 
+    	const click_handler = (col, row, n, e) => {
+    		if (col.onClick) {
+    			col.onClick({ e, row, col, index: n });
+    		}
+    	};
+
+    	const click_handler_1 = (n, e) => onClickRow({ e, index: n });
+
     	$$self.$capture_state = () => ({
+    		slide,
     		SvelteTable,
     		MHRiseCharmManager,
     		skillToSlotLevel,
@@ -3482,7 +4360,9 @@ for (const input of inputs) {
     		columns,
     		charmManager,
     		charms,
-    		init
+    		init,
+    		onClickRow,
+    		toggleScreenshot
     	});
 
     	$$self.$inject_state = $$props => {
@@ -3494,13 +4374,21 @@ for (const input of inputs) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [charms, columns, updateCharmTable, onActivate];
+    	return [
+    		charms,
+    		columns,
+    		onClickRow,
+    		updateCharmTable,
+    		onActivate,
+    		click_handler,
+    		click_handler_1
+    	];
     }
 
     class CharmList extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$4, create_fragment$4, safe_not_equal, { updateCharmTable: 2, onActivate: 3 });
+    		init(this, options, instance$4, create_fragment$4, safe_not_equal, { updateCharmTable: 3, onActivate: 4 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -3511,7 +4399,7 @@ for (const input of inputs) {
     	}
 
     	get updateCharmTable() {
-    		return this.$$.ctx[2];
+    		return this.$$.ctx[3];
     	}
 
     	set updateCharmTable(value) {
@@ -3519,7 +4407,7 @@ for (const input of inputs) {
     	}
 
     	get onActivate() {
-    		return this.$$.ctx[3];
+    		return this.$$.ctx[4];
     	}
 
     	set onActivate(value) {
@@ -3613,7 +4501,7 @@ for (const input of inputs) {
     			t2 = text(t2_value);
     			t3 = text("%");
     			attr_dev(track, "kind", "captions");
-    			add_location(track, file$3, 84, 4, 2189);
+    			add_location(track, file$3, 85, 4, 2250);
     			attr_dev(video, "id", video_id_value = "video" + /*index*/ ctx[0]);
     			attr_dev(video, "class", "video-preview svelte-syjktf");
     			if (video.src !== (video_src_value = /*videoData*/ ctx[1])) attr_dev(video, "src", video_src_value);
@@ -3621,15 +4509,15 @@ for (const input of inputs) {
     			attr_dev(video, "height", videoHeight);
     			attr_dev(video, "alt", video_alt_value = "preview" + /*index*/ ctx[0]);
     			attr_dev(video, "style", video_style_value = /*isVideoVisible*/ ctx[2] ? "" : "display: none");
-    			add_location(video, file$3, 76, 2, 1922);
+    			add_location(video, file$3, 77, 2, 1983);
     			progress_1.value = /*progress*/ ctx[4];
     			attr_dev(progress_1, "class", "svelte-syjktf");
-    			add_location(progress_1, file$3, 88, 4, 2237);
+    			add_location(progress_1, file$3, 89, 4, 2298);
     			attr_dev(span, "class", "progress-text svelte-syjktf");
-    			add_location(span, file$3, 89, 4, 2280);
-    			add_location(div0, file$3, 87, 2, 2227);
+    			add_location(span, file$3, 90, 4, 2341);
+    			add_location(div0, file$3, 88, 2, 2288);
     			attr_dev(div1, "class", "video-reader svelte-syjktf");
-    			add_location(div1, file$3, 75, 0, 1893);
+    			add_location(div1, file$3, 76, 0, 1954);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3638,7 +4526,7 @@ for (const input of inputs) {
     			insert_dev(target, div1, anchor);
     			append_dev(div1, video);
     			append_dev(video, track);
-    			/*video_binding*/ ctx[8](video);
+    			/*video_binding*/ ctx[9](video);
     			append_dev(div1, t0);
     			append_dev(div1, div0);
     			append_dev(div0, progress_1);
@@ -3674,7 +4562,7 @@ for (const input of inputs) {
     		o: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div1);
-    			/*video_binding*/ ctx[8](null);
+    			/*video_binding*/ ctx[9](null);
     		}
     	};
 
@@ -3698,6 +4586,7 @@ for (const input of inputs) {
     	validate_slots("VideoReader", slots, []);
     	let { nSplits } = $$props;
     	let { index } = $$props;
+    	let { videoName } = $$props;
     	let { videoData } = $$props;
     	let { isVideoVisible = false } = $$props;
     	let { charmScanner } = $$props;
@@ -3740,7 +4629,7 @@ for (const input of inputs) {
     		}
 
     		capture.read(frame);
-    		charmScanner.scan(frame);
+    		charmScanner.scan(frame, videoName); // TODO: コールバックにして汎用クラスにする
     		seekFrames(1, FRAME_RATE);
     		$$invalidate(4, progress = (domVideo.currentTime - beginTime) / (endTime - beginTime));
     	};
@@ -3753,7 +4642,15 @@ for (const input of inputs) {
     		$$invalidate(3, domVideo.currentTime = Math.min(endTime, newPosition), domVideo);
     	};
 
-    	const writable_props = ["nSplits", "index", "videoData", "isVideoVisible", "charmScanner", "onFinish"];
+    	const writable_props = [
+    		"nSplits",
+    		"index",
+    		"videoName",
+    		"videoData",
+    		"isVideoVisible",
+    		"charmScanner",
+    		"onFinish"
+    	];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<VideoReader> was created with unknown prop '${key}'`);
@@ -3769,10 +4666,11 @@ for (const input of inputs) {
     	$$self.$$set = $$props => {
     		if ("nSplits" in $$props) $$invalidate(5, nSplits = $$props.nSplits);
     		if ("index" in $$props) $$invalidate(0, index = $$props.index);
+    		if ("videoName" in $$props) $$invalidate(6, videoName = $$props.videoName);
     		if ("videoData" in $$props) $$invalidate(1, videoData = $$props.videoData);
     		if ("isVideoVisible" in $$props) $$invalidate(2, isVideoVisible = $$props.isVideoVisible);
-    		if ("charmScanner" in $$props) $$invalidate(6, charmScanner = $$props.charmScanner);
-    		if ("onFinish" in $$props) $$invalidate(7, onFinish = $$props.onFinish);
+    		if ("charmScanner" in $$props) $$invalidate(7, charmScanner = $$props.charmScanner);
+    		if ("onFinish" in $$props) $$invalidate(8, onFinish = $$props.onFinish);
     	};
 
     	$$self.$capture_state = () => ({
@@ -3781,6 +4679,7 @@ for (const input of inputs) {
     		videoHeight,
     		nSplits,
     		index,
+    		videoName,
     		videoData,
     		isVideoVisible,
     		charmScanner,
@@ -3798,10 +4697,11 @@ for (const input of inputs) {
     	$$self.$inject_state = $$props => {
     		if ("nSplits" in $$props) $$invalidate(5, nSplits = $$props.nSplits);
     		if ("index" in $$props) $$invalidate(0, index = $$props.index);
+    		if ("videoName" in $$props) $$invalidate(6, videoName = $$props.videoName);
     		if ("videoData" in $$props) $$invalidate(1, videoData = $$props.videoData);
     		if ("isVideoVisible" in $$props) $$invalidate(2, isVideoVisible = $$props.isVideoVisible);
-    		if ("charmScanner" in $$props) $$invalidate(6, charmScanner = $$props.charmScanner);
-    		if ("onFinish" in $$props) $$invalidate(7, onFinish = $$props.onFinish);
+    		if ("charmScanner" in $$props) $$invalidate(7, charmScanner = $$props.charmScanner);
+    		if ("onFinish" in $$props) $$invalidate(8, onFinish = $$props.onFinish);
     		if ("beginTime" in $$props) beginTime = $$props.beginTime;
     		if ("endTime" in $$props) endTime = $$props.endTime;
     		if ("domVideo" in $$props) $$invalidate(3, domVideo = $$props.domVideo);
@@ -3821,6 +4721,7 @@ for (const input of inputs) {
     		domVideo,
     		progress,
     		nSplits,
+    		videoName,
     		charmScanner,
     		onFinish,
     		video_binding
@@ -3834,10 +4735,11 @@ for (const input of inputs) {
     		init(this, options, instance$3, create_fragment$3, safe_not_equal, {
     			nSplits: 5,
     			index: 0,
+    			videoName: 6,
     			videoData: 1,
     			isVideoVisible: 2,
-    			charmScanner: 6,
-    			onFinish: 7
+    			charmScanner: 7,
+    			onFinish: 8
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
@@ -3858,15 +4760,19 @@ for (const input of inputs) {
     			console.warn("<VideoReader> was created without expected prop 'index'");
     		}
 
+    		if (/*videoName*/ ctx[6] === undefined && !("videoName" in props)) {
+    			console.warn("<VideoReader> was created without expected prop 'videoName'");
+    		}
+
     		if (/*videoData*/ ctx[1] === undefined && !("videoData" in props)) {
     			console.warn("<VideoReader> was created without expected prop 'videoData'");
     		}
 
-    		if (/*charmScanner*/ ctx[6] === undefined && !("charmScanner" in props)) {
+    		if (/*charmScanner*/ ctx[7] === undefined && !("charmScanner" in props)) {
     			console.warn("<VideoReader> was created without expected prop 'charmScanner'");
     		}
 
-    		if (/*onFinish*/ ctx[7] === undefined && !("onFinish" in props)) {
+    		if (/*onFinish*/ ctx[8] === undefined && !("onFinish" in props)) {
     			console.warn("<VideoReader> was created without expected prop 'onFinish'");
     		}
     	}
@@ -3884,6 +4790,14 @@ for (const input of inputs) {
     	}
 
     	set index(value) {
+    		throw new Error("<VideoReader>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get videoName() {
+    		throw new Error("<VideoReader>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set videoName(value) {
     		throw new Error("<VideoReader>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
@@ -3931,7 +4845,7 @@ for (const input of inputs) {
     	return child_ctx;
     }
 
-    // (98:4) {#each $videoReaderProps as props}
+    // (103:4) {#each $videoReaderProps as props}
     function create_each_block$1(ctx) {
     	let videoreader;
     	let current;
@@ -3977,14 +4891,14 @@ for (const input of inputs) {
     		block,
     		id: create_each_block$1.name,
     		type: "each",
-    		source: "(98:4) {#each $videoReaderProps as props}",
+    		source: "(103:4) {#each $videoReaderProps as props}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (104:31) 
+    // (109:31) 
     function create_if_block_2(ctx) {
     	let t0;
     	let t1_value = 1 + Number(/*currentFileIndex*/ ctx[4]) + "";
@@ -4026,14 +4940,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(104:31) ",
+    		source: "(109:31) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (102:4) {#if isScanFinished}
+    // (107:4) {#if isScanFinished}
     function create_if_block_1(ctx) {
     	let t;
 
@@ -4054,14 +4968,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(102:4) {#if isScanFinished}",
+    		source: "(107:4) {#if isScanFinished}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (160:2) {:else}
+    // (165:2) {:else}
     function create_else_block(ctx) {
     	let div;
 
@@ -4069,7 +4983,7 @@ for (const input of inputs) {
     		c: function create() {
     			div = element("div");
     			div.textContent = "Loading Files...";
-    			add_location(div, file$2, 160, 4, 4510);
+    			add_location(div, file$2, 165, 4, 4652);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -4084,14 +4998,14 @@ for (const input of inputs) {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(160:2) {:else}",
+    		source: "(165:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (148:2) {#if fInitialized}
+    // (153:2) {#if fInitialized}
     function create_if_block(ctx) {
     	let div1;
     	let input;
@@ -4117,16 +5031,16 @@ for (const input of inputs) {
     			attr_dev(input, "accept", ".mp4");
     			input.multiple = true;
     			attr_dev(input, "class", "svelte-1nkacec");
-    			add_location(input, file$2, 149, 6, 4087);
+    			add_location(input, file$2, 154, 6, 4229);
     			if (img.src !== (img_src_value = "https://static.thenounproject.com/png/625182-200.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "");
     			attr_dev(img, "class", "svelte-1nkacec");
-    			add_location(img, file$2, 156, 6, 4304);
+    			add_location(img, file$2, 161, 6, 4446);
     			attr_dev(div0, "class", "svelte-1nkacec");
-    			add_location(div0, file$2, 157, 6, 4418);
+    			add_location(div0, file$2, 162, 6, 4560);
     			attr_dev(div1, "id", "upload");
     			attr_dev(div1, "class", "svelte-1nkacec");
-    			add_location(div1, file$2, 148, 4, 4063);
+    			add_location(div1, file$2, 153, 4, 4205);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
@@ -4161,7 +5075,7 @@ for (const input of inputs) {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(148:2) {#if fInitialized}",
+    		source: "(153:2) {#if fInitialized}",
     		ctx
     	});
 
@@ -4233,17 +5147,17 @@ for (const input of inputs) {
     			if_block1.c();
     			attr_dev(div0, "id", "status");
     			attr_dev(div0, "class", "svelte-1nkacec");
-    			add_location(div0, file$2, 96, 2, 2276);
+    			add_location(div0, file$2, 101, 2, 2418);
     			attr_dev(textarea, "placeholder", "charms will be exported here");
     			textarea.value = /*exportData*/ ctx[7];
     			attr_dev(textarea, "class", "svelte-1nkacec");
-    			add_location(textarea, file$2, 142, 6, 3872);
-    			add_location(div1, file$2, 143, 6, 3955);
+    			add_location(textarea, file$2, 147, 6, 4014);
+    			add_location(div1, file$2, 148, 6, 4097);
     			attr_dev(div2, "id", "result");
     			attr_dev(div2, "class", "svelte-1nkacec");
-    			add_location(div2, file$2, 140, 2, 3819);
+    			add_location(div2, file$2, 145, 2, 3961);
     			attr_dev(div3, "id", "scanner");
-    			add_location(div3, file$2, 95, 0, 2255);
+    			add_location(div3, file$2, 100, 0, 2397);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4424,9 +5338,9 @@ for (const input of inputs) {
 
     		// console.log(files)
     		for (let i = 0; i < files.length; i++) {
-    			console.log(Date());
     			$$invalidate(4, currentFileIndex = i);
     			const file = files[i];
+    			console.log(file.name, Date());
     			initVideoReaders();
     			const reader = new FileReader();
     			reader.readAsDataURL(file);
@@ -4442,6 +5356,7 @@ for (const input of inputs) {
     					videoReaderProps,
     					$videoReaderProps[index] = {
     						index,
+    						videoName: file.name,
     						videoData: reader.result,
     						charmScanner,
     						nSplits: N_VIDEO_SPLITS,
@@ -4467,11 +5382,15 @@ for (const input of inputs) {
     						1000
     					);
     				});
+
+    			const charms = charmScanner.getCharms();
+    			await charmManager.registerCharms(charms);
     		}
 
     		const charms = charmScanner.getCharms();
     		console.log(JSON.stringify(charms));
-    		await charmManager.registerCharms(charms);
+
+    		// await charmManager.registerCharms(charms)
     		$$invalidate(5, isScanFinished = true);
     	}
 
@@ -4694,9 +5613,9 @@ for (const input of inputs) {
     			: "nav-link p-2 ml-1") + " svelte-kkkgpk"));
 
     			attr_dev(button, "role", "tab");
-    			add_location(button, file$1, 27, 8, 584);
+    			add_location(button, file$1, 27, 8, 601);
     			attr_dev(li, "class", "nav-item svelte-kkkgpk");
-    			add_location(li, file$1, 26, 6, 554);
+    			add_location(li, file$1, 26, 6, 571);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, li, anchor);
@@ -4789,7 +5708,7 @@ for (const input of inputs) {
     			? "d-block"
     			: "d-none"));
 
-    			add_location(div, file$1, 40, 6, 935);
+    			add_location(div, file$1, 40, 6, 952);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -4920,12 +5839,12 @@ for (const input of inputs) {
     			}
 
     			attr_dev(ul, "class", "nav nav-tabs svelte-kkkgpk");
-    			add_location(ul, file$1, 24, 2, 486);
+    			add_location(ul, file$1, 24, 2, 503);
     			attr_dev(div0, "class", "nav-content svelte-kkkgpk");
-    			add_location(div0, file$1, 38, 2, 867);
+    			add_location(div0, file$1, 38, 2, 884);
     			attr_dev(div1, "id", "container");
     			attr_dev(div1, "class", "svelte-kkkgpk");
-    			add_location(div1, file$1, 23, 0, 463);
+    			add_location(div1, file$1, 23, 0, 480);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -5042,8 +5961,8 @@ for (const input of inputs) {
     	let { fInitialized } = $$props;
     	let { charmScanner } = $$props;
     	let { charmManager } = $$props;
-    	let currentNavOption = navOptions[2];
-    	let currentNavOptionId = 2;
+    	let currentNavOptionId = 1;
+    	let currentNavOption = navOptions[currentNavOptionId];
     	let onActivate = {};
 
     	function switchComponent(e) {
@@ -5079,8 +5998,8 @@ for (const input of inputs) {
     		fInitialized,
     		charmScanner,
     		charmManager,
-    		currentNavOption,
     		currentNavOptionId,
+    		currentNavOption,
     		onActivate,
     		switchComponent
     	});
@@ -5089,8 +6008,8 @@ for (const input of inputs) {
     		if ("fInitialized" in $$props) $$invalidate(0, fInitialized = $$props.fInitialized);
     		if ("charmScanner" in $$props) $$invalidate(1, charmScanner = $$props.charmScanner);
     		if ("charmManager" in $$props) $$invalidate(2, charmManager = $$props.charmManager);
-    		if ("currentNavOption" in $$props) currentNavOption = $$props.currentNavOption;
     		if ("currentNavOptionId" in $$props) $$invalidate(3, currentNavOptionId = $$props.currentNavOptionId);
+    		if ("currentNavOption" in $$props) currentNavOption = $$props.currentNavOption;
     		if ("onActivate" in $$props) $$invalidate(4, onActivate = $$props.onActivate);
     	};
 
@@ -5271,7 +6190,7 @@ for (const input of inputs) {
     }
 
     const TITLE = "MHRise Charm Scanner";
-    const VERSION = "0.2.3";
+    const VERSION = "0.2.4";
 
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
