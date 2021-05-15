@@ -8,6 +8,7 @@
   const N_VIDEO_SPLITS = (navigator.hardwareConcurrency || 8) / 2
 
   export let charmScanner
+  export let charmManager
   export let fInitialized
 
   let domInput    // input 要素
@@ -20,6 +21,7 @@
 
   // progress
   let currentFileIndex = -1
+  let isScanFinished = false
 
   // result
   let nScanedCharms = 0
@@ -35,10 +37,11 @@
 
   async function onFileSelected(e) {
     const files = e.target.files
-
     if ( files == null ) { return }
 
-    console.log(files)
+    isScanFinished = false
+
+    // console.log(files)
     for (let i = 0; i < files.length; i++) {
       console.log(Date())
       currentFileIndex = i
@@ -78,8 +81,8 @@
     const charms = charmScanner.getCharms()
     console.log(JSON.stringify(charms))
 
-    charmManager.registerCharms(charms)
-    // updateCharmTable()
+    await charmManager.registerCharms(charms)
+    isScanFinished = true
   }
 
 
@@ -96,8 +99,10 @@
       <VideoReader {...props} />
     {/each}
 
-    {#if files.length > 0}
-      [{1 + Number(currentFileIndex)}/{files.length}]
+    {#if isScanFinished}
+      Completed!
+    {:else if files.length > 0}
+      Processing {1 + Number(currentFileIndex)}/{files.length} file. Please wait...
     {/if}
 
     <!-- {#if video} -->
