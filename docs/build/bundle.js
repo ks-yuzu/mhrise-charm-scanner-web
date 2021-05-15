@@ -1115,10 +1115,17 @@ for (const input of inputs) {
     	let t20;
     	let br10;
     	let t21;
-    	let span;
+    	let span0;
     	let br11;
     	let t23;
     	let br12;
+    	let t24;
+    	let br13;
+    	let t25;
+    	let br14;
+    	let t26;
+    	let span1;
+    	let br15;
 
     	const block = {
     		c: function create() {
@@ -1164,11 +1171,19 @@ for (const input of inputs) {
     			t20 = text("\n      表中の \"合計スキルレベル\" は、");
     			br10 = element("br");
     			t21 = space();
-    			span = element("span");
-    			span.textContent = "(スキルを装飾品換算した場合のスロットLv) × (スキルLv) + (スロットLv)";
+    			span0 = element("span");
+    			span0.textContent = "(スキルを装飾品換算した場合のスロットLv) × (スキルLv) + (スロットLv)";
     			br11 = element("br");
     			t23 = text("\n      として計算しています。");
     			br12 = element("br");
+    			t24 = space();
+    			br13 = element("br");
+    			t25 = text("\n      例) 納刀術2, ひるみ軽減1, スロット 3-1-0 の場合");
+    			br14 = element("br");
+    			t26 = space();
+    			span1 = element("span");
+    			span1.textContent = "2 × 2 + 1 × 1 + 3 + 1 + 0 = 9";
+    			br15 = element("br");
     			add_location(br0, file$6, 4, 28, 215);
     			add_location(br1, file$6, 5, 26, 246);
     			attr_dev(p0, "class", "svelte-15kmx5q");
@@ -1192,10 +1207,15 @@ for (const input of inputs) {
     			add_location(br8, file$6, 21, 40, 754);
     			add_location(br9, file$6, 22, 6, 765);
     			add_location(br10, file$6, 23, 23, 793);
-    			attr_dev(span, "class", "px-3 font-weight-bold");
-    			add_location(span, file$6, 24, 6, 804);
+    			attr_dev(span0, "class", "px-3 font-weight-bold");
+    			add_location(span0, file$6, 24, 6, 804);
     			add_location(br11, file$6, 24, 92, 890);
     			add_location(br12, file$6, 25, 17, 912);
+    			add_location(br13, file$6, 26, 6, 923);
+    			add_location(br14, file$6, 27, 37, 965);
+    			attr_dev(span1, "class", "px-3");
+    			add_location(span1, file$6, 28, 6, 976);
+    			add_location(br15, file$6, 28, 61, 1031);
     			attr_dev(p2, "class", "svelte-15kmx5q");
     			add_location(p2, file$6, 19, 4, 677);
     			attr_dev(div0, "class", "card-body");
@@ -1246,10 +1266,17 @@ for (const input of inputs) {
     			append_dev(p2, t20);
     			append_dev(p2, br10);
     			append_dev(p2, t21);
-    			append_dev(p2, span);
+    			append_dev(p2, span0);
     			append_dev(p2, br11);
     			append_dev(p2, t23);
     			append_dev(p2, br12);
+    			append_dev(p2, t24);
+    			append_dev(p2, br13);
+    			append_dev(p2, t25);
+    			append_dev(p2, br14);
+    			append_dev(p2, t26);
+    			append_dev(p2, span1);
+    			append_dev(p2, br15);
     		},
     		p: noop,
     		i: noop,
