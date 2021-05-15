@@ -3,7 +3,7 @@
   import VideoReader from './VideoReader.svelte'
   import MHRiseCharmManager from './mhrise-charm-manager.js'
   import MHRiseCharmScanner from './mhrise-charm-scanner.js'
-  // import {fetchImage} from './util.js'
+  import SvelteTable from "svelte-table";
 
   const TITLE = 'MHRise Charm Scanner'
 
@@ -30,12 +30,105 @@
   let nScanedCharms = 0
   let exportData = ''
 
+  // charm-list
+  const N_CHARM_SLOT_MAX = 3
+  let charms = [];
+  const columns = [
+    {
+      key: "id",
+      title: "ID",
+      value: v => v.id,
+      sortable: true,
+      filterOptions: rows => {
+        // generate groupings of 0-10, 10-20 etc...
+        let nums = {};
+        rows.forEach(row => {
+          let num = Math.floor(row.id / 10);
+          if (nums[num] === undefined)
+            nums[num] = { name: `${num * 10} 〜 ${(num + 1) * 10}`, value: num };
+        });
+        // fix order
+        nums = Object.entries(nums)
+          .sort()
+          .reduce((o, [k, v]) => ((o[k] = v), o), {});
+        return Object.values(nums);
+      },
+      filterValue: v => Math.floor(v.id / 10),
+    },
+  // {
+  //   key: "first_name",
+  //   title: "FIRST_NAME",
+  //   value: v => v.first_name,
+  //   sortable: true,
+  //   filterOptions: rows => {
+  //     // use first letter of first_name to generate filter
+  //     let letrs = {};
+  //     rows.forEach(row => {
+  //       let letr = row.first_name.charAt(0);
+  //       if (letrs[letr] === undefined)
+  //         letrs[letr] = {
+  //           name: `${letr.toUpperCase()}`,
+  //           value: letr.toLowerCase()
+  //         };
+  //     });
+  //     // fix order
+  //     letrs = Object.entries(letrs)
+  //       .sort()
+  //       .reduce((o, [k, v]) => ((o[k] = v), o), {});
+  //     return Object.values(letrs);
+  //   },
+  //   filterValue: v => v.first_name.charAt(0).toLowerCase()
+  // },
+    {
+      key:     'skill1',
+      title:   'スキル1',
+      value:    v => v.skill1,
+      sortable: true,
+    },
+    {
+      key:     'skill1Level',
+      title:   'スキル1 Lv',
+      value:    v => v.skill1Level,
+      sortable: true,
+    },
+    {
+      key:     'skill2',
+      title:   'スキル2',
+      value:    v => v.skill2,
+      sortable: true,
+    },
+    {
+      key:     'skill2Level',
+      title:   'スキル2 Lv',
+      value:    v => v.skill2Level,
+      sortable: true,
+    },
+    ...Array.from({length: N_CHARM_SLOT_MAX}, (_, i) => i + 1).map(i => ({
+      key:        `slot${i}`,
+      title:      `スロット${i}`,
+      value:       v => v[`slot${i}`],
+      renderValue: v => v[`slot${i}`] || '-',
+      sortable:    true,
+      filterOptions: [0,1,2,3],
+    })),
+  // {
+  //   key: "gender",
+  //   title: "GENDER",
+  //   value: v => v.gender,
+  //   renderValue: v => v.gender.charAt(0).toUpperCase() + v.gender.substring(1), // capitalize
+  //   sortable: true,
+  //   filterOptions: ["male", "female"] // provide array
+  // }
+];
+
 
   window.addEventListener('load', async () => {
     charmScanner = new MHRiseCharmScanner()
     charmManager = new MHRiseCharmManager()
     await charmScanner.init()
     fInitialized = true
+
+    updateCharmTable()
   })
 
 
@@ -92,6 +185,7 @@
     console.log(JSON.stringify(charms))
 
     charmManager.registerCharms(charms)
+    updateCharmTable()
   }
 
 
@@ -99,19 +193,29 @@
     if ( ++countFinishVideoRead !== N_VIDEO_SPLITS ) { return }
     isVideoReadFinished = true
   }
+
+
+  const updateCharmTable = async () => {
+    const allCharms = await charmManager.searchCharms('select * from charms')
+    charms = [...allCharms].map((elm, index) => ({...elm, id: 1 + index}))
+  }
 </script>
 
 <main>
 	<h1>{TITLE}</h1>
-  <div id="description">
-    <p style="margin: auto; max-width: 100%; width: 54rem; height: 6rem; text-align: left">
-   モンスターハンターライズの護石を自動読み取りするツールです。<br>
-   Nintendo Switch の 30 秒キャプチャ動画を用意するだけで, 護石のスキルやスロットが読み取れます。
-   (<a href="sample/input.mp4">動画例</a>)<br>
-   <br>
-   出力形式は、&lt;スキル1&gt;,&lt;スキル1Lv&gt;,&lt;スキル2&gt;,&lt;スキル2Lv&gt;,&lt;スロット1Lv&gt;,&lt;スロット2Lv&gt;,&lt;スロット3Lv&gt; です。<br>
-   <a href="https://mhrise.wiki-db.com/sim/">泣きシミュ</a> さんでそのままインポートできます。<br>
+  <div id="description" class="card border border-light shadow-sm" style="max-width: 100%; width: 56rem; margin: auto">
+    <div class="card-body">
+    <p style="margin: auto; max-width: 100%; width: 54rem; text-align: left">
+      モンスターハンターライズの護石を自動読み取りするツールです。<br>
+      Nintendo Switch の 30 秒キャプチャ動画を用意するだけで, 護石のスキルやスロットが読み取れます。
+      (<a href="sample/input.mp4">動画例</a>)<br>
+      <br>
+      出力形式は、&lt;スキル1&gt;,&lt;スキル1Lv&gt;,&lt;スキル2&gt;,&lt;スキル2Lv&gt;,&lt;スロット1Lv&gt;,&lt;スロット2Lv&gt;,&lt;スロット3Lv&gt; です。<br>
+      <a href="https://mhrise.wiki-db.com/sim/">泣きシミュ</a> さんでそのままインポートできます。<br>
+      <br>
+      スキャンした護石を自動保存、管理する機能を追加中です。
     </p>
+    </div>
   </div>
 
 
@@ -176,9 +280,17 @@
 
   <div id="result">
     <!-- {#if fFinished} -->
-      <div>Found {nScanedCharms} charms.</div>
+      <div>Found {nScanedCharms} charms in this scan.</div>
       <textarea placeholder="charms will be exported here">{exportData}</textarea>
     <!-- {/if} -->
+  </div>
+
+  <div id="charm-list">
+    <SvelteTable columns="{columns}"
+                 rows="{charms}"
+                 classNameTable={['table table-striped table-hover table-responsible']}
+                 classNameThead={['table-dark hide-first-child.disabled']}>
+    </SvelteTable>
   </div>
 </main>
 
@@ -257,6 +369,14 @@
     width: 100%;
     height: 10rem;
     font-family: monospace;
+  }
+
+  :global(.hide-first-child > *:first-child) {
+    display: none;
+  }
+
+  :global(#charm-list td) {
+    padding: 0.3rem;
   }
 
 	@media (min-width: 640px) {

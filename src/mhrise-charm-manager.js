@@ -37,7 +37,7 @@ export default class MHRiseCharmManager {
   }
 
 
-  async searchCharm(query) {
+  async searchCharms(query) {
     const {tx, result} = await this.sql(query)
     return result.rows
   }
