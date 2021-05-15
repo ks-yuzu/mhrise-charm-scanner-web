@@ -88,6 +88,14 @@
 
 <main>
 	<h1>{title}</h1>
+  <div id="description">
+   モンスターハンターライズの護石を自動読み取りするツールです。<br>
+   Nintendo Switch の 30 秒キャプチャ動画を用意するだけで, 護石のスキルやスロットが読み取れます。
+   (<a href="sample/input.mp4">動画例</a>)<br>
+   <br>
+   現時点での出力形式は、スキルシミュレータへの登録スクリプトのみです。<br>
+  </div>
+
   {#if video}
     <div id="status">
       <video class="preview" src="{video}" alt="preview" bind:this={domVideo}>
@@ -138,6 +146,10 @@
 		font-size: 4em;
 		font-weight: 100;
 	}
+
+  #description {
+    margin: 0 0 2rem;
+  }
 
   #status {
     display: block;
