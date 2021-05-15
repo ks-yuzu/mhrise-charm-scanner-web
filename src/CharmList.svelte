@@ -19,6 +19,10 @@
     })
   }
 
+  export const onActivate = () => {
+    charms = null
+    updateCharmTable()
+  }
 
   // constants
   const N_CHARM_SLOT_MAX = 3

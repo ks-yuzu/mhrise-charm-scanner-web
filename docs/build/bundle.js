@@ -224,6 +224,9 @@ var app = (function () {
     function add_render_callback(fn) {
         render_callbacks.push(fn);
     }
+    function add_flush_callback(fn) {
+        flush_callbacks.push(fn);
+    }
     let flushing = false;
     const seen_callbacks = new Set();
     function flush() {
@@ -351,6 +354,14 @@ var app = (function () {
     }
     function get_spread_object(spread_props) {
         return typeof spread_props === 'object' && spread_props !== null ? spread_props : {};
+    }
+
+    function bind(component, name, callback) {
+        const index = component.$$.props[name];
+        if (index !== undefined) {
+            component.$$.bound[index] = callback;
+            callback(component.$$.ctx[index]);
+        }
     }
     function create_component(block) {
         block && block.c();
@@ -1214,7 +1225,7 @@ for (const input of inputs) {
     	return child_ctx;
     }
 
-    function get_each_context_1(ctx, list, i) {
+    function get_each_context_1$1(ctx, list, i) {
     	const child_ctx = ctx.slice();
     	child_ctx[36] = list[i];
     	return child_ctx;
@@ -2060,7 +2071,7 @@ for (const input of inputs) {
     }
 
     // (181:10) {#each columns as col}
-    function create_each_block_1(ctx) {
+    function create_each_block_1$1(ctx) {
     	let td;
     	let current_block_type_index;
     	let if_block;
@@ -2154,7 +2165,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block_1.name,
+    		id: create_each_block_1$1.name,
     		type: "each",
     		source: "(181:10) {#each columns as col}",
     		ctx
@@ -2176,7 +2187,7 @@ for (const input of inputs) {
     	let each_blocks = [];
 
     	for (let i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
+    		each_blocks[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
     	}
 
     	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -2223,13 +2234,13 @@ for (const input of inputs) {
     				let i;
 
     				for (i = 0; i < each_value_1.length; i += 1) {
-    					const child_ctx = get_each_context_1(ctx, each_value_1, i);
+    					const child_ctx = get_each_context_1$1(ctx, each_value_1, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(child_ctx, dirty);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block_1(child_ctx);
+    						each_blocks[i] = create_each_block_1$1(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(tr, null);
@@ -3032,7 +3043,7 @@ for (const input of inputs) {
     const { Object: Object_1 } = globals;
     const file$4 = "src/CharmList.svelte";
 
-    // (145:2) {:else}
+    // (149:2) {:else}
     function create_else_block$1(ctx) {
     	let sveltetable;
     	let current;
@@ -3078,14 +3089,14 @@ for (const input of inputs) {
     		block,
     		id: create_else_block$1.name,
     		type: "else",
-    		source: "(145:2) {:else}",
+    		source: "(149:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (141:2) {#if charms == null}
+    // (145:2) {#if charms == null}
     function create_if_block$1(ctx) {
     	let div;
     	let span;
@@ -3096,11 +3107,11 @@ for (const input of inputs) {
     			span = element("span");
     			span.textContent = "Loading...";
     			attr_dev(span, "class", "visually-hidden");
-    			add_location(span, file$4, 142, 6, 3740);
+    			add_location(span, file$4, 146, 6, 3821);
     			set_style(div, "margin-top", "20%");
     			attr_dev(div, "class", "spinner-border text-info");
     			attr_dev(div, "role", "status");
-    			add_location(div, file$4, 141, 4, 3657);
+    			add_location(div, file$4, 145, 4, 3738);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3118,7 +3129,7 @@ for (const input of inputs) {
     		block,
     		id: create_if_block$1.name,
     		type: "if",
-    		source: "(141:2) {#if charms == null}",
+    		source: "(145:2) {#if charms == null}",
     		ctx
     	});
 
@@ -3147,7 +3158,7 @@ for (const input of inputs) {
     			if_block.c();
     			attr_dev(div, "id", "charm-list");
     			attr_dev(div, "class", "svelte-j3r0nf");
-    			add_location(div, file$4, 139, 0, 3608);
+    			add_location(div, file$4, 143, 0, 3689);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3226,6 +3237,11 @@ for (const input of inputs) {
     				evaluation: skillToSlotLevel[elm.skill1] * elm.skill1Level + skillToSlotLevel[elm.skill2] * elm.skill2Level + elm.slot1 + elm.slot2 + elm.slot3
     			};
     		}));
+    	};
+
+    	const onActivate = () => {
+    		$$invalidate(0, charms = null);
+    		updateCharmTable();
     	};
 
     	const columns = [
@@ -3351,6 +3367,7 @@ for (const input of inputs) {
     		MHRiseCharmManager,
     		skillToSlotLevel,
     		updateCharmTable,
+    		onActivate,
     		N_CHARM_SLOT_MAX,
     		columns,
     		charmManager,
@@ -3367,13 +3384,13 @@ for (const input of inputs) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [charms, columns, updateCharmTable];
+    	return [charms, columns, updateCharmTable, onActivate];
     }
 
     class CharmList extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$4, create_fragment$4, safe_not_equal, { updateCharmTable: 2 });
+    		init(this, options, instance$4, create_fragment$4, safe_not_equal, { updateCharmTable: 2, onActivate: 3 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -3388,6 +3405,14 @@ for (const input of inputs) {
     	}
 
     	set updateCharmTable(value) {
+    		throw new Error("<CharmList>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get onActivate() {
+    		return this.$$.ctx[3];
+    	}
+
+    	set onActivate(value) {
     		throw new Error("<CharmList>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -4522,16 +4547,24 @@ for (const input of inputs) {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[6] = list[i];
-    	child_ctx[8] = i;
+    	child_ctx[8] = list[i];
+    	child_ctx[9] = list;
+    	child_ctx[10] = i;
     	return child_ctx;
     }
 
-    // (20:4) {#each navOptions as option, i}
-    function create_each_block(ctx) {
+    function get_each_context_1(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[8] = list[i];
+    	child_ctx[10] = i;
+    	return child_ctx;
+    }
+
+    // (26:4) {#each navOptions as option, i}
+    function create_each_block_1(ctx) {
     	let li;
     	let button;
-    	let t0_value = /*option*/ ctx[6].tabTitle + "";
+    	let t0_value = /*option*/ ctx[8].tabTitle + "";
     	let t0;
     	let button_class_value;
     	let t1;
@@ -4544,16 +4577,16 @@ for (const input of inputs) {
     			button = element("button");
     			t0 = text(t0_value);
     			t1 = space();
-    			attr_dev(button, "id", /*i*/ ctx[8]);
+    			attr_dev(button, "id", /*i*/ ctx[10]);
 
-    			attr_dev(button, "class", button_class_value = "" + (null_to_empty(/*currentNavOptionId*/ ctx[4] == /*i*/ ctx[8]
+    			attr_dev(button, "class", button_class_value = "" + (null_to_empty(/*currentNavOptionId*/ ctx[3] == /*i*/ ctx[10]
     			? "active nav-link p-2 ml-1"
     			: "nav-link p-2 ml-1") + " svelte-kkkgpk"));
 
     			attr_dev(button, "role", "tab");
-    			add_location(button, file$1, 21, 8, 471);
+    			add_location(button, file$1, 27, 8, 584);
     			attr_dev(li, "class", "nav-item svelte-kkkgpk");
-    			add_location(li, file$1, 20, 6, 441);
+    			add_location(li, file$1, 26, 6, 554);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, li, anchor);
@@ -4567,7 +4600,7 @@ for (const input of inputs) {
     			}
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*currentNavOptionId*/ 16 && button_class_value !== (button_class_value = "" + (null_to_empty(/*currentNavOptionId*/ ctx[4] == /*i*/ ctx[8]
+    			if (dirty & /*currentNavOptionId*/ 8 && button_class_value !== (button_class_value = "" + (null_to_empty(/*currentNavOptionId*/ ctx[3] == /*i*/ ctx[10]
     			? "active nav-link p-2 ml-1"
     			: "nav-link p-2 ml-1") + " svelte-kkkgpk"))) {
     				attr_dev(button, "class", button_class_value);
@@ -4582,29 +4615,23 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block.name,
+    		id: create_each_block_1.name,
     		type: "each",
-    		source: "(20:4) {#each navOptions as option, i}",
+    		source: "(26:4) {#each navOptions as option, i}",
     		ctx
     	});
 
     	return block;
     }
 
-    function create_fragment$1(ctx) {
-    	let div1;
-    	let ul;
-    	let t;
-    	let div0;
+    // (40:4) {#each navOptions as option, i}
+    function create_each_block(ctx) {
+    	let div;
     	let switch_instance;
+    	let updating_onActivate;
+    	let t;
+    	let div_class_value;
     	let current;
-    	let each_value = navOptions;
-    	validate_each_argument(each_value);
-    	let each_blocks = [];
-
-    	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
-    	}
 
     	const switch_instance_spread_levels = [
     		{
@@ -4614,13 +4641,21 @@ for (const input of inputs) {
     		}
     	];
 
-    	var switch_value = /*currentNavOption*/ ctx[3].component;
+    	function switch_instance_onActivate_binding(value) {
+    		/*switch_instance_onActivate_binding*/ ctx[6](value, /*i*/ ctx[10]);
+    	}
+
+    	var switch_value = navOptions[/*i*/ ctx[10]].component;
 
     	function switch_props(ctx) {
     		let switch_instance_props = {};
 
     		for (let i = 0; i < switch_instance_spread_levels.length; i += 1) {
     			switch_instance_props = assign(switch_instance_props, switch_instance_spread_levels[i]);
+    		}
+
+    		if (/*onActivate*/ ctx[4][/*i*/ ctx[10]] !== void 0) {
+    			switch_instance_props.onActivate = /*onActivate*/ ctx[4][/*i*/ ctx[10]];
     		}
 
     		return {
@@ -4630,73 +4665,34 @@ for (const input of inputs) {
     	}
 
     	if (switch_value) {
-    		switch_instance = new switch_value(switch_props());
+    		switch_instance = new switch_value(switch_props(ctx));
+    		binding_callbacks.push(() => bind(switch_instance, "onActivate", switch_instance_onActivate_binding));
     	}
 
     	const block = {
     		c: function create() {
-    			div1 = element("div");
-    			ul = element("ul");
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			t = space();
-    			div0 = element("div");
+    			div = element("div");
     			if (switch_instance) create_component(switch_instance.$$.fragment);
-    			attr_dev(ul, "class", "nav nav-tabs svelte-kkkgpk");
-    			add_location(ul, file$1, 18, 2, 373);
-    			attr_dev(div0, "class", "nav-content svelte-kkkgpk");
-    			add_location(div0, file$1, 32, 2, 754);
-    			attr_dev(div1, "id", "container");
-    			attr_dev(div1, "class", "svelte-kkkgpk");
-    			add_location(div1, file$1, 17, 0, 350);
-    		},
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    			t = space();
+
+    			attr_dev(div, "class", div_class_value = "h-100 " + (/*currentNavOptionId*/ ctx[3] == /*i*/ ctx[10]
+    			? "d-block"
+    			: "d-none"));
+
+    			add_location(div, file$1, 40, 6, 935);
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div1, anchor);
-    			append_dev(div1, ul);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(ul, null);
-    			}
-
-    			append_dev(div1, t);
-    			append_dev(div1, div0);
+    			insert_dev(target, div, anchor);
 
     			if (switch_instance) {
-    				mount_component(switch_instance, div0, null);
+    				mount_component(switch_instance, div, null);
     			}
 
+    			append_dev(div, t);
     			current = true;
     		},
-    		p: function update(ctx, [dirty]) {
-    			if (dirty & /*currentNavOptionId, switchComponent, navOptions*/ 48) {
-    				each_value = navOptions;
-    				validate_each_argument(each_value);
-    				let i;
-
-    				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(child_ctx, dirty);
-    					} else {
-    						each_blocks[i] = create_each_block(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(ul, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-
-    				each_blocks.length = each_value.length;
-    			}
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
 
     			const switch_instance_changes = (dirty & /*fInitialized, charmScanner, charmManager*/ 7)
     			? get_spread_update(switch_instance_spread_levels, [
@@ -4708,7 +4704,13 @@ for (const input of inputs) {
     				])
     			: {};
 
-    			if (switch_value !== (switch_value = /*currentNavOption*/ ctx[3].component)) {
+    			if (!updating_onActivate && dirty & /*onActivate*/ 16) {
+    				updating_onActivate = true;
+    				switch_instance_changes.onActivate = /*onActivate*/ ctx[4][/*i*/ ctx[10]];
+    				add_flush_callback(() => updating_onActivate = false);
+    			}
+
+    			if (switch_value !== (switch_value = navOptions[/*i*/ ctx[10]].component)) {
     				if (switch_instance) {
     					group_outros();
     					const old_component = switch_instance;
@@ -4721,15 +4723,22 @@ for (const input of inputs) {
     				}
 
     				if (switch_value) {
-    					switch_instance = new switch_value(switch_props());
+    					switch_instance = new switch_value(switch_props(ctx));
+    					binding_callbacks.push(() => bind(switch_instance, "onActivate", switch_instance_onActivate_binding));
     					create_component(switch_instance.$$.fragment);
     					transition_in(switch_instance.$$.fragment, 1);
-    					mount_component(switch_instance, div0, null);
+    					mount_component(switch_instance, div, t);
     				} else {
     					switch_instance = null;
     				}
     			} else if (switch_value) {
     				switch_instance.$set(switch_instance_changes);
+    			}
+
+    			if (!current || dirty & /*currentNavOptionId*/ 8 && div_class_value !== (div_class_value = "h-100 " + (/*currentNavOptionId*/ ctx[3] == /*i*/ ctx[10]
+    			? "d-block"
+    			: "d-none"))) {
+    				attr_dev(div, "class", div_class_value);
     			}
     		},
     		i: function intro(local) {
@@ -4742,9 +4751,167 @@ for (const input of inputs) {
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div1);
-    			destroy_each(each_blocks, detaching);
+    			if (detaching) detach_dev(div);
     			if (switch_instance) destroy_component(switch_instance);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block.name,
+    		type: "each",
+    		source: "(40:4) {#each navOptions as option, i}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$1(ctx) {
+    	let div1;
+    	let ul;
+    	let t;
+    	let div0;
+    	let current;
+    	let each_value_1 = navOptions;
+    	validate_each_argument(each_value_1);
+    	let each_blocks_1 = [];
+
+    	for (let i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
+    	}
+
+    	let each_value = navOptions;
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	const block = {
+    		c: function create() {
+    			div1 = element("div");
+    			ul = element("ul");
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].c();
+    			}
+
+    			t = space();
+    			div0 = element("div");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			attr_dev(ul, "class", "nav nav-tabs svelte-kkkgpk");
+    			add_location(ul, file$1, 24, 2, 486);
+    			attr_dev(div0, "class", "nav-content svelte-kkkgpk");
+    			add_location(div0, file$1, 38, 2, 867);
+    			attr_dev(div1, "id", "container");
+    			attr_dev(div1, "class", "svelte-kkkgpk");
+    			add_location(div1, file$1, 23, 0, 463);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, ul);
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].m(ul, null);
+    			}
+
+    			append_dev(div1, t);
+    			append_dev(div1, div0);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div0, null);
+    			}
+
+    			current = true;
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*currentNavOptionId, switchComponent, navOptions*/ 40) {
+    				each_value_1 = navOptions;
+    				validate_each_argument(each_value_1);
+    				let i;
+
+    				for (i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1(ctx, each_value_1, i);
+
+    					if (each_blocks_1[i]) {
+    						each_blocks_1[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks_1[i] = create_each_block_1(child_ctx);
+    						each_blocks_1[i].c();
+    						each_blocks_1[i].m(ul, null);
+    					}
+    				}
+
+    				for (; i < each_blocks_1.length; i += 1) {
+    					each_blocks_1[i].d(1);
+    				}
+
+    				each_blocks_1.length = each_value_1.length;
+    			}
+
+    			if (dirty & /*currentNavOptionId, navOptions, fInitialized, charmScanner, charmManager, onActivate*/ 31) {
+    				each_value = navOptions;
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(div0, null);
+    					}
+    				}
+
+    				group_outros();
+
+    				for (i = each_value.length; i < each_blocks.length; i += 1) {
+    					out(i);
+    				}
+
+    				check_outros();
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			each_blocks = each_blocks.filter(Boolean);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
+
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div1);
+    			destroy_each(each_blocks_1, detaching);
+    			destroy_each(each_blocks, detaching);
     		}
     	};
 
@@ -4767,10 +4934,15 @@ for (const input of inputs) {
     	let { charmManager } = $$props;
     	let currentNavOption = navOptions[2];
     	let currentNavOptionId = 2;
+    	let onActivate = {};
 
     	function switchComponent(e) {
-    		$$invalidate(4, currentNavOptionId = e.srcElement.id);
-    		$$invalidate(3, currentNavOption = navOptions[currentNavOptionId]);
+    		$$invalidate(3, currentNavOptionId = e.srcElement.id);
+    		currentNavOption = navOptions[currentNavOptionId];
+
+    		if (onActivate[currentNavOptionId]) {
+    			onActivate[currentNavOptionId]();
+    		}
     	}
 
     	const writable_props = ["fInitialized", "charmScanner", "charmManager"];
@@ -4778,6 +4950,13 @@ for (const input of inputs) {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Nav> was created with unknown prop '${key}'`);
     	});
+
+    	function switch_instance_onActivate_binding(value, i) {
+    		if ($$self.$$.not_equal(onActivate[i], value)) {
+    			onActivate[i] = value;
+    			$$invalidate(4, onActivate);
+    		}
+    	}
 
     	$$self.$$set = $$props => {
     		if ("fInitialized" in $$props) $$invalidate(0, fInitialized = $$props.fInitialized);
@@ -4792,6 +4971,7 @@ for (const input of inputs) {
     		charmManager,
     		currentNavOption,
     		currentNavOptionId,
+    		onActivate,
     		switchComponent
     	});
 
@@ -4799,8 +4979,9 @@ for (const input of inputs) {
     		if ("fInitialized" in $$props) $$invalidate(0, fInitialized = $$props.fInitialized);
     		if ("charmScanner" in $$props) $$invalidate(1, charmScanner = $$props.charmScanner);
     		if ("charmManager" in $$props) $$invalidate(2, charmManager = $$props.charmManager);
-    		if ("currentNavOption" in $$props) $$invalidate(3, currentNavOption = $$props.currentNavOption);
-    		if ("currentNavOptionId" in $$props) $$invalidate(4, currentNavOptionId = $$props.currentNavOptionId);
+    		if ("currentNavOption" in $$props) currentNavOption = $$props.currentNavOption;
+    		if ("currentNavOptionId" in $$props) $$invalidate(3, currentNavOptionId = $$props.currentNavOptionId);
+    		if ("onActivate" in $$props) $$invalidate(4, onActivate = $$props.onActivate);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -4811,9 +4992,10 @@ for (const input of inputs) {
     		fInitialized,
     		charmScanner,
     		charmManager,
-    		currentNavOption,
     		currentNavOptionId,
-    		switchComponent
+    		onActivate,
+    		switchComponent,
+    		switch_instance_onActivate_binding
     	];
     }
 

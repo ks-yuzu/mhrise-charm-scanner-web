@@ -8,9 +8,15 @@
   let currentNavOption = navOptions[2]
   let currentNavOptionId = 2
 
+  let onActivate = {}
+
   function switchComponent(e) {
     currentNavOptionId = e.srcElement.id
     currentNavOption = navOptions[currentNavOptionId]
+
+    if ( onActivate[currentNavOptionId] ) {
+      onActivate[currentNavOptionId]()
+    }
   }
 </script>
 
@@ -21,8 +27,8 @@
       <li class="nav-item">
         <button id={i}
                 class={currentNavOptionId == i ? "active nav-link p-2 ml-1" : "nav-link p-2 ml-1"}
-                on:click={switchComponent}
                 role="tab"
+                on:click={switchComponent}
                 >
           {option.tabTitle}
         </button>
@@ -31,8 +37,13 @@
   </ul>
 
   <div class="nav-content">
-    <svelte:component this={currentNavOption.component}
-                      {...{fInitialized, charmScanner, charmManager}} />
+    {#each navOptions as option, i}
+      <div class="h-100 {currentNavOptionId == i ? 'd-block' : 'd-none'}">
+        <svelte:component this={navOptions[i].component}
+                          {...{fInitialized, charmScanner, charmManager}}
+                          bind:onActivate={onActivate[i]}/>
+      </div>
+    {/each}
   </div>
 </div>
 
