@@ -2,6 +2,8 @@ import {fetchImage, countImageDiffAtPoint, getMostMatchedImage, promiseAllRecurs
 
 export default class MHRiseCharmScanner {
   MAX_PAGE = 34
+  COLUMNS_PER_PAGE = 10
+  ROWS_PER_PAGE    = 5
 
   POINT_RARITY       = new cv.Point(1190, 176)
   POINT_SLOTS        = new cv.Point(1160, 200)
@@ -11,9 +13,10 @@ export default class MHRiseCharmScanner {
   POINT_SKILL_LEVEL2 = new cv.Point(1190, 340)
   POINT_PAGE         = new cv.Point(787, 582)
 
-  POINT_CHARM_AREA_LEFT_TOP = new cv.Point(635, 359)
-  SIZE_CHARM_AREA           = new cv.Size(356, 199)
+  POINT_CHARM_AREA_LEFT_TOP = new cv.Point(634, 359)
+  SIZE_CHARM_AREA           = new cv.Size(357, 199)
 
+  charms = {}
   templates = null
 
   async init() {
@@ -34,20 +37,20 @@ export default class MHRiseCharmScanner {
         5:                    fetchImage('img/templates/lvl/5.jpg'),
       },
       slot: {
-        0:                    fetchImage('img/templates/slot/0.jpg'),
-        1:                    fetchImage('img/templates/slot/1.jpg'),
-        11:                   fetchImage('img/templates/slot/11.jpg'),
-        111:                  fetchImage('img/templates/slot/111.jpg'),
-        2:                    fetchImage('img/templates/slot/2.jpg'),
-        21:                   fetchImage('img/templates/slot/21.jpg'),
-        211:                  fetchImage('img/templates/slot/211.jpg'),
-        22:                   fetchImage('img/templates/slot/22.jpg'),
-        221:                  fetchImage('img/templates/slot/221.jpg'),
-        3:                    fetchImage('img/templates/slot/3.jpg'),
-        31:                   fetchImage('img/templates/slot/31.jpg'),
-        311:                  fetchImage('img/templates/slot/311.jpg'),
-        32:                   fetchImage('img/templates/slot/32.jpg'),
-        321:                  fetchImage('img/templates/slot/321.jpg'),
+        '0-0-0':                    fetchImage('img/templates/slot/0.jpg'),
+        '1-0-0':                    fetchImage('img/templates/slot/1.jpg'),
+        '1-1-0':                   fetchImage('img/templates/slot/11.jpg'),
+        '1-1-1':                  fetchImage('img/templates/slot/111.jpg'),
+        '2-0-0':                    fetchImage('img/templates/slot/2.jpg'),
+        '2-1-0':                   fetchImage('img/templates/slot/21.jpg'),
+        '2-1-1':                  fetchImage('img/templates/slot/211.jpg'),
+        '2-2-0':                   fetchImage('img/templates/slot/22.jpg'),
+        '2-2-1':                  fetchImage('img/templates/slot/221.jpg'),
+        '3-0-0':                    fetchImage('img/templates/slot/3.jpg'),
+        '3-1-0':                   fetchImage('img/templates/slot/31.jpg'),
+        '3-1-1':                  fetchImage('img/templates/slot/311.jpg'),
+        '3-2-0':                   fetchImage('img/templates/slot/32.jpg'),
+        '3-2-1':                  fetchImage('img/templates/slot/321.jpg'),
       },
       skill: {
         'KO術':               fetchImage('img/templates/skill/KO術.jpg'),
@@ -161,18 +164,66 @@ export default class MHRiseCharmScanner {
     }
 
     this.templates = await promiseAllRecursive(this.templates)
+    this.reset()
+  }
+
+  reset() {
+    this.charms = {}
+    for (let p = 1; p <= this.MAX_PAGE; p++) {
+      this.charms[p] = {}
+      for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
+        this.charms[p][r] = {}
+      }
+    }
+  }
+
+  isScaned(page, row, col) {
+    return this.charms[page][row][col] != null
+  }
+
+  store(params) {
+    const {page, row, col} = params
+    this.charms[page][row][col] = params
   }
 
   scan(screenshot) {
     const page          = this._getCurrentPage(screenshot)
     const [pos, match]  = this._getCurrentCharmPos(screenshot)
+
+    if ( match < 0.35 ) {
+      // 放置すると blink するので一致度が低い時はスキップ
+      // console.log(`low match degress ${match} for charm position searching. skip`)
+      return null
+    }
+
     const [col, row]    = pos
+    if (this.isScaned(page, row, col)) {
+      // console.log(`this charm is already scanned. skip: p${page} (${row}, ${col})`);
+      return null
+    }
+
     const rarity        = this._getRarity(screenshot)
     const slots         = this._getSlots(screenshot)
     const skills        = this._getSkills(screenshot)
     const skillLevels   = this._getSkillLevels(screenshot)
 
-    console.log({col, row, match, page, rarity, slots, skills, skillLevels})
+    // console.log(`scaned ${row} ${col}`)
+
+    this.store({page, row, col, rarity, slots, skills, skillLevels})
+    // return {col, row, match, page, rarity, slots, skills, skillLevels}
+  }
+
+  exportToJson() {
+    for (let p = 1; p <= this.MAX_PAGE; p++) {
+      for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
+        for (let c = 1; c <= this.COLUMNS_PER_PAGE; c++) {
+          const charm = this.charms[p][r][c]
+          if ( charm == null ) { continue }
+
+          console.log(`${charm.slots} ${charm.skills[0]} ${charm.skillLevels[0]} ${charm.skills[1]} ${charm.skillLevels[1]}`)
+        }
+      }
+    }
   }
 
   _getRarity(screenshot) {
