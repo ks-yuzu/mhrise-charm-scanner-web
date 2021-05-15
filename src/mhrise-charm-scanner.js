@@ -38,20 +38,20 @@ export default class MHRiseCharmScanner {
         5:                    fetchImage('img/templates/lvl/5.jpg'),
       },
       slot: {
-        '0-0-0':                    fetchImage('img/templates/slot/0.jpg'),
-        '1-0-0':                    fetchImage('img/templates/slot/1.jpg'),
-        '1-1-0':                   fetchImage('img/templates/slot/11.jpg'),
-        '1-1-1':                  fetchImage('img/templates/slot/111.jpg'),
-        '2-0-0':                    fetchImage('img/templates/slot/2.jpg'),
-        '2-1-0':                   fetchImage('img/templates/slot/21.jpg'),
-        '2-1-1':                  fetchImage('img/templates/slot/211.jpg'),
-        '2-2-0':                   fetchImage('img/templates/slot/22.jpg'),
-        '2-2-1':                  fetchImage('img/templates/slot/221.jpg'),
-        '3-0-0':                    fetchImage('img/templates/slot/3.jpg'),
-        '3-1-0':                   fetchImage('img/templates/slot/31.jpg'),
-        '3-1-1':                  fetchImage('img/templates/slot/311.jpg'),
-        '3-2-0':                   fetchImage('img/templates/slot/32.jpg'),
-        '3-2-1':                  fetchImage('img/templates/slot/321.jpg'),
+        '0-0-0':              fetchImage('img/templates/slot/0.jpg'),
+        '1-0-0':              fetchImage('img/templates/slot/1.jpg'),
+        '1-1-0':              fetchImage('img/templates/slot/11.jpg'),
+        '1-1-1':              fetchImage('img/templates/slot/111.jpg'),
+        '2-0-0':              fetchImage('img/templates/slot/2.jpg'),
+        '2-1-0':              fetchImage('img/templates/slot/21.jpg'),
+        '2-1-1':              fetchImage('img/templates/slot/211.jpg'),
+        '2-2-0':              fetchImage('img/templates/slot/22.jpg'),
+        '2-2-1':              fetchImage('img/templates/slot/221.jpg'),
+        '3-0-0':              fetchImage('img/templates/slot/3.jpg'),
+        '3-1-0':              fetchImage('img/templates/slot/31.jpg'),
+        '3-1-1':              fetchImage('img/templates/slot/311.jpg'),
+        '3-2-0':              fetchImage('img/templates/slot/32.jpg'),
+        '3-2-1':              fetchImage('img/templates/slot/321.jpg'),
       },
       skill: {
         'KO術':               fetchImage('img/templates/skill/KO術.jpg'),
@@ -272,6 +272,23 @@ for (const input of inputs) {
     return buf.join('\n')
   }
 
+  getCharms() {
+    const buf = []
+
+    for (let p = 1; p <= this.MAX_PAGE; p++) {
+      for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
+        for (let c = 1; c <= this.COLUMNS_PER_PAGE; c++) {
+          const charm = this.charms[p][r][c]
+          if ( charm == null ) { continue }
+
+          buf.push(charm)
+        }
+      }
+    }
+
+    return buf
+  }
+
   _getRarity(screenshot) {
     return getMostMatchedImage(screenshot, this.templates.rare, this.POINT_RARITY, 63, 63)
   }
@@ -289,8 +306,8 @@ for (const input of inputs) {
 
   _getSkillLevels(screenshot) {
     return [
-      getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL1, 0, 95),
-      getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL2, 0, 95),
+      getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL1, 0, 127),
+      getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL2, 0, 127),
     ]
   }
 

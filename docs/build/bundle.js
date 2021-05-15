@@ -1,9 +1,15 @@
 
-(function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35730/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(window.document);
+(function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(window.document);
 var app = (function () {
     'use strict';
 
     function noop() { }
+    function assign(tar, src) {
+        // @ts-ignore
+        for (const k in src)
+            tar[k] = src[k];
+        return tar;
+    }
     function add_location(element, file, line, column, char) {
         element.__svelte_meta = {
             loc: { file, line, column, char }
@@ -39,8 +45,9 @@ var app = (function () {
         const unsub = store.subscribe(...callbacks);
         return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
     }
-    function component_subscribe(component, store, callback) {
-        component.$$.on_destroy.push(subscribe(store, callback));
+    function set_store_value(store, ret, value = ret) {
+        store.set(value);
+        return ret;
     }
 
     function append(target, node) {
@@ -51,6 +58,12 @@ var app = (function () {
     }
     function detach(node) {
         node.parentNode.removeChild(node);
+    }
+    function destroy_each(iterations, detaching) {
+        for (let i = 0; i < iterations.length; i += 1) {
+            if (iterations[i])
+                iterations[i].d(detaching);
+        }
     }
     function element(name) {
         return document.createElement(name);
@@ -152,10 +165,40 @@ var app = (function () {
         }
     }
     const outroing = new Set();
+    let outros;
+    function group_outros() {
+        outros = {
+            r: 0,
+            c: [],
+            p: outros // parent group
+        };
+    }
+    function check_outros() {
+        if (!outros.r) {
+            run_all(outros.c);
+        }
+        outros = outros.p;
+    }
     function transition_in(block, local) {
         if (block && block.i) {
             outroing.delete(block);
             block.i(local);
+        }
+    }
+    function transition_out(block, local, detach, callback) {
+        if (block && block.o) {
+            if (outroing.has(block))
+                return;
+            outroing.add(block);
+            outros.c.push(() => {
+                outroing.delete(block);
+                if (callback) {
+                    if (detach)
+                        block.d(1);
+                    callback();
+                }
+            });
+            block.o(local);
         }
     }
 
@@ -164,6 +207,46 @@ var app = (function () {
         : typeof globalThis !== 'undefined'
             ? globalThis
             : global);
+
+    function get_spread_update(levels, updates) {
+        const update = {};
+        const to_null_out = {};
+        const accounted_for = { $$scope: 1 };
+        let i = levels.length;
+        while (i--) {
+            const o = levels[i];
+            const n = updates[i];
+            if (n) {
+                for (const key in o) {
+                    if (!(key in n))
+                        to_null_out[key] = 1;
+                }
+                for (const key in n) {
+                    if (!accounted_for[key]) {
+                        update[key] = n[key];
+                        accounted_for[key] = 1;
+                    }
+                }
+                levels[i] = n;
+            }
+            else {
+                for (const key in o) {
+                    accounted_for[key] = 1;
+                }
+            }
+        }
+        for (const key in to_null_out) {
+            if (!(key in update))
+                update[key] = undefined;
+        }
+        return update;
+    }
+    function get_spread_object(spread_props) {
+        return typeof spread_props === 'object' && spread_props !== null ? spread_props : {};
+    }
+    function create_component(block) {
+        block && block.c();
+    }
     function mount_component(component, target, anchor, customElement) {
         const { fragment, on_mount, on_destroy, after_update } = component.$$;
         fragment && fragment.m(target, anchor);
@@ -334,6 +417,15 @@ var app = (function () {
         dispatch_dev('SvelteDOMSetData', { node: text, data });
         text.data = data;
     }
+    function validate_each_argument(arg) {
+        if (typeof arg !== 'string' && !(arg && typeof arg === 'object' && 'length' in arg)) {
+            let msg = '{#each} only iterates over array-like objects.';
+            if (typeof Symbol === 'function' && arg && Symbol.iterator in arg) {
+                msg += ' You can use a spread to convert this iterable into an array.';
+            }
+            throw new Error(msg);
+        }
+    }
     function validate_slots(name, slot, keys) {
         for (const slot_key of Object.keys(slot)) {
             if (!~keys.indexOf(slot_key)) {
@@ -411,6 +503,405 @@ var app = (function () {
             };
         }
         return { set, update, subscribe };
+    }
+
+    /* src/VideoReader.svelte generated by Svelte v3.38.2 */
+
+    const file$1 = "src/VideoReader.svelte";
+
+    function create_fragment$1(ctx) {
+    	let div1;
+    	let video;
+    	let track;
+    	let video_id_value;
+    	let video_src_value;
+    	let video_alt_value;
+    	let video_style_value;
+    	let t0;
+    	let div0;
+    	let progress_1;
+    	let t1;
+    	let span;
+    	let t2_value = Math.floor(/*progress*/ ctx[4] * 100) + "";
+    	let t2;
+    	let t3;
+
+    	const block = {
+    		c: function create() {
+    			div1 = element("div");
+    			video = element("video");
+    			track = element("track");
+    			t0 = space();
+    			div0 = element("div");
+    			progress_1 = element("progress");
+    			t1 = space();
+    			span = element("span");
+    			t2 = text(t2_value);
+    			t3 = text("%");
+    			attr_dev(track, "kind", "captions");
+    			add_location(track, file$1, 84, 4, 2189);
+    			attr_dev(video, "id", video_id_value = "video" + /*index*/ ctx[0]);
+    			attr_dev(video, "class", "video-preview svelte-11sf1gl");
+    			if (video.src !== (video_src_value = /*videoData*/ ctx[1])) attr_dev(video, "src", video_src_value);
+    			attr_dev(video, "width", videoWidth);
+    			attr_dev(video, "height", videoHeight);
+    			attr_dev(video, "alt", video_alt_value = "preview" + /*index*/ ctx[0]);
+    			attr_dev(video, "style", video_style_value = /*isVideoVisible*/ ctx[2] ? "" : "display: none");
+    			add_location(video, file$1, 76, 2, 1922);
+    			progress_1.value = /*progress*/ ctx[4];
+    			attr_dev(progress_1, "class", "svelte-11sf1gl");
+    			add_location(progress_1, file$1, 88, 4, 2237);
+    			attr_dev(span, "class", "progress-text");
+    			add_location(span, file$1, 89, 4, 2280);
+    			add_location(div0, file$1, 87, 2, 2227);
+    			attr_dev(div1, "class", "video-reader svelte-11sf1gl");
+    			add_location(div1, file$1, 75, 0, 1893);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, video);
+    			append_dev(video, track);
+    			/*video_binding*/ ctx[8](video);
+    			append_dev(div1, t0);
+    			append_dev(div1, div0);
+    			append_dev(div0, progress_1);
+    			append_dev(div0, t1);
+    			append_dev(div0, span);
+    			append_dev(span, t2);
+    			append_dev(span, t3);
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*index*/ 1 && video_id_value !== (video_id_value = "video" + /*index*/ ctx[0])) {
+    				attr_dev(video, "id", video_id_value);
+    			}
+
+    			if (dirty & /*videoData*/ 2 && video.src !== (video_src_value = /*videoData*/ ctx[1])) {
+    				attr_dev(video, "src", video_src_value);
+    			}
+
+    			if (dirty & /*index*/ 1 && video_alt_value !== (video_alt_value = "preview" + /*index*/ ctx[0])) {
+    				attr_dev(video, "alt", video_alt_value);
+    			}
+
+    			if (dirty & /*isVideoVisible*/ 4 && video_style_value !== (video_style_value = /*isVideoVisible*/ ctx[2] ? "" : "display: none")) {
+    				attr_dev(video, "style", video_style_value);
+    			}
+
+    			if (dirty & /*progress*/ 16) {
+    				prop_dev(progress_1, "value", /*progress*/ ctx[4]);
+    			}
+
+    			if (dirty & /*progress*/ 16 && t2_value !== (t2_value = Math.floor(/*progress*/ ctx[4] * 100) + "")) set_data_dev(t2, t2_value);
+    		},
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div1);
+    			/*video_binding*/ ctx[8](null);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$1.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    const FRAME_RATE = 29.97;
+    const videoWidth = 1280;
+    const videoHeight = 720;
+
+    function instance$1($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("VideoReader", slots, []);
+    	let { nSplits } = $$props;
+    	let { index } = $$props;
+    	let { videoData } = $$props;
+    	let { isVideoVisible = false } = $$props;
+    	let { charmScanner } = $$props;
+    	let { onFinish } = $$props;
+    	let beginTime, endTime;
+    	let domVideo;
+    	let capture;
+    	let frame = new cv.Mat(videoHeight, videoWidth, cv.CV_8UC4);
+    	let progress = 0;
+
+    	(async () => {
+    		await new Promise(r => requestAnimationFrame(r));
+    		await new Promise(r => $$invalidate(3, domVideo.oncanplay = r, domVideo));
+    		capture = new cv.VideoCapture(domVideo);
+    		beginTime = index * domVideo.duration / nSplits;
+    		endTime = (index + 1) * domVideo.duration / nSplits;
+    		domVideo.addEventListener("seeked", processCurrentFrame);
+
+    		// console.log( domVideo.currentTime, domVideo.duration, index, nSplits, beginTime, endTime )
+    		if (domVideo.currentTime != beginTime) {
+    			$$invalidate(3, domVideo.currentTime = beginTime, domVideo);
+    		} else {
+    			processCurrentFrame();
+    		}
+    	})();
+
+    	const processCurrentFrame = async () => {
+    		// console.log( {currentTime: domVideo.currentTime, endTime} )
+    		if (endTime - domVideo.currentTime < 1 / FRAME_RATE) {
+    			charmScanner.countCharms();
+
+    			// console.log(nScanedCharms)
+    			// insertScript = charmScanner.generateInsertScript()
+    			$$invalidate(4, progress = 1);
+
+    			// console.log(charmScanner.charms)
+    			onFinish();
+
+    			return;
+    		}
+
+    		capture.read(frame);
+    		charmScanner.scan(frame);
+    		seekFrames(1, FRAME_RATE);
+    		$$invalidate(4, progress = (domVideo.currentTime - beginTime) / (endTime - beginTime));
+    	};
+
+    	const seekFrames = (nFrames, fps) => {
+    		const currentFrame = domVideo.currentTime * fps;
+    		const newPosition = 0.00001 + (currentFrame + nFrames) / fps;
+
+    		// plus 0.00001 is workaround for safari
+    		$$invalidate(3, domVideo.currentTime = Math.min(endTime, newPosition), domVideo);
+    	};
+
+    	const writable_props = ["nSplits", "index", "videoData", "isVideoVisible", "charmScanner", "onFinish"];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<VideoReader> was created with unknown prop '${key}'`);
+    	});
+
+    	function video_binding($$value) {
+    		binding_callbacks[$$value ? "unshift" : "push"](() => {
+    			domVideo = $$value;
+    			$$invalidate(3, domVideo);
+    		});
+    	}
+
+    	$$self.$$set = $$props => {
+    		if ("nSplits" in $$props) $$invalidate(5, nSplits = $$props.nSplits);
+    		if ("index" in $$props) $$invalidate(0, index = $$props.index);
+    		if ("videoData" in $$props) $$invalidate(1, videoData = $$props.videoData);
+    		if ("isVideoVisible" in $$props) $$invalidate(2, isVideoVisible = $$props.isVideoVisible);
+    		if ("charmScanner" in $$props) $$invalidate(6, charmScanner = $$props.charmScanner);
+    		if ("onFinish" in $$props) $$invalidate(7, onFinish = $$props.onFinish);
+    	};
+
+    	$$self.$capture_state = () => ({
+    		FRAME_RATE,
+    		videoWidth,
+    		videoHeight,
+    		nSplits,
+    		index,
+    		videoData,
+    		isVideoVisible,
+    		charmScanner,
+    		onFinish,
+    		beginTime,
+    		endTime,
+    		domVideo,
+    		capture,
+    		frame,
+    		progress,
+    		processCurrentFrame,
+    		seekFrames
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("nSplits" in $$props) $$invalidate(5, nSplits = $$props.nSplits);
+    		if ("index" in $$props) $$invalidate(0, index = $$props.index);
+    		if ("videoData" in $$props) $$invalidate(1, videoData = $$props.videoData);
+    		if ("isVideoVisible" in $$props) $$invalidate(2, isVideoVisible = $$props.isVideoVisible);
+    		if ("charmScanner" in $$props) $$invalidate(6, charmScanner = $$props.charmScanner);
+    		if ("onFinish" in $$props) $$invalidate(7, onFinish = $$props.onFinish);
+    		if ("beginTime" in $$props) beginTime = $$props.beginTime;
+    		if ("endTime" in $$props) endTime = $$props.endTime;
+    		if ("domVideo" in $$props) $$invalidate(3, domVideo = $$props.domVideo);
+    		if ("capture" in $$props) capture = $$props.capture;
+    		if ("frame" in $$props) frame = $$props.frame;
+    		if ("progress" in $$props) $$invalidate(4, progress = $$props.progress);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [
+    		index,
+    		videoData,
+    		isVideoVisible,
+    		domVideo,
+    		progress,
+    		nSplits,
+    		charmScanner,
+    		onFinish,
+    		video_binding
+    	];
+    }
+
+    class VideoReader extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {
+    			nSplits: 5,
+    			index: 0,
+    			videoData: 1,
+    			isVideoVisible: 2,
+    			charmScanner: 6,
+    			onFinish: 7
+    		});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "VideoReader",
+    			options,
+    			id: create_fragment$1.name
+    		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*nSplits*/ ctx[5] === undefined && !("nSplits" in props)) {
+    			console.warn("<VideoReader> was created without expected prop 'nSplits'");
+    		}
+
+    		if (/*index*/ ctx[0] === undefined && !("index" in props)) {
+    			console.warn("<VideoReader> was created without expected prop 'index'");
+    		}
+
+    		if (/*videoData*/ ctx[1] === undefined && !("videoData" in props)) {
+    			console.warn("<VideoReader> was created without expected prop 'videoData'");
+    		}
+
+    		if (/*charmScanner*/ ctx[6] === undefined && !("charmScanner" in props)) {
+    			console.warn("<VideoReader> was created without expected prop 'charmScanner'");
+    		}
+
+    		if (/*onFinish*/ ctx[7] === undefined && !("onFinish" in props)) {
+    			console.warn("<VideoReader> was created without expected prop 'onFinish'");
+    		}
+    	}
+
+    	get nSplits() {
+    		throw new Error("<VideoReader>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set nSplits(value) {
+    		throw new Error("<VideoReader>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get index() {
+    		throw new Error("<VideoReader>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set index(value) {
+    		throw new Error("<VideoReader>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get videoData() {
+    		throw new Error("<VideoReader>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set videoData(value) {
+    		throw new Error("<VideoReader>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get isVideoVisible() {
+    		throw new Error("<VideoReader>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set isVideoVisible(value) {
+    		throw new Error("<VideoReader>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get charmScanner() {
+    		throw new Error("<VideoReader>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set charmScanner(value) {
+    		throw new Error("<VideoReader>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get onFinish() {
+    		throw new Error("<VideoReader>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set onFinish(value) {
+    		throw new Error("<VideoReader>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    class MHRiseCharmManager {
+      db = null
+
+
+      constructor() {
+        this.db = openDatabase('mhrise-charm-manager', '', 'MHRise charm manager', 5000);
+        this._createTable();
+      }
+
+
+      sql(query, placeholderValues) {
+        return new Promise((resolve, reject) => {
+          this.db.transaction(
+            tx => tx.executeSql(
+              query,
+              placeholderValues,
+              (tx, result) => resolve({tx, result}),
+              (...args) => reject(args)
+            )
+          );
+        })
+      }
+
+
+      async reset() {
+        await this.sql('drop table if exists charms');
+        await this._createTable();
+      }
+
+
+      async registerCharms(charms) {
+        const values = charms
+          .map(c => `("${c.skills[0]}", ${c.skillLevels[0]}, "${c.skills[1]}", ${c.skillLevels[1]}, ${c.slots.replace(/-/g, ', ')})`)
+          .join(',\n');
+        console.log(`insert or ignore into charms values ${values}`);
+        await this.sql(`insert or ignore into charms values ${values}`);
+      }
+
+
+      async searchCharm(query) {
+        const {tx, result} = await this.sql(query);
+        return result.rows
+      }
+
+
+      async _createTable() {
+        await this.sql(`create table if not exists charms(
+               skill1      varchar(20),
+               skill1Level int,
+               skill2      varchar(20),
+               skill2Level int,
+               slot1       int,
+               slot2       int,
+               slot3       int,
+               unique (skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3))`);
+      }
     }
 
     function fetchImage(path) {
@@ -544,20 +1035,20 @@ var app = (function () {
             5:                    fetchImage('img/templates/lvl/5.jpg'),
           },
           slot: {
-            '0-0-0':                    fetchImage('img/templates/slot/0.jpg'),
-            '1-0-0':                    fetchImage('img/templates/slot/1.jpg'),
-            '1-1-0':                   fetchImage('img/templates/slot/11.jpg'),
-            '1-1-1':                  fetchImage('img/templates/slot/111.jpg'),
-            '2-0-0':                    fetchImage('img/templates/slot/2.jpg'),
-            '2-1-0':                   fetchImage('img/templates/slot/21.jpg'),
-            '2-1-1':                  fetchImage('img/templates/slot/211.jpg'),
-            '2-2-0':                   fetchImage('img/templates/slot/22.jpg'),
-            '2-2-1':                  fetchImage('img/templates/slot/221.jpg'),
-            '3-0-0':                    fetchImage('img/templates/slot/3.jpg'),
-            '3-1-0':                   fetchImage('img/templates/slot/31.jpg'),
-            '3-1-1':                  fetchImage('img/templates/slot/311.jpg'),
-            '3-2-0':                   fetchImage('img/templates/slot/32.jpg'),
-            '3-2-1':                  fetchImage('img/templates/slot/321.jpg'),
+            '0-0-0':              fetchImage('img/templates/slot/0.jpg'),
+            '1-0-0':              fetchImage('img/templates/slot/1.jpg'),
+            '1-1-0':              fetchImage('img/templates/slot/11.jpg'),
+            '1-1-1':              fetchImage('img/templates/slot/111.jpg'),
+            '2-0-0':              fetchImage('img/templates/slot/2.jpg'),
+            '2-1-0':              fetchImage('img/templates/slot/21.jpg'),
+            '2-1-1':              fetchImage('img/templates/slot/211.jpg'),
+            '2-2-0':              fetchImage('img/templates/slot/22.jpg'),
+            '2-2-1':              fetchImage('img/templates/slot/221.jpg'),
+            '3-0-0':              fetchImage('img/templates/slot/3.jpg'),
+            '3-1-0':              fetchImage('img/templates/slot/31.jpg'),
+            '3-1-1':              fetchImage('img/templates/slot/311.jpg'),
+            '3-2-0':              fetchImage('img/templates/slot/32.jpg'),
+            '3-2-1':              fetchImage('img/templates/slot/321.jpg'),
           },
           skill: {
             'KO術':               fetchImage('img/templates/skill/KO術.jpg'),
@@ -778,6 +1269,23 @@ for (const input of inputs) {
         return buf.join('\n')
       }
 
+      getCharms() {
+        const buf = [];
+
+        for (let p = 1; p <= this.MAX_PAGE; p++) {
+          for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
+            for (let c = 1; c <= this.COLUMNS_PER_PAGE; c++) {
+              const charm = this.charms[p][r][c];
+              if ( charm == null ) { continue }
+
+              buf.push(charm);
+            }
+          }
+        }
+
+        return buf
+      }
+
       _getRarity(screenshot) {
         return getMostMatchedImage(screenshot, this.templates.rare, this.POINT_RARITY, 63, 63)
       }
@@ -795,8 +1303,8 @@ for (const input of inputs) {
 
       _getSkillLevels(screenshot) {
         return [
-          getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL1, 0, 95),
-          getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL2, 0, 95),
+          getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL1, 0, 127),
+          getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL2, 0, 127),
         ]
       }
 
@@ -833,129 +1341,123 @@ for (const input of inputs) {
     const { console: console_1 } = globals;
     const file = "src/App.svelte";
 
-    // (115:4) {:else}
-    function create_else_block(ctx) {
-    	let img;
-    	let img_src_value;
-    	let t;
-    	let div;
+    function get_each_context(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[21] = list[i];
+    	return child_ctx;
+    }
 
-    	function select_block_type_1(ctx, dirty) {
-    		if (/*fInitialized*/ ctx[0]) return create_if_block_1;
-    		return create_else_block_1;
+    // (119:6) {#each $videoReaderProps as props}
+    function create_each_block(ctx) {
+    	let videoreader;
+    	let current;
+    	const videoreader_spread_levels = [/*props*/ ctx[21]];
+    	let videoreader_props = {};
+
+    	for (let i = 0; i < videoreader_spread_levels.length; i += 1) {
+    		videoreader_props = assign(videoreader_props, videoreader_spread_levels[i]);
     	}
 
-    	let current_block_type = select_block_type_1(ctx);
-    	let if_block = current_block_type(ctx);
+    	videoreader = new VideoReader({ props: videoreader_props, $$inline: true });
 
     	const block = {
     		c: function create() {
-    			img = element("img");
-    			t = space();
-    			div = element("div");
-    			if_block.c();
-    			attr_dev(img, "class", "preview svelte-1697s2b");
-    			if (img.src !== (img_src_value = "sample/sample-img.png")) attr_dev(img, "src", img_src_value);
-    			attr_dev(img, "alt", "preview-sample");
-    			add_location(img, file, 115, 6, 3322);
-    			set_style(div, "height", "540px");
-    			set_style(div, "width", "960px");
-    			set_style(div, "display", "flex");
-    			set_style(div, "align-items", "center");
-    			set_style(div, "justify-content", "center");
-    			add_location(div, file, 117, 6, 3402);
+    			create_component(videoreader.$$.fragment);
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, img, anchor);
-    			insert_dev(target, t, anchor);
-    			insert_dev(target, div, anchor);
-    			if_block.m(div, null);
+    			mount_component(videoreader, target, anchor);
+    			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			if (current_block_type === (current_block_type = select_block_type_1(ctx)) && if_block) {
-    				if_block.p(ctx, dirty);
-    			} else {
-    				if_block.d(1);
-    				if_block = current_block_type(ctx);
+    			const videoreader_changes = (dirty & /*$videoReaderProps*/ 128)
+    			? get_spread_update(videoreader_spread_levels, [get_spread_object(/*props*/ ctx[21])])
+    			: {};
 
-    				if (if_block) {
-    					if_block.c();
-    					if_block.m(div, null);
-    				}
-    			}
+    			videoreader.$set(videoreader_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(videoreader.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(videoreader.$$.fragment, local);
+    			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(img);
-    			if (detaching) detach_dev(t);
-    			if (detaching) detach_dev(div);
-    			if_block.d();
+    			destroy_component(videoreader, detaching);
     		}
     	};
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block.name,
-    		type: "else",
-    		source: "(115:4) {:else}",
+    		id: create_each_block.name,
+    		type: "each",
+    		source: "(119:6) {#each $videoReaderProps as props}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (111:4) {#if video}
-    function create_if_block(ctx) {
-    	let video_1;
-    	let track;
-    	let video_1_src_value;
+    // (122:6) {#if files.length > 0}
+    function create_if_block_1(ctx) {
+    	let t0;
+    	let t1_value = 1 + Number(/*currentFileIndex*/ ctx[4]) + "";
+    	let t1;
+    	let t2;
+    	let t3_value = /*files*/ ctx[2].length + "";
+    	let t3;
+    	let t4;
 
     	const block = {
     		c: function create() {
-    			video_1 = element("video");
-    			track = element("track");
-    			attr_dev(track, "kind", "captions");
-    			add_location(track, file, 112, 8, 3265);
-    			attr_dev(video_1, "class", "preview svelte-1697s2b");
-    			if (video_1.src !== (video_1_src_value = /*video*/ ctx[4])) attr_dev(video_1, "src", video_1_src_value);
-    			attr_dev(video_1, "alt", "preview");
-    			add_location(video_1, file, 111, 6, 3184);
+    			t0 = text("[");
+    			t1 = text(t1_value);
+    			t2 = text("/");
+    			t3 = text(t3_value);
+    			t4 = text("]");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, video_1, anchor);
-    			append_dev(video_1, track);
-    			/*video_1_binding*/ ctx[11](video_1);
+    			insert_dev(target, t0, anchor);
+    			insert_dev(target, t1, anchor);
+    			insert_dev(target, t2, anchor);
+    			insert_dev(target, t3, anchor);
+    			insert_dev(target, t4, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*video*/ 16 && video_1.src !== (video_1_src_value = /*video*/ ctx[4])) {
-    				attr_dev(video_1, "src", video_1_src_value);
-    			}
+    			if (dirty & /*currentFileIndex*/ 16 && t1_value !== (t1_value = 1 + Number(/*currentFileIndex*/ ctx[4]) + "")) set_data_dev(t1, t1_value);
+    			if (dirty & /*files*/ 4 && t3_value !== (t3_value = /*files*/ ctx[2].length + "")) set_data_dev(t3, t3_value);
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(video_1);
-    			/*video_1_binding*/ ctx[11](null);
+    			if (detaching) detach_dev(t0);
+    			if (detaching) detach_dev(t1);
+    			if (detaching) detach_dev(t2);
+    			if (detaching) detach_dev(t3);
+    			if (detaching) detach_dev(t4);
     		}
     	};
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block.name,
+    		id: create_if_block_1.name,
     		type: "if",
-    		source: "(111:4) {#if video}",
+    		source: "(122:6) {#if files.length > 0}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (129:6) {:else}
-    function create_else_block_1(ctx) {
+    // (172:2) {:else}
+    function create_else_block(ctx) {
     	let div;
 
     	const block = {
     		c: function create() {
     			div = element("div");
     			div.textContent = "Loading Files...";
-    			add_location(div, file, 129, 8, 3957);
+    			add_location(div, file, 172, 2, 5020);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -968,17 +1470,17 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block_1.name,
+    		id: create_else_block.name,
     		type: "else",
-    		source: "(129:6) {:else}",
+    		source: "(172:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (119:6) {#if fInitialized}
-    function create_if_block_1(ctx) {
+    // (160:2) {#if fInitialized}
+    function create_if_block(ctx) {
     	let div1;
     	let input;
     	let t0;
@@ -1001,22 +1503,23 @@ for (const input of inputs) {
     			set_style(input, "display", "none");
     			attr_dev(input, "type", "file");
     			attr_dev(input, "accept", ".mp4");
+    			input.multiple = true;
     			attr_dev(input, "class", "svelte-1697s2b");
-    			add_location(input, file, 120, 10, 3601);
+    			add_location(input, file, 161, 4, 4617);
     			if (img.src !== (img_src_value = "https://static.thenounproject.com/png/625182-200.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "");
     			attr_dev(img, "class", "svelte-1697s2b");
-    			add_location(img, file, 125, 10, 3803);
+    			add_location(img, file, 168, 4, 4820);
     			attr_dev(div0, "class", "svelte-1697s2b");
-    			add_location(div0, file, 126, 10, 3887);
+    			add_location(div0, file, 169, 4, 4932);
     			attr_dev(div1, "id", "upload");
     			attr_dev(div1, "class", "svelte-1697s2b");
-    			add_location(div1, file, 119, 8, 3539);
+    			add_location(div1, file, 160, 2, 4595);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
     			append_dev(div1, input);
-    			/*input_binding*/ ctx[14](input);
+    			/*input_binding*/ ctx[11](input);
     			append_dev(div1, t0);
     			append_dev(div1, img);
     			append_dev(div1, t1);
@@ -1024,9 +1527,10 @@ for (const input of inputs) {
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(input, "change", /*change_handler*/ ctx[12], false, false, false),
-    					listen_dev(input, "change", /*input_change_handler*/ ctx[13]),
-    					listen_dev(div1, "click", /*click_handler*/ ctx[15], false, false, false)
+    					listen_dev(input, "change", /*change_handler*/ ctx[9], false, false, false),
+    					listen_dev(input, "change", /*input_change_handler*/ ctx[10]),
+    					listen_dev(img, "click", /*click_handler*/ ctx[12], false, false, false),
+    					listen_dev(div0, "click", /*click_handler_1*/ ctx[13], false, false, false)
     				];
 
     				mounted = true;
@@ -1035,7 +1539,7 @@ for (const input of inputs) {
     		p: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div1);
-    			/*input_binding*/ ctx[14](null);
+    			/*input_binding*/ ctx[11](null);
     			mounted = false;
     			run_all(dispose);
     		}
@@ -1043,9 +1547,9 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1.name,
+    		id: create_if_block.name,
     		type: "if",
-    		source: "(119:6) {#if fInitialized}",
+    		source: "(160:2) {#if fInitialized}",
     		ctx
     	});
 
@@ -1074,35 +1578,45 @@ for (const input of inputs) {
     	let br4;
     	let t11;
     	let div2;
-    	let t12;
     	let div1;
-    	let progress_1;
+    	let t12;
     	let t13;
-    	let t14_value = Math.floor(/*$progress*/ ctx[8] * 100) + "";
     	let t14;
-    	let t15;
-    	let t16;
     	let div4;
     	let div3;
+    	let t15;
+    	let t16;
     	let t17;
     	let t18;
-    	let t19;
-    	let t20;
     	let textarea;
+    	let current;
+    	let each_value = /*$videoReaderProps*/ ctx[7];
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	let if_block0 = /*files*/ ctx[2].length > 0 && create_if_block_1(ctx);
 
     	function select_block_type(ctx, dirty) {
-    		if (/*video*/ ctx[4]) return create_if_block;
+    		if (/*fInitialized*/ ctx[0]) return create_if_block;
     		return create_else_block;
     	}
 
     	let current_block_type = select_block_type(ctx);
-    	let if_block = current_block_type(ctx);
+    	let if_block1 = current_block_type(ctx);
 
     	const block = {
     		c: function create() {
     			main = element("main");
     			h1 = element("h1");
-    			h1.textContent = `${title}`;
+    			h1.textContent = `${TITLE}`;
     			t1 = space();
     			div0 = element("div");
     			p = element("p");
@@ -1119,62 +1633,65 @@ for (const input of inputs) {
     			br3 = element("br");
     			t8 = space();
     			a1 = element("a");
-    			a1.textContent = "泣きシミュさん";
-    			t10 = text(" でそのままインポートできます。");
+    			a1.textContent = "泣きシミュ";
+    			t10 = text(" さんでそのままインポートできます。");
     			br4 = element("br");
     			t11 = space();
     			div2 = element("div");
-    			if_block.c();
-    			t12 = space();
     			div1 = element("div");
-    			progress_1 = element("progress");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			t12 = space();
+    			if (if_block0) if_block0.c();
     			t13 = space();
-    			t14 = text(t14_value);
-    			t15 = text("%");
-    			t16 = space();
+    			if_block1.c();
+    			t14 = space();
     			div4 = element("div");
     			div3 = element("div");
-    			t17 = text("Found ");
-    			t18 = text(/*nScanedCharms*/ ctx[6]);
-    			t19 = text(" charms.");
-    			t20 = space();
+    			t15 = text("Found ");
+    			t16 = text(/*nScanedCharms*/ ctx[5]);
+    			t17 = text(" charms.");
+    			t18 = space();
     			textarea = element("textarea");
     			attr_dev(h1, "class", "svelte-1697s2b");
-    			add_location(h1, file, 96, 1, 2638);
-    			add_location(br0, file, 99, 33, 2805);
+    			add_location(h1, file, 103, 1, 2558);
+    			add_location(br0, file, 106, 33, 2725);
     			attr_dev(a0, "href", "sample/input.mp4");
-    			add_location(a0, file, 101, 4, 2876);
-    			add_location(br1, file, 101, 39, 2911);
-    			add_location(br2, file, 102, 3, 2919);
-    			add_location(br3, file, 103, 116, 3040);
+    			add_location(a0, file, 108, 4, 2796);
+    			add_location(br1, file, 108, 39, 2831);
+    			add_location(br2, file, 109, 3, 2839);
+    			add_location(br3, file, 110, 116, 2960);
     			attr_dev(a1, "href", "https://mhrise.wiki-db.com/sim/");
-    			add_location(a1, file, 104, 3, 3048);
-    			add_location(br4, file, 104, 72, 3117);
+    			add_location(a1, file, 111, 3, 2968);
+    			add_location(br4, file, 111, 72, 3037);
     			set_style(p, "margin", "auto");
     			set_style(p, "max-width", "100%");
     			set_style(p, "width", "54rem");
     			set_style(p, "height", "6rem");
     			set_style(p, "text-align", "left");
-    			add_location(p, file, 98, 4, 2684);
+    			add_location(p, file, 105, 4, 2604);
     			attr_dev(div0, "id", "description");
     			attr_dev(div0, "class", "svelte-1697s2b");
-    			add_location(div0, file, 97, 2, 2657);
-    			progress_1.value = /*$progress*/ ctx[8];
-    			attr_dev(progress_1, "class", "svelte-1697s2b");
-    			add_location(progress_1, file, 135, 6, 4037);
-    			add_location(div1, file, 134, 4, 4025);
+    			add_location(div0, file, 104, 2, 2577);
+    			attr_dev(div1, "id", "status");
+    			attr_dev(div1, "class", "svelte-1697s2b");
+    			add_location(div1, file, 117, 4, 3086);
     			attr_dev(div2, "id", "status");
     			attr_dev(div2, "class", "svelte-1697s2b");
-    			add_location(div2, file, 109, 2, 3144);
-    			add_location(div3, file, 157, 6, 4762);
-    			textarea.value = /*exportData*/ ctx[7];
+    			add_location(div2, file, 116, 2, 3064);
+    			add_location(div3, file, 177, 6, 5112);
+    			attr_dev(textarea, "placeholder", "charms will be exported here");
+    			textarea.value = /*exportData*/ ctx[6];
     			attr_dev(textarea, "class", "svelte-1697s2b");
-    			add_location(textarea, file, 158, 6, 4809);
+    			add_location(textarea, file, 178, 6, 5159);
     			attr_dev(div4, "id", "result");
     			attr_dev(div4, "class", "svelte-1697s2b");
-    			add_location(div4, file, 155, 2, 4709);
+    			add_location(div4, file, 175, 2, 5059);
     			attr_dev(main, "class", "svelte-1697s2b");
-    			add_location(main, file, 95, 0, 2630);
+    			add_location(main, file, 102, 0, 2550);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1201,53 +1718,109 @@ for (const input of inputs) {
     			append_dev(p, br4);
     			append_dev(main, t11);
     			append_dev(main, div2);
-    			if_block.m(div2, null);
-    			append_dev(div2, t12);
     			append_dev(div2, div1);
-    			append_dev(div1, progress_1);
-    			append_dev(div1, t13);
-    			append_dev(div1, t14);
-    			append_dev(div1, t15);
-    			append_dev(main, t16);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div1, null);
+    			}
+
+    			append_dev(div1, t12);
+    			if (if_block0) if_block0.m(div1, null);
+    			append_dev(main, t13);
+    			if_block1.m(main, null);
+    			append_dev(main, t14);
     			append_dev(main, div4);
     			append_dev(div4, div3);
+    			append_dev(div3, t15);
+    			append_dev(div3, t16);
     			append_dev(div3, t17);
-    			append_dev(div3, t18);
-    			append_dev(div3, t19);
-    			append_dev(div4, t20);
+    			append_dev(div4, t18);
     			append_dev(div4, textarea);
-    			/*textarea_binding*/ ctx[16](textarea);
+    			current = true;
     		},
     		p: function update(ctx, [dirty]) {
-    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
-    				if_block.p(ctx, dirty);
-    			} else {
-    				if_block.d(1);
-    				if_block = current_block_type(ctx);
+    			if (dirty & /*$videoReaderProps*/ 128) {
+    				each_value = /*$videoReaderProps*/ ctx[7];
+    				validate_each_argument(each_value);
+    				let i;
 
-    				if (if_block) {
-    					if_block.c();
-    					if_block.m(div2, t12);
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(div1, t12);
+    					}
+    				}
+
+    				group_outros();
+
+    				for (i = each_value.length; i < each_blocks.length; i += 1) {
+    					out(i);
+    				}
+
+    				check_outros();
+    			}
+
+    			if (/*files*/ ctx[2].length > 0) {
+    				if (if_block0) {
+    					if_block0.p(ctx, dirty);
+    				} else {
+    					if_block0 = create_if_block_1(ctx);
+    					if_block0.c();
+    					if_block0.m(div1, null);
+    				}
+    			} else if (if_block0) {
+    				if_block0.d(1);
+    				if_block0 = null;
+    			}
+
+    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block1) {
+    				if_block1.p(ctx, dirty);
+    			} else {
+    				if_block1.d(1);
+    				if_block1 = current_block_type(ctx);
+
+    				if (if_block1) {
+    					if_block1.c();
+    					if_block1.m(main, t14);
     				}
     			}
 
-    			if (dirty & /*$progress*/ 256) {
-    				prop_dev(progress_1, "value", /*$progress*/ ctx[8]);
-    			}
+    			if (!current || dirty & /*nScanedCharms*/ 32) set_data_dev(t16, /*nScanedCharms*/ ctx[5]);
 
-    			if (dirty & /*$progress*/ 256 && t14_value !== (t14_value = Math.floor(/*$progress*/ ctx[8] * 100) + "")) set_data_dev(t14, t14_value);
-    			if (dirty & /*nScanedCharms*/ 64) set_data_dev(t18, /*nScanedCharms*/ ctx[6]);
-
-    			if (dirty & /*exportData*/ 128) {
-    				prop_dev(textarea, "value", /*exportData*/ ctx[7]);
+    			if (!current || dirty & /*exportData*/ 64) {
+    				prop_dev(textarea, "value", /*exportData*/ ctx[6]);
     			}
     		},
-    		i: noop,
-    		o: noop,
+    		i: function intro(local) {
+    			if (current) return;
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			each_blocks = each_blocks.filter(Boolean);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
+
+    			current = false;
+    		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(main);
-    			if_block.d();
-    			/*textarea_binding*/ ctx[16](null);
+    			destroy_each(each_blocks, detaching);
+    			if (if_block0) if_block0.d();
+    			if_block1.d();
     		}
     	};
 
@@ -1262,94 +1835,121 @@ for (const input of inputs) {
     	return block;
     }
 
-    const title = "MHRise Charm Scanner";
+    const TITLE = "MHRise Charm Scanner";
+    const VIDEO_WIDTH = 1280; // switch のキャプチャ解像度
+    const VIDEO_HEIGHT = 720;
+    const VIDEO_FRAME_RATE = 29.97;
 
     function instance($$self, $$props, $$invalidate) {
-    	let $progress;
+    	let $videoReaderProps,
+    		$$unsubscribe_videoReaderProps = noop,
+    		$$subscribe_videoReaderProps = () => ($$unsubscribe_videoReaderProps(), $$unsubscribe_videoReaderProps = subscribe(videoReaderProps, $$value => $$invalidate(7, $videoReaderProps = $$value)), videoReaderProps);
+
+    	$$self.$$.on_destroy.push(() => $$unsubscribe_videoReaderProps());
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("App", slots, []);
-    	let scanner;
+    	const N_VIDEO_SPLITS = (navigator.hardwareConcurrency || 8) / 2;
     	let fInitialized = false;
-    	let fFinished = false;
+    	let charmScanner;
+    	let charmManager;
     	let domInput; // input 要素
-    	let files; // 選択されたローカルファイル
-    	let domVideo; // video 要素
-    	let video; // data uri
-    	let capture; // opencv の VideoCapture
+    	let files = []; // 選択されたローカルファイル
+
+    	// video reader
+    	let videoReaderProps = writable([]);
+
+    	validate_store(videoReaderProps, "videoReaderProps");
+    	$$subscribe_videoReaderProps();
+    	let countFinishVideoRead;
+    	let isVideoReadFinished;
+
+    	// progress
+    	let currentFileIndex = -1;
 
     	// result
-    	let domTextareaForScript;
-
     	let nScanedCharms = 0;
+
     	let exportData = "";
-    	const progress = writable(0);
-    	validate_store(progress, "progress");
-    	component_subscribe($$self, progress, value => $$invalidate(8, $progress = value));
 
     	window.addEventListener("load", async () => {
-    		scanner = new MHRiseCharmScanner();
-    		await scanner.init();
+    		charmScanner = new MHRiseCharmScanner();
+    		charmManager = new MHRiseCharmManager();
+    		await charmScanner.init();
     		$$invalidate(0, fInitialized = true);
     	});
 
+    	const initVideoReaders = () => {
+    		$$subscribe_videoReaderProps($$invalidate(3, videoReaderProps = writable([])));
+    		countFinishVideoRead = 0;
+    		isVideoReadFinished = false;
+    	};
+
     	const onFileSelected = async e => {
-    		const VIDEO_WIDTH = 1280;
-    		const VIDEO_HEIGHT = 720;
     		const files = e.target.files;
 
-    		if (files && files[0]) {
+    		if (files == null) {
+    			return;
+    		}
+
+    		console.log(files);
+
+    		for (let i = 0; i < files.length; i++) {
+    			console.log(Date());
+    			$$invalidate(4, currentFileIndex = i);
+    			const file = files[i];
+    			initVideoReaders();
     			const reader = new FileReader();
-    			reader.readAsDataURL(files[0]);
+    			reader.readAsDataURL(file);
 
     			await new Promise(resolve => {
     					reader.onload = resolve;
     				});
 
-    			$$invalidate(4, video = reader.result);
-    			await new Promise(r => setTimeout(r, 50)); // sleep
-    			$$invalidate(3, domVideo.width = VIDEO_WIDTH, domVideo); // necessary for capture.read()
-    			$$invalidate(3, domVideo.height = VIDEO_HEIGHT, domVideo);
-    			await new Promise(resolve => domVideo.addEventListener("canplay", resolve));
+    			for (let i = 0; i < N_VIDEO_SPLITS; i++) {
+    				const index = $videoReaderProps.length;
 
-    			// if ( capture ) { capture.delete() }
-    			capture = new cv.VideoCapture(domVideo);
-
-    			const screenshot = new cv.Mat(VIDEO_HEIGHT, VIDEO_WIDTH, cv.CV_8UC4);
-    			await new Promise(r => setTimeout(r, 200)); // sleep
-    			let loopCount = 0;
-    			const FRAME_RATE = 29.97;
-
-    			while (domVideo.duration != domVideo.currentTime) {
-    				capture.read(screenshot);
-    				scanner.scan(screenshot);
-    				const promiseSeek = new Promise(r => domVideo.addEventListener("seeked", r));
-    				seekFrames(domVideo, 1, FRAME_RATE);
-    				progress.set(domVideo.currentTime / domVideo.duration);
-    				await promiseSeek;
-
-    				if (++loopCount % 10 === 0) {
-    					$$invalidate(6, nScanedCharms = scanner.countCharms());
-    					$$invalidate(7, exportData = scanner.exportAsText());
-    				}
+    				set_store_value(
+    					videoReaderProps,
+    					$videoReaderProps[index] = {
+    						index,
+    						videoData: reader.result,
+    						charmScanner,
+    						nSplits: N_VIDEO_SPLITS,
+    						onFinish: onFinishVideoRead
+    					},
+    					$videoReaderProps
+    				);
     			}
 
-    			progress.set(1);
-    			console.log(scanner.charms);
-    			fFinished = true;
-    			screenshot.delete();
-    			reader.delete();
+    			// console.log($videoReaderProps)
+    			await new Promise(resolve => requestAnimationFrame(resolve));
+
+    			await new Promise(resolve => {
+    					setInterval(
+    						() => {
+    							$$invalidate(5, nScanedCharms = charmScanner.countCharms());
+    							$$invalidate(6, exportData = charmScanner.exportAsText());
+
+    							if (isVideoReadFinished) {
+    								resolve();
+    							}
+    						},
+    						1000
+    					);
+    				});
     		}
 
-    		$$invalidate(6, nScanedCharms = scanner.countCharms());
-    		$$invalidate(7, exportData = scanner.exportAsText());
-    	}; // exportData = scanner.generateInsertScript()
+    		const charms = charmScanner.getCharms();
+    		console.log(charms);
+    		charmManager.registerCharms(charms);
+    	};
 
-    	const seekFrames = (video, nFrames, fps = 29.97) => {
-    		const currentFrame = video.currentTime * fps;
-    		const newPosition = 0.00001 + (currentFrame + nFrames) / fps;
+    	const onFinishVideoRead = () => {
+    		if (++countFinishVideoRead !== N_VIDEO_SPLITS) {
+    			return;
+    		}
 
-    		// plus 0.00001 is workaround for safari
-    		video.currentTime = Math.min(video.duration, newPosition);
+    		isVideoReadFinished = true;
     	};
 
     	const writable_props = [];
@@ -1357,13 +1957,6 @@ for (const input of inputs) {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<App> was created with unknown prop '${key}'`);
     	});
-
-    	function video_1_binding($$value) {
-    		binding_callbacks[$$value ? "unshift" : "push"](() => {
-    			domVideo = $$value;
-    			$$invalidate(3, domVideo);
-    		});
-    	}
 
     	const change_handler = e => onFileSelected(e);
 
@@ -1383,47 +1976,49 @@ for (const input of inputs) {
     		domInput.click();
     	};
 
-    	function textarea_binding($$value) {
-    		binding_callbacks[$$value ? "unshift" : "push"](() => {
-    			domTextareaForScript = $$value;
-    			$$invalidate(5, domTextareaForScript);
-    		});
-    	}
+    	const click_handler_1 = () => {
+    		domInput.click();
+    	};
 
     	$$self.$capture_state = () => ({
     		writable,
+    		VideoReader,
+    		MHRiseCharmManager,
     		MHRiseCharmScanner,
-    		fetchImage,
-    		title,
-    		scanner,
+    		TITLE,
+    		VIDEO_WIDTH,
+    		VIDEO_HEIGHT,
+    		VIDEO_FRAME_RATE,
+    		N_VIDEO_SPLITS,
     		fInitialized,
-    		fFinished,
+    		charmScanner,
+    		charmManager,
     		domInput,
     		files,
-    		domVideo,
-    		video,
-    		capture,
-    		domTextareaForScript,
+    		videoReaderProps,
+    		countFinishVideoRead,
+    		isVideoReadFinished,
+    		currentFileIndex,
     		nScanedCharms,
     		exportData,
-    		progress,
+    		initVideoReaders,
     		onFileSelected,
-    		seekFrames,
-    		$progress
+    		onFinishVideoRead,
+    		$videoReaderProps
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ("scanner" in $$props) scanner = $$props.scanner;
     		if ("fInitialized" in $$props) $$invalidate(0, fInitialized = $$props.fInitialized);
-    		if ("fFinished" in $$props) fFinished = $$props.fFinished;
+    		if ("charmScanner" in $$props) charmScanner = $$props.charmScanner;
+    		if ("charmManager" in $$props) charmManager = $$props.charmManager;
     		if ("domInput" in $$props) $$invalidate(1, domInput = $$props.domInput);
     		if ("files" in $$props) $$invalidate(2, files = $$props.files);
-    		if ("domVideo" in $$props) $$invalidate(3, domVideo = $$props.domVideo);
-    		if ("video" in $$props) $$invalidate(4, video = $$props.video);
-    		if ("capture" in $$props) capture = $$props.capture;
-    		if ("domTextareaForScript" in $$props) $$invalidate(5, domTextareaForScript = $$props.domTextareaForScript);
-    		if ("nScanedCharms" in $$props) $$invalidate(6, nScanedCharms = $$props.nScanedCharms);
-    		if ("exportData" in $$props) $$invalidate(7, exportData = $$props.exportData);
+    		if ("videoReaderProps" in $$props) $$subscribe_videoReaderProps($$invalidate(3, videoReaderProps = $$props.videoReaderProps));
+    		if ("countFinishVideoRead" in $$props) countFinishVideoRead = $$props.countFinishVideoRead;
+    		if ("isVideoReadFinished" in $$props) isVideoReadFinished = $$props.isVideoReadFinished;
+    		if ("currentFileIndex" in $$props) $$invalidate(4, currentFileIndex = $$props.currentFileIndex);
+    		if ("nScanedCharms" in $$props) $$invalidate(5, nScanedCharms = $$props.nScanedCharms);
+    		if ("exportData" in $$props) $$invalidate(6, exportData = $$props.exportData);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -1434,20 +2029,17 @@ for (const input of inputs) {
     		fInitialized,
     		domInput,
     		files,
-    		domVideo,
-    		video,
-    		domTextareaForScript,
+    		videoReaderProps,
+    		currentFileIndex,
     		nScanedCharms,
     		exportData,
-    		$progress,
-    		progress,
+    		$videoReaderProps,
     		onFileSelected,
-    		video_1_binding,
     		change_handler,
     		input_change_handler,
     		input_binding,
     		click_handler,
-    		textarea_binding
+    		click_handler_1
     	];
     }
 
