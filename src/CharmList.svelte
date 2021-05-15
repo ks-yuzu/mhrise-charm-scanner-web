@@ -1,7 +1,7 @@
 <script>
   import SvelteTable from "svelte-table";
   import MHRiseCharmManager from './mhrise-charm-manager.js'
-
+  import {skillToSlotLevel} from './decorations.js'
 
   // props
   export const updateCharmTable = async () => {
@@ -10,7 +10,11 @@
       return {
         ...elm,
         id:         1 + index,
-        evaluation: 0,
+        evaluation: skillToSlotLevel[elm.skill1] * elm.skill1Level
+                  + skillToSlotLevel[elm.skill2] * elm.skill2Level
+                  + elm.slot1
+                  + elm.slot2
+                  + elm.slot3,
       }
     })
   }
@@ -99,7 +103,7 @@
     {
       key:      'evaluation',
       title:    '合計Lv',
-      value:    () => 0,
+      value:    v => v.evaluation,
       sortable: true,
     },
     // {
