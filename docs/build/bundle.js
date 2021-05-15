@@ -1,5 +1,5 @@
 
-(function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(window.document);
+(function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35730/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(window.document);
 var app = (function () {
     'use strict';
 
@@ -833,94 +833,129 @@ for (const input of inputs) {
     const { console: console_1 } = globals;
     const file = "src/App.svelte";
 
-    // (99:2) {#if video}
-    function create_if_block_2(ctx) {
-    	let div1;
-    	let video_1;
-    	let track;
-    	let video_1_src_value;
-    	let t0;
-    	let div0;
-    	let progress_1;
-    	let t1;
-    	let t2_value = Math.floor(/*$progress*/ ctx[9] * 100) + "";
-    	let t2;
-    	let t3;
+    // (115:4) {:else}
+    function create_else_block(ctx) {
+    	let img;
+    	let img_src_value;
+    	let t;
+    	let div;
+
+    	function select_block_type_1(ctx, dirty) {
+    		if (/*fInitialized*/ ctx[0]) return create_if_block_1;
+    		return create_else_block_1;
+    	}
+
+    	let current_block_type = select_block_type_1(ctx);
+    	let if_block = current_block_type(ctx);
 
     	const block = {
     		c: function create() {
-    			div1 = element("div");
-    			video_1 = element("video");
-    			track = element("track");
-    			t0 = space();
-    			div0 = element("div");
-    			progress_1 = element("progress");
-    			t1 = space();
-    			t2 = text(t2_value);
-    			t3 = text("%");
-    			attr_dev(track, "kind", "captions");
-    			add_location(track, file, 101, 8, 2813);
-    			attr_dev(video_1, "class", "preview svelte-5a7mj7");
-    			if (video_1.src !== (video_1_src_value = /*video*/ ctx[5])) attr_dev(video_1, "src", video_1_src_value);
-    			attr_dev(video_1, "alt", "preview");
-    			add_location(video_1, file, 100, 6, 2732);
-    			progress_1.value = /*$progress*/ ctx[9];
-    			attr_dev(progress_1, "class", "svelte-5a7mj7");
-    			add_location(progress_1, file, 104, 8, 2872);
-    			add_location(div0, file, 103, 6, 2858);
-    			attr_dev(div1, "id", "status");
-    			attr_dev(div1, "class", "svelte-5a7mj7");
-    			add_location(div1, file, 99, 4, 2708);
+    			img = element("img");
+    			t = space();
+    			div = element("div");
+    			if_block.c();
+    			attr_dev(img, "class", "preview svelte-1697s2b");
+    			if (img.src !== (img_src_value = "sample/sample-img.png")) attr_dev(img, "src", img_src_value);
+    			attr_dev(img, "alt", "preview-sample");
+    			add_location(img, file, 115, 6, 3322);
+    			set_style(div, "height", "540px");
+    			set_style(div, "width", "960px");
+    			set_style(div, "display", "flex");
+    			set_style(div, "align-items", "center");
+    			set_style(div, "justify-content", "center");
+    			add_location(div, file, 117, 6, 3402);
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div1, anchor);
-    			append_dev(div1, video_1);
-    			append_dev(video_1, track);
-    			/*video_1_binding*/ ctx[12](video_1);
-    			append_dev(div1, t0);
-    			append_dev(div1, div0);
-    			append_dev(div0, progress_1);
-    			append_dev(div0, t1);
-    			append_dev(div0, t2);
-    			append_dev(div0, t3);
+    			insert_dev(target, img, anchor);
+    			insert_dev(target, t, anchor);
+    			insert_dev(target, div, anchor);
+    			if_block.m(div, null);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*video*/ 32 && video_1.src !== (video_1_src_value = /*video*/ ctx[5])) {
-    				attr_dev(video_1, "src", video_1_src_value);
-    			}
+    			if (current_block_type === (current_block_type = select_block_type_1(ctx)) && if_block) {
+    				if_block.p(ctx, dirty);
+    			} else {
+    				if_block.d(1);
+    				if_block = current_block_type(ctx);
 
-    			if (dirty & /*$progress*/ 512) {
-    				prop_dev(progress_1, "value", /*$progress*/ ctx[9]);
+    				if (if_block) {
+    					if_block.c();
+    					if_block.m(div, null);
+    				}
     			}
-
-    			if (dirty & /*$progress*/ 512 && t2_value !== (t2_value = Math.floor(/*$progress*/ ctx[9] * 100) + "")) set_data_dev(t2, t2_value);
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div1);
-    			/*video_1_binding*/ ctx[12](null);
+    			if (detaching) detach_dev(img);
+    			if (detaching) detach_dev(t);
+    			if (detaching) detach_dev(div);
+    			if_block.d();
     		}
     	};
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_2.name,
-    		type: "if",
-    		source: "(99:2) {#if video}",
+    		id: create_else_block.name,
+    		type: "else",
+    		source: "(115:4) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (121:2) {:else}
-    function create_else_block(ctx) {
+    // (111:4) {#if video}
+    function create_if_block(ctx) {
+    	let video_1;
+    	let track;
+    	let video_1_src_value;
+
+    	const block = {
+    		c: function create() {
+    			video_1 = element("video");
+    			track = element("track");
+    			attr_dev(track, "kind", "captions");
+    			add_location(track, file, 112, 8, 3265);
+    			attr_dev(video_1, "class", "preview svelte-1697s2b");
+    			if (video_1.src !== (video_1_src_value = /*video*/ ctx[4])) attr_dev(video_1, "src", video_1_src_value);
+    			attr_dev(video_1, "alt", "preview");
+    			add_location(video_1, file, 111, 6, 3184);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, video_1, anchor);
+    			append_dev(video_1, track);
+    			/*video_1_binding*/ ctx[11](video_1);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*video*/ 16 && video_1.src !== (video_1_src_value = /*video*/ ctx[4])) {
+    				attr_dev(video_1, "src", video_1_src_value);
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(video_1);
+    			/*video_1_binding*/ ctx[11](null);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block.name,
+    		type: "if",
+    		source: "(111:4) {#if video}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (129:6) {:else}
+    function create_else_block_1(ctx) {
     	let div;
 
     	const block = {
     		c: function create() {
     			div = element("div");
     			div.textContent = "Loading Files...";
-    			add_location(div, file, 121, 2, 3392);
+    			add_location(div, file, 129, 8, 3957);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -933,16 +968,16 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block.name,
+    		id: create_else_block_1.name,
     		type: "else",
-    		source: "(121:2) {:else}",
+    		source: "(129:6) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (111:2) {#if fInitialized}
+    // (119:6) {#if fInitialized}
     function create_if_block_1(ctx) {
     	let div1;
     	let input;
@@ -962,26 +997,26 @@ for (const input of inputs) {
     			img = element("img");
     			t1 = space();
     			div0 = element("div");
-    			div0.textContent = "Choose Movie";
+    			div0.textContent = "Click to Select Movie";
     			set_style(input, "display", "none");
     			attr_dev(input, "type", "file");
     			attr_dev(input, "accept", ".mp4");
-    			attr_dev(input, "class", "svelte-5a7mj7");
-    			add_location(input, file, 112, 4, 3029);
+    			attr_dev(input, "class", "svelte-1697s2b");
+    			add_location(input, file, 120, 10, 3601);
     			if (img.src !== (img_src_value = "https://static.thenounproject.com/png/625182-200.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "");
-    			attr_dev(img, "class", "svelte-5a7mj7");
-    			add_location(img, file, 117, 4, 3201);
-    			attr_dev(div0, "class", "svelte-5a7mj7");
-    			add_location(div0, file, 118, 4, 3313);
+    			attr_dev(img, "class", "svelte-1697s2b");
+    			add_location(img, file, 125, 10, 3803);
+    			attr_dev(div0, "class", "svelte-1697s2b");
+    			add_location(div0, file, 126, 10, 3887);
     			attr_dev(div1, "id", "upload");
-    			attr_dev(div1, "class", "svelte-5a7mj7");
-    			add_location(div1, file, 111, 2, 3007);
+    			attr_dev(div1, "class", "svelte-1697s2b");
+    			add_location(div1, file, 119, 8, 3539);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
     			append_dev(div1, input);
-    			/*input_binding*/ ctx[15](input);
+    			/*input_binding*/ ctx[14](input);
     			append_dev(div1, t0);
     			append_dev(div1, img);
     			append_dev(div1, t1);
@@ -989,10 +1024,9 @@ for (const input of inputs) {
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(input, "change", /*change_handler*/ ctx[13], false, false, false),
-    					listen_dev(input, "change", /*input_change_handler*/ ctx[14]),
-    					listen_dev(img, "click", /*click_handler*/ ctx[16], false, false, false),
-    					listen_dev(div0, "click", /*click_handler_1*/ ctx[17], false, false, false)
+    					listen_dev(input, "change", /*change_handler*/ ctx[12], false, false, false),
+    					listen_dev(input, "change", /*input_change_handler*/ ctx[13]),
+    					listen_dev(div1, "click", /*click_handler*/ ctx[15], false, false, false)
     				];
 
     				mounted = true;
@@ -1001,7 +1035,7 @@ for (const input of inputs) {
     		p: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div1);
-    			/*input_binding*/ ctx[15](null);
+    			/*input_binding*/ ctx[14](null);
     			mounted = false;
     			run_all(dispose);
     		}
@@ -1011,61 +1045,7 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(111:2) {#if fInitialized}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (126:4) {#if fFinished}
-    function create_if_block(ctx) {
-    	let div;
-    	let t0;
-    	let t1;
-    	let t2;
-    	let textarea;
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			t0 = text(/*nScanedCharms*/ ctx[6]);
-    			t1 = text(" charms are scanned.");
-    			t2 = space();
-    			textarea = element("textarea");
-    			add_location(div, file, 126, 6, 3475);
-    			textarea.value = /*insertScript*/ ctx[8];
-    			attr_dev(textarea, "class", "svelte-5a7mj7");
-    			add_location(textarea, file, 127, 6, 3528);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			append_dev(div, t0);
-    			append_dev(div, t1);
-    			insert_dev(target, t2, anchor);
-    			insert_dev(target, textarea, anchor);
-    			/*textarea_binding*/ ctx[18](textarea);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*nScanedCharms*/ 64) set_data_dev(t0, /*nScanedCharms*/ ctx[6]);
-
-    			if (dirty & /*insertScript*/ 256) {
-    				prop_dev(textarea, "value", /*insertScript*/ ctx[8]);
-    			}
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			if (detaching) detach_dev(t2);
-    			if (detaching) detach_dev(textarea);
-    			/*textarea_binding*/ ctx[18](null);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block.name,
-    		type: "if",
-    		source: "(126:4) {#if fFinished}",
+    		source: "(119:6) {#if fInitialized}",
     		ctx
     	});
 
@@ -1077,10 +1057,11 @@ for (const input of inputs) {
     	let h1;
     	let t1;
     	let div0;
+    	let p;
     	let t2;
     	let br0;
     	let t3;
-    	let a;
+    	let a0;
     	let t5;
     	let br1;
     	let t6;
@@ -1088,19 +1069,34 @@ for (const input of inputs) {
     	let t7;
     	let br3;
     	let t8;
-    	let t9;
+    	let a1;
     	let t10;
+    	let br4;
+    	let t11;
+    	let div2;
+    	let t12;
     	let div1;
-    	let if_block0 = /*video*/ ctx[5] && create_if_block_2(ctx);
+    	let progress_1;
+    	let t13;
+    	let t14_value = Math.floor(/*$progress*/ ctx[8] * 100) + "";
+    	let t14;
+    	let t15;
+    	let t16;
+    	let div4;
+    	let div3;
+    	let t17;
+    	let t18;
+    	let t19;
+    	let t20;
+    	let textarea;
 
     	function select_block_type(ctx, dirty) {
-    		if (/*fInitialized*/ ctx[0]) return create_if_block_1;
+    		if (/*video*/ ctx[4]) return create_if_block;
     		return create_else_block;
     	}
 
     	let current_block_type = select_block_type(ctx);
-    	let if_block1 = current_block_type(ctx);
-    	let if_block2 = /*fFinished*/ ctx[1] && create_if_block(ctx);
+    	let if_block = current_block_type(ctx);
 
     	const block = {
     		c: function create() {
@@ -1109,40 +1105,76 @@ for (const input of inputs) {
     			h1.textContent = `${title}`;
     			t1 = space();
     			div0 = element("div");
+    			p = element("p");
     			t2 = text("モンスターハンターライズの護石を自動読み取りするツールです。");
     			br0 = element("br");
     			t3 = text("\n   Nintendo Switch の 30 秒キャプチャ動画を用意するだけで, 護石のスキルやスロットが読み取れます。\n   (");
-    			a = element("a");
-    			a.textContent = "動画例";
+    			a0 = element("a");
+    			a0.textContent = "動画例";
     			t5 = text(")");
     			br1 = element("br");
     			t6 = space();
     			br2 = element("br");
-    			t7 = text("\n   現時点での出力形式は、スキルシミュレータへの登録スクリプトのみです。");
+    			t7 = text("\n   出力形式は、<スキル1>,<スキル1Lv>,<スキル2>,<スキル2Lv>,<スロット1Lv>,<スロット2Lv>,<スロット3Lv> です。");
     			br3 = element("br");
     			t8 = space();
-    			if (if_block0) if_block0.c();
-    			t9 = space();
-    			if_block1.c();
-    			t10 = space();
+    			a1 = element("a");
+    			a1.textContent = "泣きシミュさん";
+    			t10 = text(" でそのままインポートできます。");
+    			br4 = element("br");
+    			t11 = space();
+    			div2 = element("div");
+    			if_block.c();
+    			t12 = space();
     			div1 = element("div");
-    			if (if_block2) if_block2.c();
-    			attr_dev(h1, "class", "svelte-5a7mj7");
-    			add_location(h1, file, 89, 1, 2444);
-    			add_location(br0, file, 91, 33, 2519);
-    			attr_dev(a, "href", "sample/input.mp4");
-    			add_location(a, file, 93, 4, 2590);
-    			add_location(br1, file, 93, 39, 2625);
-    			add_location(br2, file, 94, 3, 2633);
-    			add_location(br3, file, 95, 37, 2675);
+    			progress_1 = element("progress");
+    			t13 = space();
+    			t14 = text(t14_value);
+    			t15 = text("%");
+    			t16 = space();
+    			div4 = element("div");
+    			div3 = element("div");
+    			t17 = text("Found ");
+    			t18 = text(/*nScanedCharms*/ ctx[6]);
+    			t19 = text(" charms.");
+    			t20 = space();
+    			textarea = element("textarea");
+    			attr_dev(h1, "class", "svelte-1697s2b");
+    			add_location(h1, file, 96, 1, 2638);
+    			add_location(br0, file, 99, 33, 2805);
+    			attr_dev(a0, "href", "sample/input.mp4");
+    			add_location(a0, file, 101, 4, 2876);
+    			add_location(br1, file, 101, 39, 2911);
+    			add_location(br2, file, 102, 3, 2919);
+    			add_location(br3, file, 103, 116, 3040);
+    			attr_dev(a1, "href", "https://mhrise.wiki-db.com/sim/");
+    			add_location(a1, file, 104, 3, 3048);
+    			add_location(br4, file, 104, 72, 3117);
+    			set_style(p, "margin", "auto");
+    			set_style(p, "max-width", "100%");
+    			set_style(p, "width", "54rem");
+    			set_style(p, "height", "6rem");
+    			set_style(p, "text-align", "left");
+    			add_location(p, file, 98, 4, 2684);
     			attr_dev(div0, "id", "description");
-    			attr_dev(div0, "class", "svelte-5a7mj7");
-    			add_location(div0, file, 90, 2, 2463);
-    			attr_dev(div1, "id", "result");
-    			attr_dev(div1, "class", "svelte-5a7mj7");
-    			add_location(div1, file, 124, 2, 3431);
-    			attr_dev(main, "class", "svelte-5a7mj7");
-    			add_location(main, file, 88, 0, 2436);
+    			attr_dev(div0, "class", "svelte-1697s2b");
+    			add_location(div0, file, 97, 2, 2657);
+    			progress_1.value = /*$progress*/ ctx[8];
+    			attr_dev(progress_1, "class", "svelte-1697s2b");
+    			add_location(progress_1, file, 135, 6, 4037);
+    			add_location(div1, file, 134, 4, 4025);
+    			attr_dev(div2, "id", "status");
+    			attr_dev(div2, "class", "svelte-1697s2b");
+    			add_location(div2, file, 109, 2, 3144);
+    			add_location(div3, file, 157, 6, 4762);
+    			textarea.value = /*exportData*/ ctx[7];
+    			attr_dev(textarea, "class", "svelte-1697s2b");
+    			add_location(textarea, file, 158, 6, 4809);
+    			attr_dev(div4, "id", "result");
+    			attr_dev(div4, "class", "svelte-1697s2b");
+    			add_location(div4, file, 155, 2, 4709);
+    			attr_dev(main, "class", "svelte-1697s2b");
+    			add_location(main, file, 95, 0, 2630);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1152,70 +1184,70 @@ for (const input of inputs) {
     			append_dev(main, h1);
     			append_dev(main, t1);
     			append_dev(main, div0);
-    			append_dev(div0, t2);
-    			append_dev(div0, br0);
-    			append_dev(div0, t3);
-    			append_dev(div0, a);
-    			append_dev(div0, t5);
-    			append_dev(div0, br1);
-    			append_dev(div0, t6);
-    			append_dev(div0, br2);
-    			append_dev(div0, t7);
-    			append_dev(div0, br3);
-    			append_dev(main, t8);
-    			if (if_block0) if_block0.m(main, null);
-    			append_dev(main, t9);
-    			if_block1.m(main, null);
-    			append_dev(main, t10);
-    			append_dev(main, div1);
-    			if (if_block2) if_block2.m(div1, null);
+    			append_dev(div0, p);
+    			append_dev(p, t2);
+    			append_dev(p, br0);
+    			append_dev(p, t3);
+    			append_dev(p, a0);
+    			append_dev(p, t5);
+    			append_dev(p, br1);
+    			append_dev(p, t6);
+    			append_dev(p, br2);
+    			append_dev(p, t7);
+    			append_dev(p, br3);
+    			append_dev(p, t8);
+    			append_dev(p, a1);
+    			append_dev(p, t10);
+    			append_dev(p, br4);
+    			append_dev(main, t11);
+    			append_dev(main, div2);
+    			if_block.m(div2, null);
+    			append_dev(div2, t12);
+    			append_dev(div2, div1);
+    			append_dev(div1, progress_1);
+    			append_dev(div1, t13);
+    			append_dev(div1, t14);
+    			append_dev(div1, t15);
+    			append_dev(main, t16);
+    			append_dev(main, div4);
+    			append_dev(div4, div3);
+    			append_dev(div3, t17);
+    			append_dev(div3, t18);
+    			append_dev(div3, t19);
+    			append_dev(div4, t20);
+    			append_dev(div4, textarea);
+    			/*textarea_binding*/ ctx[16](textarea);
     		},
     		p: function update(ctx, [dirty]) {
-    			if (/*video*/ ctx[5]) {
-    				if (if_block0) {
-    					if_block0.p(ctx, dirty);
-    				} else {
-    					if_block0 = create_if_block_2(ctx);
-    					if_block0.c();
-    					if_block0.m(main, t9);
-    				}
-    			} else if (if_block0) {
-    				if_block0.d(1);
-    				if_block0 = null;
-    			}
-
-    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block1) {
-    				if_block1.p(ctx, dirty);
+    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+    				if_block.p(ctx, dirty);
     			} else {
-    				if_block1.d(1);
-    				if_block1 = current_block_type(ctx);
+    				if_block.d(1);
+    				if_block = current_block_type(ctx);
 
-    				if (if_block1) {
-    					if_block1.c();
-    					if_block1.m(main, t10);
+    				if (if_block) {
+    					if_block.c();
+    					if_block.m(div2, t12);
     				}
     			}
 
-    			if (/*fFinished*/ ctx[1]) {
-    				if (if_block2) {
-    					if_block2.p(ctx, dirty);
-    				} else {
-    					if_block2 = create_if_block(ctx);
-    					if_block2.c();
-    					if_block2.m(div1, null);
-    				}
-    			} else if (if_block2) {
-    				if_block2.d(1);
-    				if_block2 = null;
+    			if (dirty & /*$progress*/ 256) {
+    				prop_dev(progress_1, "value", /*$progress*/ ctx[8]);
+    			}
+
+    			if (dirty & /*$progress*/ 256 && t14_value !== (t14_value = Math.floor(/*$progress*/ ctx[8] * 100) + "")) set_data_dev(t14, t14_value);
+    			if (dirty & /*nScanedCharms*/ 64) set_data_dev(t18, /*nScanedCharms*/ ctx[6]);
+
+    			if (dirty & /*exportData*/ 128) {
+    				prop_dev(textarea, "value", /*exportData*/ ctx[7]);
     			}
     		},
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(main);
-    			if (if_block0) if_block0.d();
-    			if_block1.d();
-    			if (if_block2) if_block2.d();
+    			if_block.d();
+    			/*textarea_binding*/ ctx[16](null);
     		}
     	};
 
@@ -1246,13 +1278,13 @@ for (const input of inputs) {
     	let capture; // opencv の VideoCapture
 
     	// result
-    	let nScanedCharms;
-
     	let domTextareaForScript;
-    	let insertScript;
+
+    	let nScanedCharms = 0;
+    	let exportData = "";
     	const progress = writable(0);
     	validate_store(progress, "progress");
-    	component_subscribe($$self, progress, value => $$invalidate(9, $progress = value));
+    	component_subscribe($$self, progress, value => $$invalidate(8, $progress = value));
 
     	window.addEventListener("load", async () => {
     		scanner = new MHRiseCharmScanner();
@@ -1273,10 +1305,10 @@ for (const input of inputs) {
     					reader.onload = resolve;
     				});
 
-    			$$invalidate(5, video = reader.result);
+    			$$invalidate(4, video = reader.result);
     			await new Promise(r => setTimeout(r, 50)); // sleep
-    			$$invalidate(4, domVideo.width = VIDEO_WIDTH, domVideo); // necessary for capture.read()
-    			$$invalidate(4, domVideo.height = VIDEO_HEIGHT, domVideo);
+    			$$invalidate(3, domVideo.width = VIDEO_WIDTH, domVideo); // necessary for capture.read()
+    			$$invalidate(3, domVideo.height = VIDEO_HEIGHT, domVideo);
     			await new Promise(resolve => domVideo.addEventListener("canplay", resolve));
 
     			// if ( capture ) { capture.delete() }
@@ -1284,6 +1316,7 @@ for (const input of inputs) {
 
     			const screenshot = new cv.Mat(VIDEO_HEIGHT, VIDEO_WIDTH, cv.CV_8UC4);
     			await new Promise(r => setTimeout(r, 200)); // sleep
+    			let loopCount = 0;
     			const FRAME_RATE = 29.97;
 
     			while (domVideo.duration != domVideo.currentTime) {
@@ -1293,19 +1326,23 @@ for (const input of inputs) {
     				seekFrames(domVideo, 1, FRAME_RATE);
     				progress.set(domVideo.currentTime / domVideo.duration);
     				await promiseSeek;
+
+    				if (++loopCount % 10 === 0) {
+    					$$invalidate(6, nScanedCharms = scanner.countCharms());
+    					$$invalidate(7, exportData = scanner.exportAsText());
+    				}
     			}
 
     			progress.set(1);
     			console.log(scanner.charms);
-    			$$invalidate(1, fFinished = true);
+    			fFinished = true;
     			screenshot.delete();
+    			reader.delete();
     		}
 
     		$$invalidate(6, nScanedCharms = scanner.countCharms());
-
-    		// insertScript = scanner.generateInsertScript()
-    		$$invalidate(8, insertScript = scanner.exportAsText());
-    	};
+    		$$invalidate(7, exportData = scanner.exportAsText());
+    	}; // exportData = scanner.generateInsertScript()
 
     	const seekFrames = (video, nFrames, fps = 29.97) => {
     		const currentFrame = video.currentTime * fps;
@@ -1324,7 +1361,7 @@ for (const input of inputs) {
     	function video_1_binding($$value) {
     		binding_callbacks[$$value ? "unshift" : "push"](() => {
     			domVideo = $$value;
-    			$$invalidate(4, domVideo);
+    			$$invalidate(3, domVideo);
     		});
     	}
 
@@ -1332,13 +1369,13 @@ for (const input of inputs) {
 
     	function input_change_handler() {
     		files = this.files;
-    		$$invalidate(3, files);
+    		$$invalidate(2, files);
     	}
 
     	function input_binding($$value) {
     		binding_callbacks[$$value ? "unshift" : "push"](() => {
     			domInput = $$value;
-    			$$invalidate(2, domInput);
+    			$$invalidate(1, domInput);
     		});
     	}
 
@@ -1346,14 +1383,10 @@ for (const input of inputs) {
     		domInput.click();
     	};
 
-    	const click_handler_1 = () => {
-    		domInput.click();
-    	};
-
     	function textarea_binding($$value) {
     		binding_callbacks[$$value ? "unshift" : "push"](() => {
     			domTextareaForScript = $$value;
-    			$$invalidate(7, domTextareaForScript);
+    			$$invalidate(5, domTextareaForScript);
     		});
     	}
 
@@ -1370,9 +1403,9 @@ for (const input of inputs) {
     		domVideo,
     		video,
     		capture,
-    		nScanedCharms,
     		domTextareaForScript,
-    		insertScript,
+    		nScanedCharms,
+    		exportData,
     		progress,
     		onFileSelected,
     		seekFrames,
@@ -1382,15 +1415,15 @@ for (const input of inputs) {
     	$$self.$inject_state = $$props => {
     		if ("scanner" in $$props) scanner = $$props.scanner;
     		if ("fInitialized" in $$props) $$invalidate(0, fInitialized = $$props.fInitialized);
-    		if ("fFinished" in $$props) $$invalidate(1, fFinished = $$props.fFinished);
-    		if ("domInput" in $$props) $$invalidate(2, domInput = $$props.domInput);
-    		if ("files" in $$props) $$invalidate(3, files = $$props.files);
-    		if ("domVideo" in $$props) $$invalidate(4, domVideo = $$props.domVideo);
-    		if ("video" in $$props) $$invalidate(5, video = $$props.video);
+    		if ("fFinished" in $$props) fFinished = $$props.fFinished;
+    		if ("domInput" in $$props) $$invalidate(1, domInput = $$props.domInput);
+    		if ("files" in $$props) $$invalidate(2, files = $$props.files);
+    		if ("domVideo" in $$props) $$invalidate(3, domVideo = $$props.domVideo);
+    		if ("video" in $$props) $$invalidate(4, video = $$props.video);
     		if ("capture" in $$props) capture = $$props.capture;
+    		if ("domTextareaForScript" in $$props) $$invalidate(5, domTextareaForScript = $$props.domTextareaForScript);
     		if ("nScanedCharms" in $$props) $$invalidate(6, nScanedCharms = $$props.nScanedCharms);
-    		if ("domTextareaForScript" in $$props) $$invalidate(7, domTextareaForScript = $$props.domTextareaForScript);
-    		if ("insertScript" in $$props) $$invalidate(8, insertScript = $$props.insertScript);
+    		if ("exportData" in $$props) $$invalidate(7, exportData = $$props.exportData);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -1399,14 +1432,13 @@ for (const input of inputs) {
 
     	return [
     		fInitialized,
-    		fFinished,
     		domInput,
     		files,
     		domVideo,
     		video,
-    		nScanedCharms,
     		domTextareaForScript,
-    		insertScript,
+    		nScanedCharms,
+    		exportData,
     		$progress,
     		progress,
     		onFileSelected,
@@ -1415,7 +1447,6 @@ for (const input of inputs) {
     		input_change_handler,
     		input_binding,
     		click_handler,
-    		click_handler_1,
     		textarea_binding
     	];
     }

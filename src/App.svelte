@@ -16,9 +16,9 @@
   let capture   // opencv の VideoCapture
 
   // result
-  let nScanedCharms
   let domTextareaForScript
-  let insertScript
+  let nScanedCharms = 0
+  let exportData = ''
 
   const progress = writable(0)
 
@@ -53,6 +53,7 @@
       const screenshot = new cv.Mat(VIDEO_HEIGHT, VIDEO_WIDTH, cv.CV_8UC4)
       await new Promise(r => setTimeout(r, 200)) // sleep
 
+      let loopCount = 0
       const FRAME_RATE = 29.97
       while ( domVideo.duration != domVideo.currentTime ) {
         capture.read(screenshot)
@@ -63,17 +64,23 @@
         progress.set(domVideo.currentTime / domVideo.duration)
 
         await promiseSeek
+
+        if ( ++loopCount % 10 === 0 ) {
+          nScanedCharms = scanner.countCharms()
+          exportData = scanner.exportAsText()
+        }
       }
       progress.set(1)
       console.log(scanner.charms)
       fFinished = true
 
       screenshot.delete()
+      reader.delete()
     }
 
     nScanedCharms = scanner.countCharms()
-    // insertScript = scanner.generateInsertScript()
-    insertScript = scanner.exportAsText()
+    exportData = scanner.exportAsText()
+    // exportData = scanner.generateInsertScript()
   }
 
 
@@ -89,44 +96,68 @@
 <main>
 	<h1>{title}</h1>
   <div id="description">
+    <p style="margin: auto; max-width: 100%; width: 54rem; height: 6rem; text-align: left">
    モンスターハンターライズの護石を自動読み取りするツールです。<br>
    Nintendo Switch の 30 秒キャプチャ動画を用意するだけで, 護石のスキルやスロットが読み取れます。
    (<a href="sample/input.mp4">動画例</a>)<br>
    <br>
-   現時点での出力形式は、スキルシミュレータへの登録スクリプトのみです。<br>
+   出力形式は、&lt;スキル1&gt;,&lt;スキル1Lv&gt;,&lt;スキル2&gt;,&lt;スキル2Lv&gt;,&lt;スロット1Lv&gt;,&lt;スロット2Lv&gt;,&lt;スロット3Lv&gt; です。<br>
+   <a href="https://mhrise.wiki-db.com/sim/">泣きシミュさん</a> でそのままインポートできます。<br>
+    </p>
   </div>
 
-  {#if video}
-    <div id="status">
+
+  <div id="status">
+    {#if video}
       <video class="preview" src="{video}" alt="preview" bind:this={domVideo}>
         <track kind="captions">
       </video>
-      <div>
-        <progress value={$progress}></progress>
-        {Math.floor($progress * 100)}%
-      </div>
-    </div>
-  {/if}
+    {:else}
+      <img class="preview" src="sample/sample-img.png" alt="preview-sample" />
 
-  {#if fInitialized}
-  <div id="upload">
-    <input style="display:none"
-           type="file"
-           accept=".mp4"
-           on:change={(e) => onFileSelected(e)}
-           bind:files bind:this={domInput}>
-    <img src="https://static.thenounproject.com/png/625182-200.png" alt="" on:click={()=>{domInput.click()}} />
-    <div on:click={()=>{domInput.click()}}>Choose Movie</div>
+      <div style="height: 540px; width: 960px; display: flex; align-items: center; justify-content: center;">
+      {#if fInitialized}
+        <div id="upload" on:click={()=>{domInput.click()}}>
+          <input style="display:none"
+                 type="file"
+                 accept=".mp4"
+                 on:change={(e) => onFileSelected(e)}
+                 bind:files bind:this={domInput}>
+          <img src="https://static.thenounproject.com/png/625182-200.png" alt="" />
+          <div>Click to Select Movie</div>
+        </div>
+      {:else}
+        <div>Loading Files...</div>
+      {/if}
+      </div>
+    {/if}
+
+    <div>
+      <progress value={$progress}></progress>
+      {Math.floor($progress * 100)}%
+    </div>
   </div>
-  {:else}
-  <div>Loading Files...</div>
-  {/if}
+
+
+  <!-- {#if fInitialized} -->
+  <!-- <div id="upload"> -->
+  <!--   <input style="display:none" -->
+  <!--          type="file" -->
+  <!--          accept=".mp4" -->
+  <!--          on:change={(e) => onFileSelected(e)} -->
+  <!--          bind:files bind:this={domInput}> -->
+  <!--   <img src="https://static.thenounproject.com/png/625182-200.png" alt="" on:click={()=>{domInput.click()}} /> -->
+  <!--   <div on:click={()=>{domInput.click()}}>Click to Select Movie</div> -->
+  <!-- </div> -->
+  <!-- {:else} -->
+  <!-- <div>Loading Files...</div> -->
+  <!-- {/if} -->
 
   <div id="result">
-    {#if fFinished}
-      <div>{nScanedCharms} charms are scanned.</div>
-      <textarea bind:this={domTextareaForScript}>{insertScript}</textarea>
-    {/if}
+    <!-- {#if fFinished} -->
+      <div>Found {nScanedCharms} charms.</div>
+      <textarea bind:this={domTextareaForScript}>{exportData}</textarea>
+    <!-- {/if} -->
   </div>
 </main>
 
@@ -141,7 +172,7 @@
 
 	h1 {
 		color: #ff3e00;
-		text-transform: uppercase;
+		/* text-transform: uppercase; */
 		font-size: 4em;
 		font-weight: 100;
 	}
@@ -152,6 +183,7 @@
 
   #status {
     display: block;
+    position: relative;
 		width: 960px;
     max-width: 100%;
     margin: 1rem auto; /*tmp*/
@@ -163,18 +195,30 @@
     max-width: 100%;
   }
 
+  #status img.preview {
+    opacity: 0.3;
+    position: absolute;
+    left: 0;
+  }
+
   #status progress {
 		display: block;
 		width: 100%;
 	}
 
-  #upload > * {
+  #upload,
+  #upload * {
+    z-index: 1;
 		cursor:pointer;
 	}
 
-  #upload > img {
-    height:50px;
-		width:50px;
+  #upload img {
+		width:  60px;
+    height: 60px;
+  }
+
+  #upload div {
+    font-weight: bold;
   }
 
   #result {
