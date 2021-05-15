@@ -718,8 +718,8 @@ var app = (function () {
 
         // console.log(`scaned ${row} ${col}`)
 
+        // console.log({col, row, match, page, rarity, slots, skills, skillLevels})
         this.store({page, row, col, rarity, slots, skills, skillLevels});
-        // return {col, row, match, page, rarity, slots, skills, skillLevels}
       }
 
       countCharms() {
@@ -761,6 +761,23 @@ for (const input of inputs) {
 }`
       }
 
+      exportAsText() {
+        const buf = [];
+
+        for (let p = 1; p <= this.MAX_PAGE; p++) {
+          for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
+            for (let c = 1; c <= this.COLUMNS_PER_PAGE; c++) {
+              const charm = this.charms[p][r][c];
+              if ( charm == null ) { continue }
+
+              buf.push(`${charm.skills[0]},${charm.skillLevels[0]},${charm.skills[1]},${charm.skillLevels[1]},${charm.slots.replace(/-/g, ',')}`);
+            }
+          }
+        }
+
+        return buf.join('\n')
+      }
+
       _getRarity(screenshot) {
         return getMostMatchedImage(screenshot, this.templates.rare, this.POINT_RARITY, 63, 63)
       }
@@ -778,8 +795,8 @@ for (const input of inputs) {
 
       _getSkillLevels(screenshot) {
         return [
-          getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL1, 0, 63),
-          getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL2, 0, 63),
+          getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL1, 0, 95),
+          getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL2, 0, 95),
         ]
       }
 
@@ -816,7 +833,7 @@ for (const input of inputs) {
     const { console: console_1 } = globals;
     const file = "src/App.svelte";
 
-    // (98:2) {#if video}
+    // (99:2) {#if video}
     function create_if_block_2(ctx) {
     	let div1;
     	let video_1;
@@ -842,18 +859,18 @@ for (const input of inputs) {
     			t2 = text(t2_value);
     			t3 = text("%");
     			attr_dev(track, "kind", "captions");
-    			add_location(track, file, 100, 8, 2768);
+    			add_location(track, file, 101, 8, 2813);
     			attr_dev(video_1, "class", "preview svelte-5a7mj7");
     			if (video_1.src !== (video_1_src_value = /*video*/ ctx[5])) attr_dev(video_1, "src", video_1_src_value);
     			attr_dev(video_1, "alt", "preview");
-    			add_location(video_1, file, 99, 6, 2687);
+    			add_location(video_1, file, 100, 6, 2732);
     			progress_1.value = /*$progress*/ ctx[9];
     			attr_dev(progress_1, "class", "svelte-5a7mj7");
-    			add_location(progress_1, file, 103, 8, 2827);
-    			add_location(div0, file, 102, 6, 2813);
+    			add_location(progress_1, file, 104, 8, 2872);
+    			add_location(div0, file, 103, 6, 2858);
     			attr_dev(div1, "id", "status");
     			attr_dev(div1, "class", "svelte-5a7mj7");
-    			add_location(div1, file, 98, 4, 2663);
+    			add_location(div1, file, 99, 4, 2708);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
@@ -888,14 +905,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(98:2) {#if video}",
+    		source: "(99:2) {#if video}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (120:2) {:else}
+    // (121:2) {:else}
     function create_else_block(ctx) {
     	let div;
 
@@ -903,7 +920,7 @@ for (const input of inputs) {
     		c: function create() {
     			div = element("div");
     			div.textContent = "Loading Files...";
-    			add_location(div, file, 120, 2, 3347);
+    			add_location(div, file, 121, 2, 3392);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -918,14 +935,14 @@ for (const input of inputs) {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(120:2) {:else}",
+    		source: "(121:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (110:2) {#if fInitialized}
+    // (111:2) {#if fInitialized}
     function create_if_block_1(ctx) {
     	let div1;
     	let input;
@@ -950,16 +967,16 @@ for (const input of inputs) {
     			attr_dev(input, "type", "file");
     			attr_dev(input, "accept", ".mp4");
     			attr_dev(input, "class", "svelte-5a7mj7");
-    			add_location(input, file, 111, 4, 2984);
+    			add_location(input, file, 112, 4, 3029);
     			if (img.src !== (img_src_value = "https://static.thenounproject.com/png/625182-200.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "");
     			attr_dev(img, "class", "svelte-5a7mj7");
-    			add_location(img, file, 116, 4, 3156);
+    			add_location(img, file, 117, 4, 3201);
     			attr_dev(div0, "class", "svelte-5a7mj7");
-    			add_location(div0, file, 117, 4, 3268);
+    			add_location(div0, file, 118, 4, 3313);
     			attr_dev(div1, "id", "upload");
     			attr_dev(div1, "class", "svelte-5a7mj7");
-    			add_location(div1, file, 110, 2, 2962);
+    			add_location(div1, file, 111, 2, 3007);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
@@ -994,14 +1011,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(110:2) {#if fInitialized}",
+    		source: "(111:2) {#if fInitialized}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (125:4) {#if fFinished}
+    // (126:4) {#if fFinished}
     function create_if_block(ctx) {
     	let div;
     	let t0;
@@ -1016,10 +1033,10 @@ for (const input of inputs) {
     			t1 = text(" charms are scanned.");
     			t2 = space();
     			textarea = element("textarea");
-    			add_location(div, file, 125, 6, 3430);
+    			add_location(div, file, 126, 6, 3475);
     			textarea.value = /*insertScript*/ ctx[8];
     			attr_dev(textarea, "class", "svelte-5a7mj7");
-    			add_location(textarea, file, 126, 6, 3483);
+    			add_location(textarea, file, 127, 6, 3528);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -1048,7 +1065,7 @@ for (const input of inputs) {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(125:4) {#if fFinished}",
+    		source: "(126:4) {#if fFinished}",
     		ctx
     	});
 
@@ -1111,21 +1128,21 @@ for (const input of inputs) {
     			div1 = element("div");
     			if (if_block2) if_block2.c();
     			attr_dev(h1, "class", "svelte-5a7mj7");
-    			add_location(h1, file, 88, 1, 2399);
-    			add_location(br0, file, 90, 33, 2474);
+    			add_location(h1, file, 89, 1, 2444);
+    			add_location(br0, file, 91, 33, 2519);
     			attr_dev(a, "href", "sample/input.mp4");
-    			add_location(a, file, 92, 4, 2545);
-    			add_location(br1, file, 92, 39, 2580);
-    			add_location(br2, file, 93, 3, 2588);
-    			add_location(br3, file, 94, 37, 2630);
+    			add_location(a, file, 93, 4, 2590);
+    			add_location(br1, file, 93, 39, 2625);
+    			add_location(br2, file, 94, 3, 2633);
+    			add_location(br3, file, 95, 37, 2675);
     			attr_dev(div0, "id", "description");
     			attr_dev(div0, "class", "svelte-5a7mj7");
-    			add_location(div0, file, 89, 2, 2418);
+    			add_location(div0, file, 90, 2, 2463);
     			attr_dev(div1, "id", "result");
     			attr_dev(div1, "class", "svelte-5a7mj7");
-    			add_location(div1, file, 123, 2, 3386);
+    			add_location(div1, file, 124, 2, 3431);
     			attr_dev(main, "class", "svelte-5a7mj7");
-    			add_location(main, file, 87, 0, 2391);
+    			add_location(main, file, 88, 0, 2436);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1285,7 +1302,9 @@ for (const input of inputs) {
     		}
 
     		$$invalidate(6, nScanedCharms = scanner.countCharms());
-    		$$invalidate(8, insertScript = scanner.generateInsertScript());
+
+    		// insertScript = scanner.generateInsertScript()
+    		$$invalidate(8, insertScript = scanner.exportAsText());
     	};
 
     	const seekFrames = (video, nFrames, fps = 29.97) => {

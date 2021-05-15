@@ -212,8 +212,8 @@ export default class MHRiseCharmScanner {
 
     // console.log(`scaned ${row} ${col}`)
 
+    // console.log({col, row, match, page, rarity, slots, skills, skillLevels})
     this.store({page, row, col, rarity, slots, skills, skillLevels})
-    // return {col, row, match, page, rarity, slots, skills, skillLevels}
   }
 
   countCharms() {
@@ -255,6 +255,23 @@ for (const input of inputs) {
 }`
   }
 
+  exportAsText() {
+    const buf = []
+
+    for (let p = 1; p <= this.MAX_PAGE; p++) {
+      for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
+        for (let c = 1; c <= this.COLUMNS_PER_PAGE; c++) {
+          const charm = this.charms[p][r][c]
+          if ( charm == null ) { continue }
+
+          buf.push(`${charm.skills[0]},${charm.skillLevels[0]},${charm.skills[1]},${charm.skillLevels[1]},${charm.slots.replace(/-/g, ',')}`)
+        }
+      }
+    }
+
+    return buf.join('\n')
+  }
+
   _getRarity(screenshot) {
     return getMostMatchedImage(screenshot, this.templates.rare, this.POINT_RARITY, 63, 63)
   }
@@ -272,8 +289,8 @@ for (const input of inputs) {
 
   _getSkillLevels(screenshot) {
     return [
-      getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL1, 0, 63),
-      getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL2, 0, 63),
+      getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL1, 0, 95),
+      getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL2, 0, 95),
     ]
   }
 

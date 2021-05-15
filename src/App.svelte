@@ -72,7 +72,8 @@
     }
 
     nScanedCharms = scanner.countCharms()
-    insertScript = scanner.generateInsertScript()
+    // insertScript = scanner.generateInsertScript()
+    insertScript = scanner.exportAsText()
   }
 
 
