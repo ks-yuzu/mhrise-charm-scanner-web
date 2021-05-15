@@ -16,6 +16,7 @@ export default class MHRiseCharmScanner {
   POINT_CHARM_AREA_LEFT_TOP = new cv.Point(634, 359)
   SIZE_CHARM_AREA           = new cv.Size(357, 199)
 
+  nCharms = 0
   charms = {}
   templates = null
 
@@ -168,6 +169,7 @@ export default class MHRiseCharmScanner {
   }
 
   reset() {
+    this.nCharms = 0
     this.charms = {}
     for (let p = 1; p <= this.MAX_PAGE; p++) {
       this.charms[p] = {}
@@ -184,6 +186,7 @@ export default class MHRiseCharmScanner {
   store(params) {
     const {page, row, col} = params
     this.charms[page][row][col] = params
+    this.nCharms++
   }
 
   scan(screenshot) {
@@ -207,10 +210,14 @@ export default class MHRiseCharmScanner {
     const skills        = this._getSkills(screenshot)
     const skillLevels   = this._getSkillLevels(screenshot)
 
-    // console.log(`scaned ${row} ${col}`)
+    console.log(`scaned ${row} ${col}`)
 
     this.store({page, row, col, rarity, slots, skills, skillLevels})
     // return {col, row, match, page, rarity, slots, skills, skillLevels}
+  }
+
+  countCharms() {
+    return this.nCharms
   }
 
   generateInsertScript() {

@@ -14,6 +14,8 @@
   let video     // data uri
   let capture   // opencv の VideoCapture
 
+  // result
+  let nScanedCharms
   let domTextareaForScript
   let insertScript
 
@@ -55,7 +57,8 @@
         seekFrames(domVideo, 1, FRAME_RATE)
         progress.set(domVideo.currentTime / domVideo.duration)
 
-        await new Promise(r => setTimeout(r, 50))
+        await new Promise(r => setTimeout(r, 100))
+        // await new Promise(r => requestAnimationFrame(r))
       }
       progress.set(1)
       console.log(scanner.charms)
@@ -64,6 +67,7 @@
       screenshot.delete()
     }
 
+    nScanedCharms = scanner.countCharms()
     insertScript = scanner.generateInsertScript()
   }
 
@@ -113,6 +117,7 @@
 
   <div id="result">
     {#if fFinished}
+      <div>{nScanedCharms} charms are scanned.</div>
       <textarea bind:this={domTextareaForScript}>{insertScript}</textarea>
     {/if}
   </div>
@@ -162,7 +167,7 @@
   }
 
   #result {
-    margin: 0.5rem auto;
+    margin: 1rem auto;
 		width: 960px;
     max-width: 100%;
   }
