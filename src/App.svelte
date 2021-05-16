@@ -4,7 +4,7 @@
   import Nav from './Nav.svelte'
 
   const TITLE   = 'MHRise Charm Scanner'
-  const VERSION = '0.2.4'
+  const VERSION = '0.2.5'
 
   let fInitialized = false
   let charmScanner
