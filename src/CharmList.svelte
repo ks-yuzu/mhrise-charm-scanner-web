@@ -21,7 +21,7 @@
   }
 
   export const onActivate = () => {
-    charms = null
+    // charms = null
     updateCharmTable()
   }
 
