@@ -150,13 +150,18 @@
 
 
   // handlers
+  function onSort(event) {
+    // close all accordion
+    charms.forEach(i => i.isScrennshotShown = i.isSubstitutableCharmsShown = false)
+  }
+
+
   function onClickRow({e, index}) {
-    console.log('called!!!')
     charms[index].isSubstitutableCharmsShown = !charms[index].isSubstitutableCharmsShown
   }
 
 
-  async function toggleScreenshot({e, index}) {
+  async function toggleScreenshot({e, row, index}) {
     e.stopPropagation()
 
     const toShow = ! charms[index].isScrennshotShown
@@ -164,12 +169,11 @@
 
     if ( toShow ) {
       // console.log(charms[index].imagename)
-      const screenshot = await charmManager.getScreenshot(charms[index].imagename)
+      const screenshot = await charmManager.getScreenshot(row.imagename)
 
       // await new Promise((resolve) => requestAnimationFrame(resolve))
       cv.imshow(`charm-table-row-${index}-screenshot`, screenshot)
     }
-
   }
 </script>
 
@@ -183,7 +187,9 @@
     <SvelteTable columns="{columns}"
                  rows="{charms}"
                  classNameTable={['table table-striped table-hover table-responsible']}
-                 classNameThead={['table-dark hide-first-child.disabled']}>
+                 classNameThead={['table-dark hide-first-child.disabled']}
+                 on:clickCol={onSort}
+                 >
       <tr slot="row" let:row let:n on:click={(e) => onClickRow({e, index: n})}>
         {#each columns as col}
           <td on:click={(e) => { if (col.onClick) {col.onClick({e, row, col, index: n})} }}
@@ -207,7 +213,7 @@
         {/if}
         {#if charms[n].isScrennshotShown}
           <div style="width: 100%; border-bottom: solid 1px #ddd">
-            <canvas id="charm-table-row-{n}-screenshot"></canvas>
+            <canvas id="charm-table-row-{n}-screenshot" style="width: 100%"></canvas>
           </div>
         {/if}
       </div>
@@ -279,22 +285,26 @@
     display:    inline-block;
   }
 
-  :global(#charm-list > table > * > tr > *:nth-child(1)) { width: 6rem; }
+
+  /* width */
+  :global(#charm-list > table) { width: 67rem; }
+
+  :global(#charm-list > table > * > tr > *:nth-child(1)) { width: 4rem; }
   :global(
     #charm-list > table > * > tr > *:nth-child(2),
     #charm-list > table > * > tr > *:nth-child(4)
   ) {
-    width: calc((100% - 54rem - 5rem) / 2);
-    min-width: 10rem;
+    /* width: calc((100% - 52rem - 6rem) / 2); */
+    width: 10rem;
   }
-  :global(#charm-list > table > * > tr > *:nth-child(3)) { width: 8rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(5)) { width: 8rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(6)) { width: 8rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(7)) { width: 8rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(8)) { width: 8rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(9)) { width: 8rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(10)) { width: 2.5rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(11)) { width: 2.5rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(3))  { width: 6rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(5))  { width: 6rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(6))  { width: 6rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(7))  { width: 6rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(8))  { width: 6rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(9))  { width: 6rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(10)) { width: 3rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(11)) { width: 3rem; }
 
   :global(#charm-list > table > tbody > tr > td:nth-child(11)) { color: mediumseagreen; }
 
@@ -303,8 +313,17 @@
     padding-right: 0;
   }
 
+  :global(#charm-list > table > thead > tr[class]:first-child > th) {
+    padding-left:  0.5rem;
+    padding-right: 0.5rem;
+  }
+
   #charm-list {
-    margin-top: 2px;
+    max-width:  100%;
     height:     100%;
+    margin-top: 2px;
+
+    overflow-x: scroll;
+    overflow-y: hidden;
   }
 </style>
