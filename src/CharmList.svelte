@@ -3,26 +3,19 @@
   import SvelteTable from "./SvelteTable.svelte"
   import MHRiseCharmManager from './mhrise-charm-manager.js'
   import {skillToSlotLevel} from './mhrise-charm-decorations.js'
+  import {allSkills}        from './mhrise-skills.js'
+  import {fRefleshCharmTable} from './stores.js'
 
-  // props
-  export const updateCharmTable = async () => {
-    const allCharms = await charmManager.searchCharms('select * from charms')
-    charms = [...allCharms].map((elm, index) => {
-      return {
-        ...elm,
-        id:         1 + index,
-        evaluation: skillToSlotLevel[elm.skill1] * elm.skill1Level
-                  + skillToSlotLevel[elm.skill2] * elm.skill2Level
-                  + elm.slot1
-                  + elm.slot2
-                  + elm.slot3,
-      }
-    })
-  }
 
-  export const onActivate = () => {
-    // charms = null
-    updateCharmTable()
+  $: if ( $fRefleshCharmTable ) {
+    (async () => {
+      console.log('reflesh table')
+
+      fRefleshCharmTable.set(false)
+
+      await updateCharmTable()
+      searchSubstitutableCharms()
+    })()
   }
 
   // constants
@@ -31,14 +24,14 @@
     {
       key: "id",
       title: "ID",
-      value: v => v.id,
+      value: v => v.rowid,
       sortable: true,
       filterOptions: rows => {
         const UNIT = 50
         // generate groupings of 0-10, 10-20 etc...
         let nums = {}
         rows.forEach(row => {
-          let num = Math.floor(row.id / UNIT)
+          let num = Math.floor(row.rowid / UNIT)
           if (nums[num] === undefined)
             nums[num] = { name: `${num * UNIT + 1} 〜 ${(num + 1) * UNIT}`, value: num }
         })
@@ -48,7 +41,7 @@
           .reduce((o, [k, v]) => ((o[k] = v), o), {})
         return Object.values(nums)
       },
-      filterValue: v => Math.floor((v.id - 1) / 50),
+      filterValue: v => Math.floor((v.rowid - 1) / 50),
     },
     // {
     //   key: "first_name",
@@ -75,28 +68,32 @@
     //   filterValue: v => v.first_name.charAt(0).toLowerCase()
     // },
     {
-      key:     'skill1',
-      title:   'スキル1',
-      value:    v => v.skill1,
-      sortable: true,
+      key:           'skill1',
+      title:         'スキル1',
+      value:         v => v.skill1,
+      filterOptions: allSkills,
+      sortable:      true,
     },
     {
-      key:     'skill1Level',
-      title:   'スキル1 Lv',
-      value:    v => v.skill1Level,
-      sortable: true,
+      key:           'skill1Level',
+      title:         'スキル1 Lv',
+      value:         v => v.skill1Level,
+      filterOptions: [0,1,2,3,4,5,6,7],
+      sortable:      true,
     },
     {
-      key:     'skill2',
-      title:   'スキル2',
-      value:    v => v.skill2,
-      sortable: true,
+      key:           'skill2',
+      title:         'スキル2',
+      value:         v => v.skill2,
+      filterOptions: allSkills,
+      sortable:      true,
     },
     {
-      key:     'skill2Level',
-      title:   'スキル2 Lv',
-      value:    v => v.skill2Level,
-      sortable: true,
+      key:           'skill2Level',
+      title:         'スキル2 Lv',
+      value:         v => v.skill2Level,
+      filterOptions: [0,1,2,3,4,5,6,7],
+      sortable:      true,
     },
     ...Array.from({length: N_CHARM_SLOT_MAX}, (_, i) => i + 1).map(i => ({
       key:           `slot${i}`,
@@ -107,10 +104,12 @@
       filterOptions: [0,1,2,3],
     })),
     {
-      key:      'evaluation',
-      title:    '合計Lv',
-      value:    v => v.evaluation,
-      sortable: true,
+      key:           'evaluation',
+      title:         '合計Lv',
+      value:         v => v.evaluation || '-',
+      // filterOptions: rows => [...new Set(rows.map(i => i.evaluation))],
+      filterOptions: [...Array(21).keys()],
+      sortable:      true,
     },
     {
       key:           "image",
@@ -124,8 +123,14 @@
     {
       key:           "substitutableCharms",
       title:         "代替",
-      value:         v => v.substitutableCharms ? '有り' : '無し',
-      renderValue:   v => v.substitutableCharms ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-square-fill" viewBox="0 0 16 16"> <path d="M2 16a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2zm6.5-4.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 1 0z"/> </svg>' : '',
+      value:         v => v.substitutableCharms?.length ? '有り' : '無し',
+      renderValue:   v => {
+        const question = '<span style="color: gray"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-square-fill" viewBox="0 0 16 16"> <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.496 6.033a.237.237 0 0 1-.24-.247C5.35 4.091 6.737 3.5 8.005 3.5c1.396 0 2.672.73 2.672 2.24 0 1.08-.635 1.594-1.244 2.057-.737.559-1.01.768-1.01 1.486v.105a.25.25 0 0 1-.25.25h-.81a.25.25 0 0 1-.25-.246l-.004-.217c-.038-.927.495-1.498 1.168-1.987.59-.444.965-.736.965-1.371 0-.825-.628-1.168-1.314-1.168-.803 0-1.253.478-1.342 1.134-.018.137-.128.25-.266.25h-.825zm2.325 6.443c-.584 0-1.009-.394-1.009-.927 0-.552.425-.94 1.01-.94.609 0 1.028.388 1.028.94 0 .533-.42.927-1.029.927z"/> </svg> </span>'
+        const up = '<span style="color: mediumseagreen"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-square-fill" viewBox="0 0 16 16"> <path d="M2 16a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2zm6.5-4.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 1 0z"/> </svg> </span>'
+        return v.substitutableCharms == null ? question
+             : v.substitutableCharms.length  ? up
+             :                                 ''
+      },
       sortable:      true,
       filterOptions: ["有り", "無し"],
     },
@@ -144,9 +149,41 @@
     }
     else {
       await updateCharmTable()
+      searchSubstitutableCharms()
     }
   }
   init()
+
+
+  // functions
+  async function updateCharmTable() {
+    charms = [
+      ...(await charmManager.searchCharms('select rowid,* from charms'))
+    ].map(row => {
+      row.evaluation = skillToSlotLevel[row.skill1] * row.skill1Level
+                     + skillToSlotLevel[row.skill2] * row.skill2Level
+                     + row.slot1
+                     + row.slot2
+                     + row.slot3
+      return row
+    })
+  }
+
+  async function searchSubstitutableCharms() {
+    for ( const index in charms ) {
+      const row = charms[index]
+      console.log(row.rowid)
+
+      const substitutableCharms = await charmManager.findSubstitutableCharms({
+        skills     : [row.skill1,      row.skill2],
+        skillLevels: [row.skill1Level, row.skill2Level],
+        slots      : [row.slot1, row.slot2, row.slot3],
+      })
+
+      // use "charms[index]" to tell update to svelte
+      charms[index].substitutableCharms = substitutableCharms
+    }
+  }
 
 
   // handlers
@@ -156,7 +193,8 @@
   }
 
 
-  function onClickRow({e, index}) {
+  function onClickRow({row}) {
+    const index = row.rowid - 1
     charms[index].isSubstitutableCharmsShown = !charms[index].isSubstitutableCharmsShown
   }
 
@@ -190,7 +228,7 @@
                  classNameThead={['table-dark hide-first-child.disabled']}
                  on:clickCol={onSort}
                  >
-      <tr slot="row" let:row let:n on:click={(e) => onClickRow({e, index: n})}>
+      <tr slot="row" let:row let:n on:click={(e) => onClickRow({row})}>
         {#each columns as col}
           <td on:click={(e) => { if (col.onClick) {col.onClick({e, row, col, index: n})} }}
               class={[col.class].join(' ')}
@@ -207,12 +245,23 @@
           </td>
         {/each}
       </tr>
-      <div slot="after-row" let:row let:n id="charm-table-row-{n}" style="width: 100%" transition:slide={{duration: 300}}>
-        {#if charms[n].isSubstitutableCharmsShown}
-          <div style="width: 100%; border-bottom: solid 1px #ddd">上位互換護石の表示は準備中です</div>
+      <div slot="after-row" let:row let:n id="charm-table-row-{n}" style="width: 100%">
+        {#if row.isSubstitutableCharmsShown}
+          {#if row.substitutableCharms == null}
+            <div style="width: 100%; border-bottom: solid 1px #ddd">searching...</div>
+          {:else}
+            <div transition:slide={{duration: 100}}>
+            {#each row.substitutableCharms as c}
+              <div style="width: 100%; text-align: left; padding: 0.3rem 2rem">
+                {c.rowid}: {c.skill1}{c.skill1Level}, {c.skill2}{c.skill2Level}, {c.slot1}-{c.slot2}-{c.slot3}
+              </div>
+            {/each}
+            </div>
+          {/if}
         {/if}
+
         {#if charms[n].isScrennshotShown}
-          <div style="width: 100%; border-bottom: solid 1px #ddd">
+          <div style="width: 100%; border-bottom: solid 1px #ddd" transition:slide={{duration: 100}}>
             <canvas id="charm-table-row-{n}-screenshot" style="width: 100%"></canvas>
           </div>
         {/if}
@@ -225,6 +274,10 @@
 <style>
   :global(.hide-first-child > *:first-child) {
     display: none;
+  }
+
+  :global(#charm-list) {
+    font-family: monospace;
   }
 
   :global(#charm-list td) {
@@ -258,7 +311,20 @@
   }
 
   :global(#charm-list > table > thead) {
-    padding-right: 15px; /* tbody のスクロールバーに合わせる */
+    /*padding-right: 15px; /* tbody のスクロールバーに合わせる */
+    background: none;
+  }
+
+  :global(#charm-list > table > thead > :nth-child(1)) {
+    border: none;
+  }
+
+  :global(#charm-list > table > thead > :nth-child(2)) {
+    background: #262626;
+  }
+
+  :global(#charm-list > table > thead th) {
+    background: inherit;
   }
 
   :global(#charm-list > table > tbody) {
@@ -289,24 +355,38 @@
   /* width */
   :global(#charm-list > table) { width: 67rem; }
 
-  :global(#charm-list > table > * > tr > *:nth-child(1)) { width: 4rem; }
+  :global(#charm-list > table > * > tr > *:nth-child(1)) {
+    width: 4rem;
+    padding-right: 1rem;
+    text-align: right;
+  }
   :global(
     #charm-list > table > * > tr > *:nth-child(2),
     #charm-list > table > * > tr > *:nth-child(4)
   ) {
     /* width: calc((100% - 52rem - 6rem) / 2); */
     width: 10rem;
+    padding-left: 1rem;
+    text-align: left;
   }
-  :global(#charm-list > table > * > tr > *:nth-child(3))  { width: 6rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(5))  { width: 6rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(6))  { width: 6rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(7))  { width: 6rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(8))  { width: 6rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(9))  { width: 6rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(10)) { width: 3rem; }
-  :global(#charm-list > table > * > tr > *:nth-child(11)) { width: 3rem; }
+  :global(
+    #charm-list > table > * > tr > *:nth-child(3),
+    #charm-list > table > * > tr > *:nth-child(5),
+    #charm-list > table > * > tr > *:nth-child(6),
+    #charm-list > table > * > tr > *:nth-child(7),
+    #charm-list > table > * > tr > *:nth-child(8),
+    #charm-list > table > * > tr > *:nth-child(9)
+  ) {
+    width: 6rem;
+  }
+  :global(
+    #charm-list > table > * > tr > *:nth-child(10),
+    #charm-list > table > * > tr > *:nth-child(11)
+  ) {
+    width: 3rem;
+  }
 
-  :global(#charm-list > table > tbody > tr > td:nth-child(11)) { color: mediumseagreen; }
+  /* :global(#charm-list > table > tbody > tr > td:nth-child(11)) { color: mediumseagreen; } */
 
   :global(#charm-list > table > :not(caption) > * > *) {
     padding-left:  0;

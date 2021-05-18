@@ -1,6 +1,7 @@
 <script>
   import {writable} from 'svelte/store'
   import VideoReader from './VideoReader.svelte'
+  import {fRefleshCharmTable} from './stores.js'
 
   const VIDEO_WIDTH      = 1280 // switch のキャプチャ解像度
   const VIDEO_HEIGHT     = 720
@@ -88,6 +89,7 @@
 
     // await charmManager.registerCharms(charms)
     isScanFinished = true
+    fRefleshCharmTable.set(true)
   }
 
 
