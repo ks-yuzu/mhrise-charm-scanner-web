@@ -46,6 +46,9 @@ var app = (function () {
         const unsub = store.subscribe(...callbacks);
         return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
     }
+    function component_subscribe(component, store, callback) {
+        component.$$.on_destroy.push(subscribe(store, callback));
+    }
     function create_slot(definition, ctx, $$scope, fn) {
         if (definition) {
             const slot_ctx = get_slot_context(definition, ctx, $$scope, fn);
@@ -789,6 +792,114 @@ var app = (function () {
         $inject_state() { }
     }
 
+    const skillToSlotLevel = {
+      '無し':               0,
+
+      '龍耐性':             1,
+      '氷耐性':             1,
+      '雷耐性':             1,
+      '水耐性':             1,
+      '火耐性':             1,
+      '毒耐性':             1,
+      '麻痺耐性':           1,
+      '睡眠耐性':           1,
+      '爆破やられ耐性':     1,
+      '植生学':             1,
+      '地質学':             1,
+      '飛び込み':           1,
+      '陽動':               1,
+      '泥雪耐性':           1,
+      '満足感':             1,
+      '腹減り耐性':         1,
+      '剥ぎ取り鉄人':       1,
+      '防御':               1,
+      '龍属性攻撃強化':     1,
+      '氷属性攻撃強化':     1,
+      '雷属性攻撃強化':     1,
+      '水属性攻撃強化':     1,
+      '火属性攻撃強化':     1,
+      'ボマー':             1,
+      '滑走強化':           1,
+      '毒属性強化':         1,
+      'スタミナ奪取':       1,
+      '笛吹き名人':         1,
+      '回復速度':           1,
+      '砥石使用高速化':     1,
+      '風圧耐性':           1,
+      'ひるみ軽減':         1,
+      'ブレ抑制':           1,
+      '気絶耐性':           1,
+      '装填速度':           1,
+      '反動軽減':           1,
+
+      '不屈':               2,
+      '乗り名人':           2,
+      '体術':               2,
+      '体力回復量UP':       2,
+      'アイテム使用強化':   2,
+      '翔蟲使い':           2,
+      '壁面移動':           2,
+      '精霊の加護':         2,
+      '早食い':             2,
+      '属性やられ耐性':     2,
+      '破壊王':             2,
+      '広域化':             2,
+      'KO術':               2,
+      '納刀術':             2,
+      '回避性能':           2,
+      '回避距離UP':         2,
+      '抜刀術【力】':       2,
+      '泡沫の舞':           2,
+      '逆襲':               2,
+      '耐震':               2,
+      '鈍器使い':           2,
+      '高速変形':           2,
+      '見切り':             2,
+      '攻撃':               2,
+      '渾身':               2,
+      '強化持続':           2,
+      'スタミナ急速回復':   2,
+      'ガード性能':         2,
+      'ガード強化':         2,
+      '砲弾装填':           2,
+      '特殊射撃強化':       2,
+      '火事場力':           2,
+      '心眼':               2,
+      '集中':               2,
+      'ランナー':           2,
+      '砲術':               2,
+      '会心撃【属性】':     2,
+      '弾導強化':           2,
+      '超会心':             2,
+      '弱点特効':           2,
+      '挑戦者':             2,
+      'フルチャージ':       2,
+      '逆恨み':             2,
+      '死中に活':           2,
+      '力の解放':           2,
+      '麻痺属性強化':       2,
+      '睡眠属性強化':       2,
+      '爆破属性強化':       2,
+      '剛刃研磨':           2,
+      '業物':               2,
+      '弾丸節約':           2,
+      '達人芸':             2,
+
+      '耳栓':               3,
+      '抜刀術【技】':       3,
+      'キノコ大好き':       3,
+      '攻めの守勢':         3,
+      '装填拡張':           3,
+      '通常弾・連射矢強化': 3,
+      '貫通弾・貫通矢強化': 3,
+      '散弾・拡散矢強化':   3,
+      '速射強化':           3,
+      'ジャンプ鉄人':       3,
+      '鬼火纏':             3,
+      '幸運':               3,
+      '匠':                 3,
+    };
+
     class MHRiseCharmManager {
       MAX_SKILLS = 2
       MAX_SLOTS  = 3
@@ -852,6 +963,10 @@ var app = (function () {
                slot3       int,
                imagename   varchar(128),
                unique (skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3))`);
+
+        await this.sql(`create index if not exists 'charms.skill1' on charms(skill1, skill1Level)`);
+        await this.sql(`create index if not exists 'charms.skill2' on charms(skill2, skill2Level)`);
+        await this.sql(`create index if not exists 'charms.slots' on charms(slot1, slot2, slot3)`);
       }
 
 
@@ -864,24 +979,25 @@ var app = (function () {
 
 
       async findSubstitutableCharms(charm) {
-        // charm {
+        // interface Charm {
         //   skills:      string[]
         //   skillLevels: number[]
         //   slots:       number[]
         // }
         const sl = [];
+        const substitutableCharms = [];
 
         for (sl[0] = charm.skillLevels[0]; sl[0] >= 0; sl[0]--) {
           for (sl[1] = charm.skillLevels[1]; sl[1] >= 0; sl[1]--) {
             // console.log(sl[0], sl[1])
             // 装飾品で実現するスキルレベル
-            const skillLevelsRequiredInDecorations = [...Array(MAX_SKILLS).keys()].map(i => charm.skillLevels[i] - sl[i]);
+            const skillLevelsRequiredInDecorations = [...Array(this.MAX_SKILLS).keys()].map(i => charm.skillLevels[i] - sl[i]);
 
             // スキル用の要求スロット数
             const slotRequirementForSkill = skillLevelsRequiredInDecorations.reduce(((a, b) => a + b), 0);
 
             // 装飾品の要求スロット数 + charm のスロット数 > 3 なら実現不可能
-            if ( slotRequirementForSkill + charm.slots.filter(i => i).length > MAX_SLOTS ) {
+            if ( slotRequirementForSkill + charm.slots.filter(i => i).length > this.MAX_SLOTS ) {
               // それ以上 sl (=スキル要求) を減らして探索しても意味がない
               break
             }
@@ -905,16 +1021,32 @@ var app = (function () {
                   ? '(' + [`(${skillConstraints})`, `(${skillConstraintsRev})`].filter(i => i).join(' or ') + ') and '
                   : '';
 
-            const query =`select * from charms where ${sc} slot1 >= ${requiredSlots[0] || 0} and slot2 >= ${requiredSlots[1] || 0} and slot3 >= ${requiredSlots[2] || 0}`;
-            console.log(query);
-            const {result} = await sql(query);
-            console.log(result.rows);
+            const query =`select rowid,* from charms where ${sc} slot1 >= ${requiredSlots[0] || 0} and slot2 >= ${requiredSlots[1] || 0} and slot3 >= ${requiredSlots[2] || 0}`;
+            // console.log(query)
+            const {result} = await this.sql(query);
+            // console.log(result.rows)
+
+            substitutableCharms.push(
+              ...[...result.rows].filter(i => !this._isSameCharm(this._row2obj(i), charm))
+            );
             // TODO: 合計スキルレベルの条件 (WebSQL 用) は必要？
-            // TODO: スキル名とスロットにそれぞれ複合インデックス
           }
         }
 
-        return false
+        return substitutableCharms
+      }
+
+      // TODO: charm class 作ってコンストラクタでやる
+      _row2obj(row) {
+        return {
+          skills:      [row.skill1, row.skill2],
+          skillLevels: [row.skill1Level, row.skill2Level],
+          slots:       [row.slot1, row.slot2, row.slot3],
+        }
+      }
+
+      _isSameCharm(a, b) {
+        return JSON.stringify(a) === JSON.stringify(b)
       }
     }
 
@@ -1385,157 +1517,217 @@ for (const input of inputs) {
     function create_fragment$6(ctx) {
     	let div1;
     	let div0;
-    	let p0;
-    	let t0;
-    	let br0;
-    	let t1;
-    	let br1;
-    	let t2;
     	let h30;
+    	let t1;
+    	let p0;
+    	let t2;
+    	let br0;
+    	let t3;
+    	let br1;
     	let t4;
-    	let p1;
-    	let t5;
-    	let br2;
-    	let t6;
-    	let a0;
-    	let t8;
-    	let br3;
-    	let t9;
-    	let br4;
-    	let t10;
-    	let br5;
-    	let t11;
-    	let a1;
-    	let t13;
-    	let br6;
-    	let t14;
+    	let div3;
+    	let div2;
     	let h31;
+    	let t6;
+    	let p1;
+    	let t7;
+    	let br2;
+    	let t8;
+    	let a0;
+    	let t10;
+    	let br3;
+    	let t11;
+    	let br4;
+    	let t12;
+    	let br5;
+    	let t13;
+    	let a1;
+    	let t15;
+    	let br6;
     	let t16;
-    	let p2;
-    	let t17;
     	let br7;
-    	let t18;
+    	let t17;
     	let br8;
-    	let t19;
-    	let br9;
-    	let t20;
-    	let br10;
-    	let t21;
-    	let br11;
-    	let t22;
+    	let t18;
     	let span0;
-    	let br12;
+    	let t20;
+    	let br9;
+    	let t21;
+    	let br10;
+    	let t22;
+    	let div5;
+    	let div4;
+    	let h32;
     	let t24;
-    	let br13;
+    	let p2;
     	let t25;
-    	let br14;
+    	let br11;
     	let t26;
-    	let br15;
+    	let br12;
     	let t27;
-    	let span1;
-    	let br16;
+    	let br13;
+    	let t28;
+    	let br14;
     	let t29;
+    	let span1;
+    	let br15;
+    	let t31;
+    	let br16;
+    	let t32;
+    	let br17;
+    	let t33;
+    	let br18;
+    	let t34;
+    	let span2;
+    	let br19;
+    	let t36;
+    	let br20;
+    	let t37;
+    	let br21;
+    	let t38;
+    	let br22;
 
     	const block = {
     		c: function create() {
     			div1 = element("div");
     			div0 = element("div");
-    			p0 = element("p");
-    			t0 = text("モンスターハンターライズの護石用ツールです。");
-    			br0 = element("br");
-    			t1 = text("\n      機能追加、UI 改善は随時行っています。");
-    			br1 = element("br");
-    			t2 = space();
     			h30 = element("h3");
-    			h30.textContent = "■ 護石スキャン";
+    			h30.textContent = "■ 概要";
+    			t1 = space();
+    			p0 = element("p");
+    			t2 = text("モンスターハンターライズの護石用ツールです。");
+    			br0 = element("br");
+    			t3 = text("\n      機能追加、UI 改善は随時行っています。");
+    			br1 = element("br");
     			t4 = space();
+    			div3 = element("div");
+    			div2 = element("div");
+    			h31 = element("h3");
+    			h31.textContent = "■ 護石スキャン";
+    			t6 = space();
     			p1 = element("p");
-    			t5 = text("護石のスキルやスロットを自動読み取りします。");
+    			t7 = text("護石のスキルやスロットを自動読み取りします。");
     			br2 = element("br");
-    			t6 = text("\n      Nintendo Switch の 30 秒キャプチャ動画を用意するだけで、自動でデータ化できます。\n      (");
+    			t8 = text("\n      Nintendo Switch の 30 秒キャプチャ動画を用意するだけで、自動でデータ化できます。\n      (");
     			a0 = element("a");
     			a0.textContent = "動画例";
-    			t8 = text(")");
+    			t10 = text(")");
     			br3 = element("br");
-    			t9 = space();
-    			br4 = element("br");
-    			t10 = text("\n      出力形式は、<スキル1>,<スキル1Lv>,<スキル2>,<スキル2Lv>,<スロット1Lv>,<スロット2Lv>,<スロット3Lv> です。");
-    			br5 = element("br");
     			t11 = space();
+    			br4 = element("br");
+    			t12 = text("\n      出力形式は、<スキル1>,<スキル1Lv>,<スキル2>,<スキル2Lv>,<スロット1Lv>,<スロット2Lv>,<スロット3Lv> です。");
+    			br5 = element("br");
+    			t13 = space();
     			a1 = element("a");
     			a1.textContent = "泣きシミュ";
-    			t13 = text(" さんでそのままインポートできます。");
+    			t15 = text(" さんでそのままインポートできます。");
     			br6 = element("br");
-    			t14 = space();
-    			h31 = element("h3");
-    			h31.textContent = "■ 護石管理";
     			t16 = space();
-    			p2 = element("p");
-    			t17 = text("スキャンした護石の一覧を見ることができます。");
     			br7 = element("br");
-    			t18 = text("\n      右端の画像ボタンを押すことで、スキャン時のスクリーンショットを確認できます。");
+    			t17 = text("\n      (注意)");
     			br8 = element("br");
-    			t19 = text("\n      護石データは蓄積され、次回、同じブラウザで開いた時にも保持されます。");
-    			br9 = element("br");
-    			t20 = space();
-    			br10 = element("br");
-    			t21 = text("\n      表中の \"合計スキルレベル\" は、");
-    			br11 = element("br");
-    			t22 = space();
+    			t18 = text("\n      - ");
     			span0 = element("span");
-    			span0.textContent = "(スキルを装飾品換算した場合のスロットLv) × (スキルLv) + (スロットLv)";
+    			span0.textContent = "装飾品を外した状態でないと、装飾品分のスキルも読み込まれてしまいます。";
+    			t20 = text(" (一括解除が有用です)");
+    			br9 = element("br");
+    			t21 = text("\n      - キャプチャ動画のファイル名はデフォルトのまま使用することを推奨します。");
+    			br10 = element("br");
+    			t22 = space();
+    			div5 = element("div");
+    			div4 = element("div");
+    			h32 = element("h3");
+    			h32.textContent = "■ 護石管理";
+    			t24 = space();
+    			p2 = element("p");
+    			t25 = text("スキャンした護石の一覧を見ることができます。");
+    			br11 = element("br");
+    			t26 = text("\n      護石データは蓄積され、次回、同じブラウザで開いた時にも保持されます。");
     			br12 = element("br");
-    			t24 = text("\n      として計算しています。");
-    			br13 = element("br");
-    			t25 = space();
-    			br14 = element("br");
-    			t26 = text("\n      例) 納刀術2, ひるみ軽減1, スロット 3-1-0 の場合");
-    			br15 = element("br");
     			t27 = space();
+    			br13 = element("br");
+    			t28 = text("\n      表中の \"合計スキルレベル\" は、");
+    			br14 = element("br");
+    			t29 = space();
     			span1 = element("span");
-    			span1.textContent = "2 × 2 + 1 × 1 + 3 + 1 + 0 = 9";
+    			span1.textContent = "(スキルを装飾品換算した場合のスロットLv) × (スキルLv) + (スロットLv)";
+    			br15 = element("br");
+    			t31 = text("\n      として計算しています。");
     			br16 = element("br");
-    			t29 = text("\n\n      近日、上位互換護石の表示機能を追加予定です。");
-    			add_location(br0, file$6, 4, 28, 215);
-    			add_location(br1, file$6, 5, 26, 246);
-    			attr_dev(p0, "class", "svelte-15kmx5q");
-    			add_location(p0, file$6, 3, 4, 183);
+    			t32 = space();
+    			br17 = element("br");
+    			t33 = text("\n      例: 納刀術2, ひるみ軽減1, スロット 3-1-0 の場合");
+    			br18 = element("br");
+    			t34 = space();
+    			span2 = element("span");
+    			span2.textContent = "2 × 2 + 1 × 1 + 3 + 1 + 0 = 9";
+    			br19 = element("br");
+    			t36 = space();
+    			br20 = element("br");
+    			t37 = text("\n      右端の画像ボタンを押すことで、スキャン時のスクリーンショットを確認できます。");
+    			br21 = element("br");
+    			t38 = text("\n      右端に上向き矢印がある場合、上位互換の護石があります。クリックで該当の護石を確認することができます。");
+    			br22 = element("br");
     			attr_dev(h30, "class", "svelte-15kmx5q");
-    			add_location(h30, file$6, 8, 4, 265);
-    			add_location(br2, file$6, 10, 28, 319);
-    			attr_dev(a0, "href", "sample/input.mp4");
-    			add_location(a0, file$6, 12, 7, 388);
-    			add_location(br3, file$6, 12, 42, 423);
-    			add_location(br4, file$6, 13, 6, 434);
-    			add_location(br5, file$6, 14, 119, 558);
-    			attr_dev(a1, "href", "https://mhrise.wiki-db.com/sim/");
-    			add_location(a1, file$6, 15, 6, 569);
-    			add_location(br6, file$6, 15, 75, 638);
-    			attr_dev(p1, "class", "svelte-15kmx5q");
-    			add_location(p1, file$6, 9, 4, 287);
-    			attr_dev(h31, "class", "svelte-15kmx5q");
-    			add_location(h31, file$6, 18, 4, 657);
-    			add_location(br7, file$6, 20, 28, 709);
-    			add_location(br8, file$6, 21, 44, 758);
-    			add_location(br9, file$6, 22, 40, 803);
-    			add_location(br10, file$6, 23, 6, 814);
-    			add_location(br11, file$6, 24, 23, 842);
-    			attr_dev(span0, "class", "px-3 font-weight-bold");
-    			add_location(span0, file$6, 25, 6, 853);
-    			add_location(br12, file$6, 25, 92, 939);
-    			add_location(br13, file$6, 26, 17, 961);
-    			add_location(br14, file$6, 27, 6, 972);
-    			add_location(br15, file$6, 28, 37, 1014);
-    			attr_dev(span1, "class", "px-3");
-    			add_location(span1, file$6, 29, 6, 1025);
-    			add_location(br16, file$6, 29, 61, 1080);
-    			attr_dev(p2, "class", "svelte-15kmx5q");
-    			add_location(p2, file$6, 19, 4, 677);
+    			add_location(h30, file$6, 2, 4, 96);
+    			add_location(br0, file$6, 4, 28, 146);
+    			add_location(br1, file$6, 5, 26, 177);
+    			attr_dev(p0, "class", "svelte-15kmx5q");
+    			add_location(p0, file$6, 3, 4, 114);
     			attr_dev(div0, "class", "card-body");
     			add_location(div0, file$6, 1, 2, 68);
     			attr_dev(div1, "id", "description");
     			attr_dev(div1, "class", "card border border-light shadow-sm svelte-15kmx5q");
     			add_location(div1, file$6, 0, 0, 0);
+    			attr_dev(h31, "class", "svelte-15kmx5q");
+    			add_location(h31, file$6, 13, 4, 305);
+    			add_location(br2, file$6, 15, 28, 359);
+    			attr_dev(a0, "href", "sample/input.mp4");
+    			add_location(a0, file$6, 17, 7, 428);
+    			add_location(br3, file$6, 17, 42, 463);
+    			add_location(br4, file$6, 18, 6, 474);
+    			add_location(br5, file$6, 19, 119, 598);
+    			attr_dev(a1, "href", "https://mhrise.wiki-db.com/sim/");
+    			add_location(a1, file$6, 20, 6, 609);
+    			add_location(br6, file$6, 20, 75, 678);
+    			add_location(br7, file$6, 21, 6, 689);
+    			add_location(br8, file$6, 22, 10, 704);
+    			set_style(span0, "color", "red");
+    			add_location(span0, file$6, 23, 8, 717);
+    			add_location(br9, file$6, 23, 87, 796);
+    			add_location(br10, file$6, 24, 43, 844);
+    			attr_dev(p1, "class", "svelte-15kmx5q");
+    			add_location(p1, file$6, 14, 4, 327);
+    			attr_dev(div2, "class", "card-body");
+    			add_location(div2, file$6, 11, 2, 276);
+    			attr_dev(div3, "id", "description");
+    			attr_dev(div3, "class", "card border border-light shadow-sm svelte-15kmx5q");
+    			add_location(div3, file$6, 10, 0, 208);
+    			attr_dev(h32, "class", "svelte-15kmx5q");
+    			add_location(h32, file$6, 31, 4, 971);
+    			add_location(br11, file$6, 33, 28, 1023);
+    			add_location(br12, file$6, 34, 40, 1068);
+    			add_location(br13, file$6, 35, 6, 1079);
+    			add_location(br14, file$6, 36, 23, 1107);
+    			attr_dev(span1, "class", "px-3 font-weight-bold");
+    			add_location(span1, file$6, 37, 6, 1118);
+    			add_location(br15, file$6, 37, 92, 1204);
+    			add_location(br16, file$6, 38, 17, 1226);
+    			add_location(br17, file$6, 39, 6, 1237);
+    			add_location(br18, file$6, 40, 37, 1279);
+    			attr_dev(span2, "class", "px-3");
+    			add_location(span2, file$6, 41, 6, 1290);
+    			add_location(br19, file$6, 41, 61, 1345);
+    			add_location(br20, file$6, 42, 6, 1356);
+    			add_location(br21, file$6, 43, 44, 1405);
+    			add_location(br22, file$6, 44, 56, 1466);
+    			attr_dev(p2, "class", "svelte-15kmx5q");
+    			add_location(p2, file$6, 32, 4, 991);
+    			attr_dev(div4, "class", "card-body");
+    			add_location(div4, file$6, 29, 2, 942);
+    			attr_dev(div5, "id", "description");
+    			attr_dev(div5, "class", "card border border-light shadow-sm svelte-15kmx5q");
+    			add_location(div5, file$6, 28, 0, 874);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1543,62 +1735,85 @@ for (const input of inputs) {
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
     			append_dev(div1, div0);
-    			append_dev(div0, p0);
-    			append_dev(p0, t0);
-    			append_dev(p0, br0);
-    			append_dev(p0, t1);
-    			append_dev(p0, br1);
-    			append_dev(div0, t2);
     			append_dev(div0, h30);
-    			append_dev(div0, t4);
-    			append_dev(div0, p1);
-    			append_dev(p1, t5);
+    			append_dev(div0, t1);
+    			append_dev(div0, p0);
+    			append_dev(p0, t2);
+    			append_dev(p0, br0);
+    			append_dev(p0, t3);
+    			append_dev(p0, br1);
+    			insert_dev(target, t4, anchor);
+    			insert_dev(target, div3, anchor);
+    			append_dev(div3, div2);
+    			append_dev(div2, h31);
+    			append_dev(div2, t6);
+    			append_dev(div2, p1);
+    			append_dev(p1, t7);
     			append_dev(p1, br2);
-    			append_dev(p1, t6);
-    			append_dev(p1, a0);
     			append_dev(p1, t8);
-    			append_dev(p1, br3);
-    			append_dev(p1, t9);
-    			append_dev(p1, br4);
+    			append_dev(p1, a0);
     			append_dev(p1, t10);
-    			append_dev(p1, br5);
+    			append_dev(p1, br3);
     			append_dev(p1, t11);
-    			append_dev(p1, a1);
+    			append_dev(p1, br4);
+    			append_dev(p1, t12);
+    			append_dev(p1, br5);
     			append_dev(p1, t13);
+    			append_dev(p1, a1);
+    			append_dev(p1, t15);
     			append_dev(p1, br6);
-    			append_dev(div0, t14);
-    			append_dev(div0, h31);
-    			append_dev(div0, t16);
-    			append_dev(div0, p2);
-    			append_dev(p2, t17);
-    			append_dev(p2, br7);
-    			append_dev(p2, t18);
-    			append_dev(p2, br8);
-    			append_dev(p2, t19);
-    			append_dev(p2, br9);
-    			append_dev(p2, t20);
-    			append_dev(p2, br10);
-    			append_dev(p2, t21);
-    			append_dev(p2, br11);
-    			append_dev(p2, t22);
-    			append_dev(p2, span0);
-    			append_dev(p2, br12);
-    			append_dev(p2, t24);
-    			append_dev(p2, br13);
+    			append_dev(p1, t16);
+    			append_dev(p1, br7);
+    			append_dev(p1, t17);
+    			append_dev(p1, br8);
+    			append_dev(p1, t18);
+    			append_dev(p1, span0);
+    			append_dev(p1, t20);
+    			append_dev(p1, br9);
+    			append_dev(p1, t21);
+    			append_dev(p1, br10);
+    			insert_dev(target, t22, anchor);
+    			insert_dev(target, div5, anchor);
+    			append_dev(div5, div4);
+    			append_dev(div4, h32);
+    			append_dev(div4, t24);
+    			append_dev(div4, p2);
     			append_dev(p2, t25);
-    			append_dev(p2, br14);
+    			append_dev(p2, br11);
     			append_dev(p2, t26);
-    			append_dev(p2, br15);
+    			append_dev(p2, br12);
     			append_dev(p2, t27);
-    			append_dev(p2, span1);
-    			append_dev(p2, br16);
+    			append_dev(p2, br13);
+    			append_dev(p2, t28);
+    			append_dev(p2, br14);
     			append_dev(p2, t29);
+    			append_dev(p2, span1);
+    			append_dev(p2, br15);
+    			append_dev(p2, t31);
+    			append_dev(p2, br16);
+    			append_dev(p2, t32);
+    			append_dev(p2, br17);
+    			append_dev(p2, t33);
+    			append_dev(p2, br18);
+    			append_dev(p2, t34);
+    			append_dev(p2, span2);
+    			append_dev(p2, br19);
+    			append_dev(p2, t36);
+    			append_dev(p2, br20);
+    			append_dev(p2, t37);
+    			append_dev(p2, br21);
+    			append_dev(p2, t38);
+    			append_dev(p2, br22);
     		},
     		p: noop,
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div1);
+    			if (detaching) detach_dev(t4);
+    			if (detaching) detach_dev(div3);
+    			if (detaching) detach_dev(t22);
+    			if (detaching) detach_dev(div5);
     		}
     	};
 
@@ -1685,7 +1900,7 @@ for (const input of inputs) {
     const get_after_row_slot_changes = dirty => ({ row: dirty[0] & /*c_rows*/ 8192 });
     const get_after_row_slot_context = ctx => ({ row: /*row*/ ctx[33], n: /*n*/ ctx[35] });
 
-    function get_each_context_1$1(ctx, list, i) {
+    function get_each_context_1$2(ctx, list, i) {
     	const child_ctx = ctx.slice();
     	child_ctx[36] = list[i];
     	return child_ctx;
@@ -1725,7 +1940,7 @@ for (const input of inputs) {
     }
 
     // (117:4) {#if showFilterHeader}
-    function create_if_block_4(ctx) {
+    function create_if_block_4$1(ctx) {
     	let tr;
     	let each_value_3 = /*columns*/ ctx[3];
     	validate_each_argument(each_value_3);
@@ -1786,7 +2001,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_4.name,
+    		id: create_if_block_4$1.name,
     		type: "if",
     		source: "(117:4) {#if showFilterHeader}",
     		ctx
@@ -2531,7 +2746,7 @@ for (const input of inputs) {
     }
 
     // (166:10) {#each columns as col}
-    function create_each_block_1$1(ctx) {
+    function create_each_block_1$2(ctx) {
     	let td;
     	let current_block_type_index;
     	let if_block;
@@ -2625,7 +2840,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block_1$1.name,
+    		id: create_each_block_1$2.name,
     		type: "each",
     		source: "(166:10) {#each columns as col}",
     		ctx
@@ -2646,7 +2861,7 @@ for (const input of inputs) {
     	let each_blocks = [];
 
     	for (let i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
+    		each_blocks[i] = create_each_block_1$2(get_each_context_1$2(ctx, each_value_1, i));
     	}
 
     	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -2691,13 +2906,13 @@ for (const input of inputs) {
     				let i;
 
     				for (i = 0; i < each_value_1.length; i += 1) {
-    					const child_ctx = get_each_context_1$1(ctx, each_value_1, i);
+    					const child_ctx = get_each_context_1$2(ctx, each_value_1, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(child_ctx, dirty);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block_1$1(child_ctx);
+    						each_blocks[i] = create_each_block_1$2(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(tr, null);
@@ -2839,7 +3054,7 @@ for (const input of inputs) {
     	let tbody_class_value;
     	let table_class_value;
     	let current;
-    	let if_block = /*showFilterHeader*/ ctx[14] && create_if_block_4(ctx);
+    	let if_block = /*showFilterHeader*/ ctx[14] && create_if_block_4$1(ctx);
     	const header_slot_template = /*#slots*/ ctx[23].header;
     	const header_slot = create_slot(header_slot_template, ctx, /*$$scope*/ ctx[22], get_header_slot_context);
     	const header_slot_or_fallback = header_slot || fallback_block_2(ctx);
@@ -3407,126 +3622,209 @@ for (const input of inputs) {
     	}
     }
 
-    const skillToSlotLevel$1 = {
-      '無し':               0,
+    const allSkills = [
+      // 'あ行のスキル',
+      'アイテム使用強化',
+      '泡沫の舞',
+      '炎鱗の恩恵',
+      '鬼火纏',
+      // 'か行のスキル',
+      'スキル',
+      'ガード強化',
+      'ガード性能',
+      '会心撃【属性】',
+      '回避距離UP',
+      '回避性能',
+      '回復速度',
+      '翔蟲使い',
+      '火事場力',
+      '滑走強化',
+      '霞皮の恩恵',
+      '雷属性攻撃強化',
+      '雷耐性',
+      '貫通弾・貫通矢強化',
+      '気絶耐性',
+      'キノコ大好き',
+      '逆襲',
+      '強化持続',
+      'KO術',
+      '広域化',
+      '幸運',
+      '鋼殻の恩恵',
+      '攻撃',
+      '剛刃研磨',
+      '高速変形',
+      '氷属性攻撃強化',
+      '氷耐性',
+      '渾身',
+      // 'さ行のスキル',
+      'スキル',
+      '逆恨み',
+      '散弾・拡散矢強化',
+      '死中に活',
+      '弱点特効',
+      'ジャンプ鉄人',
+      '集中',
+      '植生学',
+      '心眼',
+      '睡眠属性強化',
+      '睡眠耐性',
+      'スタミナ急速回復',
+      'スタミナ奪取',
+      '精霊の加護',
+      '攻めの守勢',
+      '装填拡張',
+      '装填速度',
+      '速射強化',
+      '属性やられ耐性',
+      // 'た行のスキル',
+      'スキル',
+      '体術',
+      '耐震',
+      '体力回復量UP',
+      '匠',
+      '達人芸',
+      '弾丸節約',
+      '弾導強化',
+      '力の解放',
+      '地質学',
+      '超会心',
+      '挑戦者',
+      '通常弾・連射矢強化',
+      '泥雪耐性',
+      '砥石使用高速化',
+      '特殊射撃強化',
+      '毒属性強化',
+      '毒耐性',
+      '飛び込み',
+      '鈍器使い',
+      // 'な行のスキル',
+      'スキル',
+      '納刀術',
+      '乗り名人',
+      // 'は行のスキル',
+      'スキル',
+      '破壊王',
+      '剥ぎ取り鉄人',
+      '剥ぎ取り名人',
+      '爆破属性強化',
+      '爆破やられ耐性',
+      '抜刀術【力】',
+      '抜刀術【技】',
+      '早食い',
+      '腹減り耐性',
+      '反動軽減',
+      '火属性攻撃強化',
+      '火耐性',
+      'ひるみ軽減',
+      '風圧耐性',
+      '風紋の一致',
+      '笛吹き名人',
+      '不屈',
+      'フルチャージ',
+      'ブレ抑制',
+      '壁面移動',
+      '防御',
+      '砲術',
+      '砲弾装填',
+      '捕獲名人',
+      'ボマー',
+      // 'ま行のスキル',
+      'スキル',
+      '麻痺属性強化',
+      '麻痺耐性',
+      '満足感',
+      '見切り',
+      '水属性攻撃強化',
+      '水耐性',
+      '耳栓',
+      // 'や行のスキル',
+      'スキル',
+      '弓溜め段階解放',
+      '陽動',
+      // 'ら行のスキル',
+      'スキル',
+      '雷紋の一致',
+      'ランナー',
+      '龍属性攻撃強化',
+      '龍耐性',
+      // 'わ行のスキル',
+      'スキル',
+      '業物',
+    ];
 
-      '龍耐性':             1,
-      '氷耐性':             1,
-      '雷耐性':             1,
-      '水耐性':             1,
-      '火耐性':             1,
-      '毒耐性':             1,
-      '麻痺耐性':           1,
-      '睡眠耐性':           1,
-      '爆破やられ耐性':     1,
-      '植生学':             1,
-      '地質学':             1,
-      '飛び込み':           1,
-      '陽動':               1,
-      '泥雪耐性':           1,
-      '満足感':             1,
-      '腹減り耐性':         1,
-      '剥ぎ取り鉄人':       1,
-      '防御':               1,
-      '龍属性攻撃強化':     1,
-      '氷属性攻撃強化':     1,
-      '雷属性攻撃強化':     1,
-      '水属性攻撃強化':     1,
-      '火属性攻撃強化':     1,
-      'ボマー':             1,
-      '滑走強化':           1,
-      '毒属性強化':         1,
-      'スタミナ奪取':       1,
-      '笛吹き名人':         1,
-      '回復速度':           1,
-      '砥石使用高速化':     1,
-      '風圧耐性':           1,
-      'ひるみ軽減':         1,
-      'ブレ抑制':           1,
-      '気絶耐性':           1,
-      '装填速度':           1,
-      '反動軽減':           1,
+    const subscriber_queue = [];
+    /**
+     * Create a `Writable` store that allows both updating and reading by subscription.
+     * @param {*=}value initial value
+     * @param {StartStopNotifier=}start start and stop notifications for subscriptions
+     */
+    function writable(value, start = noop) {
+        let stop;
+        const subscribers = [];
+        function set(new_value) {
+            if (safe_not_equal(value, new_value)) {
+                value = new_value;
+                if (stop) { // store is ready
+                    const run_queue = !subscriber_queue.length;
+                    for (let i = 0; i < subscribers.length; i += 1) {
+                        const s = subscribers[i];
+                        s[1]();
+                        subscriber_queue.push(s, value);
+                    }
+                    if (run_queue) {
+                        for (let i = 0; i < subscriber_queue.length; i += 2) {
+                            subscriber_queue[i][0](subscriber_queue[i + 1]);
+                        }
+                        subscriber_queue.length = 0;
+                    }
+                }
+            }
+        }
+        function update(fn) {
+            set(fn(value));
+        }
+        function subscribe(run, invalidate = noop) {
+            const subscriber = [run, invalidate];
+            subscribers.push(subscriber);
+            if (subscribers.length === 1) {
+                stop = start(set) || noop;
+            }
+            run(value);
+            return () => {
+                const index = subscribers.indexOf(subscriber);
+                if (index !== -1) {
+                    subscribers.splice(index, 1);
+                }
+                if (subscribers.length === 0) {
+                    stop();
+                    stop = null;
+                }
+            };
+        }
+        return { set, update, subscribe };
+    }
 
-      '不屈':               2,
-      '乗り名人':           2,
-      '体術':               2,
-      '体力回復量UP':       2,
-      'アイテム使用強化':   2,
-      '翔蟲使い':           2,
-      '壁面移動':           2,
-      '精霊の加護':         2,
-      '早食い':             2,
-      '属性やられ耐性':     2,
-      '破壊王':             2,
-      '広域化':             2,
-      'KO術':               2,
-      '納刀術':             2,
-      '回避性能':           2,
-      '回避距離UP':         2,
-      '抜刀術【力】':       2,
-      '泡沫の舞':           2,
-      '逆襲':               2,
-      '耐震':               2,
-      '鈍器使い':           2,
-      '高速変形':           2,
-      '見切り':             2,
-      '攻撃':               2,
-      '渾身':               2,
-      '強化持続':           2,
-      'スタミナ急速回復':   2,
-      'ガード性能':         2,
-      'ガード強化':         2,
-      '砲弾装填':           2,
-      '特殊射撃強化':       2,
-      '火事場力':           2,
-      '心眼':               2,
-      '集中':               2,
-      'ランナー':           2,
-      '砲術':               2,
-      '会心撃【属性】':     2,
-      '弾導強化':           2,
-      '超会心':             2,
-      '弱点特効':           2,
-      '挑戦者':             2,
-      'フルチャージ':       2,
-      '逆恨み':             2,
-      '死中に活':           2,
-      '力の解放':           2,
-      '麻痺属性強化':       2,
-      '睡眠属性強化':       2,
-      '爆破属性強化':       2,
-      '剛刃研磨':           2,
-      '業物':               2,
-      '弾丸節約':           2,
-      '達人芸':             2,
-
-      '耳栓':               3,
-      '抜刀術【技】':       3,
-      'キノコ大好き':       3,
-      '攻めの守勢':         3,
-      '装填拡張':           3,
-      '通常弾・連射矢強化': 3,
-      '貫通弾・貫通矢強化': 3,
-      '散弾・拡散矢強化':   3,
-      '速射強化':           3,
-      'ジャンプ鉄人':       3,
-      '鬼火纏':             3,
-      '幸運':               3,
-      '匠':                 3,
-    };
+    const fRefleshCharmTable = writable(false);
 
     /* src/CharmList.svelte generated by Svelte v3.38.2 */
 
     const { Object: Object_1, console: console_1$1 } = globals;
     const file$4 = "src/CharmList.svelte";
 
-    function get_each_context$2(ctx, list, i) {
+    function get_each_context_1$1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[13] = list[i];
+    	child_ctx[17] = list[i];
     	return child_ctx;
     }
 
-    // (190:2) {:else}
+    function get_each_context$2(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[14] = list[i];
+    	return child_ctx;
+    }
+
+    // (224:2) {:else}
     function create_else_block$1(ctx) {
     	let sveltetable;
     	let current;
@@ -3540,13 +3838,13 @@ for (const input of inputs) {
     				$$slots: {
     					"after-row": [
     						create_after_row_slot,
-    						({ n, row }) => ({ 11: n, 12: row }),
-    						({ n, row }) => (n ? 2048 : 0) | (row ? 4096 : 0)
+    						({ n, row }) => ({ 12: n, 13: row }),
+    						({ n, row }) => (n ? 4096 : 0) | (row ? 8192 : 0)
     					],
     					row: [
     						create_row_slot,
-    						({ n, row }) => ({ 11: n, 12: row }),
-    						({ n, row }) => (n ? 2048 : 0) | (row ? 4096 : 0)
+    						({ n, row }) => ({ 12: n, 13: row }),
+    						({ n, row }) => (n ? 4096 : 0) | (row ? 8192 : 0)
     					]
     				},
     				$$scope: { ctx }
@@ -3568,7 +3866,7 @@ for (const input of inputs) {
     			const sveltetable_changes = {};
     			if (dirty & /*charms*/ 1) sveltetable_changes.rows = /*charms*/ ctx[0];
 
-    			if (dirty & /*$$scope, n, charms, row*/ 71681) {
+    			if (dirty & /*$$scope, n, charms, row*/ 1060865) {
     				sveltetable_changes.$$scope = { dirty, ctx };
     			}
 
@@ -3592,14 +3890,14 @@ for (const input of inputs) {
     		block,
     		id: create_else_block$1.name,
     		type: "else",
-    		source: "(190:2) {:else}",
+    		source: "(224:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (186:2) {#if charms == null}
+    // (220:2) {#if charms == null}
     function create_if_block$1(ctx) {
     	let div;
     	let span;
@@ -3610,11 +3908,11 @@ for (const input of inputs) {
     			span = element("span");
     			span.textContent = "Loading...";
     			attr_dev(span, "class", "visually-hidden");
-    			add_location(span, file$4, 187, 6, 5885);
+    			add_location(span, file$4, 221, 6, 7880);
     			set_style(div, "margin-top", "20%");
     			attr_dev(div, "class", "spinner-border text-info");
     			attr_dev(div, "role", "status");
-    			add_location(div, file$4, 186, 4, 5802);
+    			add_location(div, file$4, 220, 4, 7797);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3632,20 +3930,20 @@ for (const input of inputs) {
     		block,
     		id: create_if_block$1.name,
     		type: "if",
-    		source: "(186:2) {#if charms == null}",
+    		source: "(220:2) {#if charms == null}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (208:12) {:else}
-    function create_else_block_1(ctx) {
+    // (242:12) {:else}
+    function create_else_block_2(ctx) {
     	let html_tag;
 
-    	let raw_value = (/*col*/ ctx[13].renderValue
-    	? /*col*/ ctx[13].renderValue(/*row*/ ctx[12])
-    	: /*col*/ ctx[13].value(/*row*/ ctx[12])) + "";
+    	let raw_value = (/*col*/ ctx[17].renderValue
+    	? /*col*/ ctx[17].renderValue(/*row*/ ctx[13])
+    	: /*col*/ ctx[17].value(/*row*/ ctx[13])) + "";
 
     	let html_anchor;
 
@@ -3659,9 +3957,9 @@ for (const input of inputs) {
     			insert_dev(target, html_anchor, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*row*/ 4096 && raw_value !== (raw_value = (/*col*/ ctx[13].renderValue
-    			? /*col*/ ctx[13].renderValue(/*row*/ ctx[12])
-    			: /*col*/ ctx[13].value(/*row*/ ctx[12])) + "")) html_tag.p(raw_value);
+    			if (dirty & /*row*/ 8192 && raw_value !== (raw_value = (/*col*/ ctx[17].renderValue
+    			? /*col*/ ctx[17].renderValue(/*row*/ ctx[13])
+    			: /*col*/ ctx[17].value(/*row*/ ctx[13])) + "")) html_tag.p(raw_value);
     		},
     		i: noop,
     		o: noop,
@@ -3673,28 +3971,28 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block_1.name,
+    		id: create_else_block_2.name,
     		type: "else",
-    		source: "(208:12) {:else}",
+    		source: "(242:12) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (202:12) {#if col.renderComponent}
-    function create_if_block_3(ctx) {
+    // (236:12) {#if col.renderComponent}
+    function create_if_block_4(ctx) {
     	let switch_instance;
     	let switch_instance_anchor;
     	let current;
 
     	const switch_instance_spread_levels = [
-    		/*col*/ ctx[13].renderComponent.props || {},
-    		{ row: /*row*/ ctx[12] },
-    		{ col: /*col*/ ctx[13] }
+    		/*col*/ ctx[17].renderComponent.props || {},
+    		{ row: /*row*/ ctx[13] },
+    		{ col: /*col*/ ctx[17] }
     	];
 
-    	var switch_value = /*col*/ ctx[13].renderComponent.component || /*col*/ ctx[13].renderComponent;
+    	var switch_value = /*col*/ ctx[17].renderComponent.component || /*col*/ ctx[17].renderComponent;
 
     	function switch_props(ctx) {
     		let switch_instance_props = {};
@@ -3727,15 +4025,15 @@ for (const input of inputs) {
     			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			const switch_instance_changes = (dirty & /*columns, row*/ 4098)
+    			const switch_instance_changes = (dirty & /*columns, row*/ 8194)
     			? get_spread_update(switch_instance_spread_levels, [
-    					dirty & /*columns*/ 2 && get_spread_object(/*col*/ ctx[13].renderComponent.props || {}),
-    					dirty & /*row*/ 4096 && { row: /*row*/ ctx[12] },
-    					dirty & /*columns*/ 2 && { col: /*col*/ ctx[13] }
+    					dirty & /*columns*/ 2 && get_spread_object(/*col*/ ctx[17].renderComponent.props || {}),
+    					dirty & /*row*/ 8192 && { row: /*row*/ ctx[13] },
+    					dirty & /*columns*/ 2 && { col: /*col*/ ctx[17] }
     				])
     			: {};
 
-    			if (switch_value !== (switch_value = /*col*/ ctx[13].renderComponent.component || /*col*/ ctx[13].renderComponent)) {
+    			if (switch_value !== (switch_value = /*col*/ ctx[17].renderComponent.component || /*col*/ ctx[17].renderComponent)) {
     				if (switch_instance) {
     					group_outros();
     					const old_component = switch_instance;
@@ -3776,17 +4074,17 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_3.name,
+    		id: create_if_block_4.name,
     		type: "if",
-    		source: "(202:12) {#if col.renderComponent}",
+    		source: "(236:12) {#if col.renderComponent}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (198:8) {#each columns as col}
-    function create_each_block$2(ctx) {
+    // (232:8) {#each columns as col}
+    function create_each_block_1$1(ctx) {
     	let td;
     	let current_block_type_index;
     	let if_block;
@@ -3794,19 +4092,19 @@ for (const input of inputs) {
     	let current;
     	let mounted;
     	let dispose;
-    	const if_block_creators = [create_if_block_3, create_else_block_1];
+    	const if_block_creators = [create_if_block_4, create_else_block_2];
     	const if_blocks = [];
 
-    	function select_block_type_1(ctx, dirty) {
-    		if (/*col*/ ctx[13].renderComponent) return 0;
+    	function select_block_type_2(ctx, dirty) {
+    		if (/*col*/ ctx[17].renderComponent) return 0;
     		return 1;
     	}
 
-    	current_block_type_index = select_block_type_1(ctx);
+    	current_block_type_index = select_block_type_2(ctx);
     	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
     	function click_handler(...args) {
-    		return /*click_handler*/ ctx[6](/*col*/ ctx[13], /*row*/ ctx[12], /*n*/ ctx[11], ...args);
+    		return /*click_handler*/ ctx[5](/*col*/ ctx[17], /*row*/ ctx[13], /*n*/ ctx[12], ...args);
     	}
 
     	const block = {
@@ -3814,8 +4112,8 @@ for (const input of inputs) {
     			td = element("td");
     			if_block.c();
     			t = space();
-    			attr_dev(td, "class", [/*col*/ ctx[13].class].join(" "));
-    			add_location(td, file$4, 198, 10, 6365);
+    			attr_dev(td, "class", [/*col*/ ctx[17].class].join(" "));
+    			add_location(td, file$4, 232, 10, 8352);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, td, anchor);
@@ -3851,27 +4149,27 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block$2.name,
+    		id: create_each_block_1$1.name,
     		type: "each",
-    		source: "(198:8) {#each columns as col}",
+    		source: "(232:8) {#each columns as col}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (197:6) 
+    // (231:6) 
     function create_row_slot(ctx) {
     	let tr;
     	let current;
     	let mounted;
     	let dispose;
-    	let each_value = /*columns*/ ctx[1];
-    	validate_each_argument(each_value);
+    	let each_value_1 = /*columns*/ ctx[1];
+    	validate_each_argument(each_value_1);
     	let each_blocks = [];
 
-    	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
+    	for (let i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
     	}
 
     	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -3879,7 +4177,7 @@ for (const input of inputs) {
     	});
 
     	function click_handler_1(...args) {
-    		return /*click_handler_1*/ ctx[7](/*n*/ ctx[11], ...args);
+    		return /*click_handler_1*/ ctx[6](/*row*/ ctx[13], ...args);
     	}
 
     	const block = {
@@ -3891,7 +4189,7 @@ for (const input of inputs) {
     			}
 
     			attr_dev(tr, "slot", "row");
-    			add_location(tr, file$4, 196, 6, 6250);
+    			add_location(tr, file$4, 230, 6, 8245);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, tr, anchor);
@@ -3910,19 +4208,19 @@ for (const input of inputs) {
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
 
-    			if (dirty & /*columns, row*/ 4098) {
-    				each_value = /*columns*/ ctx[1];
-    				validate_each_argument(each_value);
+    			if (dirty & /*columns, row*/ 8194) {
+    				each_value_1 = /*columns*/ ctx[1];
+    				validate_each_argument(each_value_1);
     				let i;
 
-    				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$2(ctx, each_value, i);
+    				for (i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1$1(ctx, each_value_1, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(child_ctx, dirty);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block$2(child_ctx);
+    						each_blocks[i] = create_each_block_1$1(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(tr, null);
@@ -3931,7 +4229,7 @@ for (const input of inputs) {
 
     				group_outros();
 
-    				for (i = each_value.length; i < each_blocks.length; i += 1) {
+    				for (i = each_value_1.length; i < each_blocks.length; i += 1) {
     					out(i);
     				}
 
@@ -3941,7 +4239,7 @@ for (const input of inputs) {
     		i: function intro(local) {
     			if (current) return;
 
-    			for (let i = 0; i < each_value.length; i += 1) {
+    			for (let i = 0; i < each_value_1.length; i += 1) {
     				transition_in(each_blocks[i]);
     			}
 
@@ -3968,30 +4266,79 @@ for (const input of inputs) {
     		block,
     		id: create_row_slot.name,
     		type: "slot",
-    		source: "(197:6) ",
+    		source: "(231:6) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (215:8) {#if charms[n].isSubstitutableCharmsShown}
+    // (249:8) {#if row.isSubstitutableCharmsShown}
     function create_if_block_2$1(ctx) {
-    	let div;
+    	let current_block_type_index;
+    	let if_block;
+    	let if_block_anchor;
+    	let current;
+    	const if_block_creators = [create_if_block_3, create_else_block_1];
+    	const if_blocks = [];
+
+    	function select_block_type_1(ctx, dirty) {
+    		if (/*row*/ ctx[13].substitutableCharms == null) return 0;
+    		return 1;
+    	}
+
+    	current_block_type_index = select_block_type_1(ctx);
+    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
     	const block = {
     		c: function create() {
-    			div = element("div");
-    			div.textContent = "上位互換護石の表示は準備中です";
-    			set_style(div, "width", "100%");
-    			set_style(div, "border-bottom", "solid 1px #ddd");
-    			add_location(div, file$4, 215, 10, 7107);
+    			if_block.c();
+    			if_block_anchor = empty();
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
+    			if_blocks[current_block_type_index].m(target, anchor);
+    			insert_dev(target, if_block_anchor, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			let previous_block_index = current_block_type_index;
+    			current_block_type_index = select_block_type_1(ctx);
+
+    			if (current_block_type_index === previous_block_index) {
+    				if_blocks[current_block_type_index].p(ctx, dirty);
+    			} else {
+    				group_outros();
+
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    					if_blocks[previous_block_index] = null;
+    				});
+
+    				check_outros();
+    				if_block = if_blocks[current_block_type_index];
+
+    				if (!if_block) {
+    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    					if_block.c();
+    				} else {
+    					if_block.p(ctx, dirty);
+    				}
+
+    				transition_in(if_block, 1);
+    				if_block.m(if_block_anchor.parentNode, if_block_anchor);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
+    			if_blocks[current_block_type_index].d(detaching);
+    			if (detaching) detach_dev(if_block_anchor);
     		}
     	};
 
@@ -3999,39 +4346,211 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_2$1.name,
     		type: "if",
-    		source: "(215:8) {#if charms[n].isSubstitutableCharmsShown}",
+    		source: "(249:8) {#if row.isSubstitutableCharmsShown}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (218:8) {#if charms[n].isScrennshotShown}
-    function create_if_block_1$1(ctx) {
+    // (252:10) {:else}
+    function create_else_block_1(ctx) {
     	let div;
-    	let canvas;
-    	let canvas_id_value;
+    	let div_transition;
+    	let current;
+    	let each_value = /*row*/ ctx[13].substitutableCharms;
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
+    	}
 
     	const block = {
     		c: function create() {
     			div = element("div");
-    			canvas = element("canvas");
-    			attr_dev(canvas, "id", canvas_id_value = "charm-table-row-" + /*n*/ ctx[11] + "-screenshot");
-    			set_style(canvas, "width", "100%");
-    			attr_dev(canvas, "class", "svelte-k99c5z");
-    			add_location(canvas, file$4, 219, 12, 7320);
-    			set_style(div, "width", "100%");
-    			set_style(div, "border-bottom", "solid 1px #ddd");
-    			add_location(div, file$4, 218, 10, 7251);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			add_location(div, file$4, 252, 12, 9208);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
-    			append_dev(div, canvas);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div, null);
+    			}
+
+    			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*n*/ 2048 && canvas_id_value !== (canvas_id_value = "charm-table-row-" + /*n*/ ctx[11] + "-screenshot")) {
-    				attr_dev(canvas, "id", canvas_id_value);
+    			if (dirty & /*row*/ 8192) {
+    				each_value = /*row*/ ctx[13].substitutableCharms;
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$2(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block$2(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(div, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value.length;
     			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 100 }, true);
+    				div_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 100 }, false);
+    			div_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching && div_transition) div_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block_1.name,
+    		type: "else",
+    		source: "(252:10) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (250:10) {#if row.substitutableCharms == null}
+    function create_if_block_3(ctx) {
+    	let div;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			div.textContent = "searching...";
+    			set_style(div, "width", "100%");
+    			set_style(div, "border-bottom", "solid 1px #ddd");
+    			add_location(div, file$4, 250, 12, 9103);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    		},
+    		p: noop,
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_3.name,
+    		type: "if",
+    		source: "(250:10) {#if row.substitutableCharms == null}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (254:12) {#each row.substitutableCharms as c}
+    function create_each_block$2(ctx) {
+    	let div;
+    	let t0_value = /*c*/ ctx[14].rowid + "";
+    	let t0;
+    	let t1;
+    	let t2_value = /*c*/ ctx[14].skill1 + "";
+    	let t2;
+    	let t3_value = /*c*/ ctx[14].skill1Level + "";
+    	let t3;
+    	let t4;
+    	let t5_value = /*c*/ ctx[14].skill2 + "";
+    	let t5;
+    	let t6_value = /*c*/ ctx[14].skill2Level + "";
+    	let t6;
+    	let t7;
+    	let t8_value = /*c*/ ctx[14].slot1 + "";
+    	let t8;
+    	let t9;
+    	let t10_value = /*c*/ ctx[14].slot2 + "";
+    	let t10;
+    	let t11;
+    	let t12_value = /*c*/ ctx[14].slot3 + "";
+    	let t12;
+    	let t13;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			t0 = text(t0_value);
+    			t1 = text(": ");
+    			t2 = text(t2_value);
+    			t3 = text(t3_value);
+    			t4 = text(", ");
+    			t5 = text(t5_value);
+    			t6 = text(t6_value);
+    			t7 = text(", ");
+    			t8 = text(t8_value);
+    			t9 = text("-");
+    			t10 = text(t10_value);
+    			t11 = text("-");
+    			t12 = text(t12_value);
+    			t13 = space();
+    			set_style(div, "width", "100%");
+    			set_style(div, "text-align", "left");
+    			set_style(div, "padding", "0.3rem 2rem");
+    			add_location(div, file$4, 254, 14, 9312);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, t0);
+    			append_dev(div, t1);
+    			append_dev(div, t2);
+    			append_dev(div, t3);
+    			append_dev(div, t4);
+    			append_dev(div, t5);
+    			append_dev(div, t6);
+    			append_dev(div, t7);
+    			append_dev(div, t8);
+    			append_dev(div, t9);
+    			append_dev(div, t10);
+    			append_dev(div, t11);
+    			append_dev(div, t12);
+    			append_dev(div, t13);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*row*/ 8192 && t0_value !== (t0_value = /*c*/ ctx[14].rowid + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*row*/ 8192 && t2_value !== (t2_value = /*c*/ ctx[14].skill1 + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*row*/ 8192 && t3_value !== (t3_value = /*c*/ ctx[14].skill1Level + "")) set_data_dev(t3, t3_value);
+    			if (dirty & /*row*/ 8192 && t5_value !== (t5_value = /*c*/ ctx[14].skill2 + "")) set_data_dev(t5, t5_value);
+    			if (dirty & /*row*/ 8192 && t6_value !== (t6_value = /*c*/ ctx[14].skill2Level + "")) set_data_dev(t6, t6_value);
+    			if (dirty & /*row*/ 8192 && t8_value !== (t8_value = /*c*/ ctx[14].slot1 + "")) set_data_dev(t8, t8_value);
+    			if (dirty & /*row*/ 8192 && t10_value !== (t10_value = /*c*/ ctx[14].slot2 + "")) set_data_dev(t10, t10_value);
+    			if (dirty & /*row*/ 8192 && t12_value !== (t12_value = /*c*/ ctx[14].slot3 + "")) set_data_dev(t12, t12_value);
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
@@ -4040,24 +4559,85 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$1.name,
-    		type: "if",
-    		source: "(218:8) {#if charms[n].isScrennshotShown}",
+    		id: create_each_block$2.name,
+    		type: "each",
+    		source: "(254:12) {#each row.substitutableCharms as c}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (214:6) 
+    // (263:8) {#if charms[n].isScrennshotShown}
+    function create_if_block_1$1(ctx) {
+    	let div;
+    	let canvas;
+    	let canvas_id_value;
+    	let div_transition;
+    	let current;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			canvas = element("canvas");
+    			attr_dev(canvas, "id", canvas_id_value = "charm-table-row-" + /*n*/ ctx[12] + "-screenshot");
+    			set_style(canvas, "width", "100%");
+    			attr_dev(canvas, "class", "svelte-1hiit2s");
+    			add_location(canvas, file$4, 264, 12, 9736);
+    			set_style(div, "width", "100%");
+    			set_style(div, "border-bottom", "solid 1px #ddd");
+    			add_location(div, file$4, 263, 10, 9632);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, canvas);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if (!current || dirty & /*n*/ 4096 && canvas_id_value !== (canvas_id_value = "charm-table-row-" + /*n*/ ctx[12] + "-screenshot")) {
+    				attr_dev(canvas, "id", canvas_id_value);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			add_render_callback(() => {
+    				if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 100 }, true);
+    				div_transition.run(1);
+    			});
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 100 }, false);
+    			div_transition.run(0);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			if (detaching && div_transition) div_transition.end();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_1$1.name,
+    		type: "if",
+    		source: "(263:8) {#if charms[n].isScrennshotShown}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (248:6) 
     function create_after_row_slot(ctx) {
     	let div;
     	let t;
     	let div_id_value;
-    	let div_transition;
     	let current;
-    	let if_block0 = /*charms*/ ctx[0][/*n*/ ctx[11]].isSubstitutableCharmsShown && create_if_block_2$1(ctx);
-    	let if_block1 = /*charms*/ ctx[0][/*n*/ ctx[11]].isScrennshotShown && create_if_block_1$1(ctx);
+    	let if_block0 = /*row*/ ctx[13].isSubstitutableCharmsShown && create_if_block_2$1(ctx);
+    	let if_block1 = /*charms*/ ctx[0][/*n*/ ctx[12]].isScrennshotShown && create_if_block_1$1(ctx);
 
     	const block = {
     		c: function create() {
@@ -4066,10 +4646,10 @@ for (const input of inputs) {
     			t = space();
     			if (if_block1) if_block1.c();
     			attr_dev(div, "slot", "after-row");
-    			attr_dev(div, "id", div_id_value = "charm-table-row-" + /*n*/ ctx[11]);
+    			attr_dev(div, "id", div_id_value = "charm-table-row-" + /*n*/ ctx[12]);
     			set_style(div, "width", "100%");
-    			attr_dev(div, "class", "svelte-k99c5z");
-    			add_location(div, file$4, 213, 6, 6929);
+    			attr_dev(div, "class", "svelte-1hiit2s");
+    			add_location(div, file$4, 247, 6, 8916);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -4079,54 +4659,71 @@ for (const input of inputs) {
     			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			if (/*charms*/ ctx[0][/*n*/ ctx[11]].isSubstitutableCharmsShown) {
-    				if (if_block0) ; else {
+    			if (/*row*/ ctx[13].isSubstitutableCharmsShown) {
+    				if (if_block0) {
+    					if_block0.p(ctx, dirty);
+
+    					if (dirty & /*row*/ 8192) {
+    						transition_in(if_block0, 1);
+    					}
+    				} else {
     					if_block0 = create_if_block_2$1(ctx);
     					if_block0.c();
+    					transition_in(if_block0, 1);
     					if_block0.m(div, t);
     				}
     			} else if (if_block0) {
-    				if_block0.d(1);
-    				if_block0 = null;
+    				group_outros();
+
+    				transition_out(if_block0, 1, 1, () => {
+    					if_block0 = null;
+    				});
+
+    				check_outros();
     			}
 
-    			if (/*charms*/ ctx[0][/*n*/ ctx[11]].isScrennshotShown) {
+    			if (/*charms*/ ctx[0][/*n*/ ctx[12]].isScrennshotShown) {
     				if (if_block1) {
     					if_block1.p(ctx, dirty);
+
+    					if (dirty & /*charms, n*/ 4097) {
+    						transition_in(if_block1, 1);
+    					}
     				} else {
     					if_block1 = create_if_block_1$1(ctx);
     					if_block1.c();
+    					transition_in(if_block1, 1);
     					if_block1.m(div, null);
     				}
     			} else if (if_block1) {
-    				if_block1.d(1);
-    				if_block1 = null;
+    				group_outros();
+
+    				transition_out(if_block1, 1, 1, () => {
+    					if_block1 = null;
+    				});
+
+    				check_outros();
     			}
 
-    			if (!current || dirty & /*n*/ 2048 && div_id_value !== (div_id_value = "charm-table-row-" + /*n*/ ctx[11])) {
+    			if (!current || dirty & /*n*/ 4096 && div_id_value !== (div_id_value = "charm-table-row-" + /*n*/ ctx[12])) {
     				attr_dev(div, "id", div_id_value);
     			}
     		},
     		i: function intro(local) {
     			if (current) return;
-
-    			add_render_callback(() => {
-    				if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 300 }, true);
-    				div_transition.run(1);
-    			});
-
+    			transition_in(if_block0);
+    			transition_in(if_block1);
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 300 }, false);
-    			div_transition.run(0);
+    			transition_out(if_block0);
+    			transition_out(if_block1);
     			current = false;
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
     			if (if_block0) if_block0.d();
     			if (if_block1) if_block1.d();
-    			if (detaching && div_transition) div_transition.end();
     		}
     	};
 
@@ -4134,7 +4731,7 @@ for (const input of inputs) {
     		block,
     		id: create_after_row_slot.name,
     		type: "slot",
-    		source: "(214:6) ",
+    		source: "(248:6) ",
     		ctx
     	});
 
@@ -4162,8 +4759,8 @@ for (const input of inputs) {
     			div = element("div");
     			if_block.c();
     			attr_dev(div, "id", "charm-list");
-    			attr_dev(div, "class", "svelte-k99c5z");
-    			add_location(div, file$4, 184, 0, 5753);
+    			attr_dev(div, "class", "svelte-1hiit2s");
+    			add_location(div, file$4, 218, 0, 7748);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4229,36 +4826,17 @@ for (const input of inputs) {
     const N_CHARM_SLOT_MAX = 3;
 
     function instance$4($$self, $$props, $$invalidate) {
+    	let $fRefleshCharmTable;
+    	validate_store(fRefleshCharmTable, "fRefleshCharmTable");
+    	component_subscribe($$self, fRefleshCharmTable, $$value => $$invalidate(4, $fRefleshCharmTable = $$value));
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("CharmList", slots, []);
-
-    	const updateCharmTable = async () => {
-    		console.log("query start");
-    		const allCharms = await charmManager.searchCharms("select * from charms");
-    		console.log("query finish");
-    		console.log("map start");
-
-    		$$invalidate(0, charms = [...allCharms].map((elm, index) => {
-    			return {
-    				...elm,
-    				id: 1 + index,
-    				evaluation: skillToSlotLevel$1[elm.skill1] * elm.skill1Level + skillToSlotLevel$1[elm.skill2] * elm.skill2Level + elm.slot1 + elm.slot2 + elm.slot3
-    			};
-    		}));
-
-    		console.log("map finish");
-    	};
-
-    	const onActivate = () => {
-    		// charms = null
-    		updateCharmTable();
-    	};
 
     	const columns = [
     		{
     			key: "id",
     			title: "ID",
-    			value: v => v.id,
+    			value: v => v.rowid,
     			sortable: true,
     			filterOptions: rows => {
     				const UNIT = 50;
@@ -4267,7 +4845,7 @@ for (const input of inputs) {
     				let nums = {};
 
     				rows.forEach(row => {
-    					let num = Math.floor(row.id / UNIT);
+    					let num = Math.floor(row.rowid / UNIT);
 
     					if (nums[num] === undefined) nums[num] = {
     						name: `${num * UNIT + 1} 〜 ${(num + 1) * UNIT}`,
@@ -4280,7 +4858,7 @@ for (const input of inputs) {
 
     				return Object.values(nums);
     			},
-    			filterValue: v => Math.floor((v.id - 1) / 50)
+    			filterValue: v => Math.floor((v.rowid - 1) / 50)
     		},
     		// {
     		//   key: "first_name",
@@ -4310,24 +4888,28 @@ for (const input of inputs) {
     			key: "skill1",
     			title: "スキル1",
     			value: v => v.skill1,
+    			filterOptions: allSkills,
     			sortable: true
     		},
     		{
     			key: "skill1Level",
     			title: "スキル1 Lv",
     			value: v => v.skill1Level,
+    			filterOptions: [0, 1, 2, 3, 4, 5, 6, 7],
     			sortable: true
     		},
     		{
     			key: "skill2",
     			title: "スキル2",
     			value: v => v.skill2,
+    			filterOptions: allSkills,
     			sortable: true
     		},
     		{
     			key: "skill2Level",
     			title: "スキル2 Lv",
     			value: v => v.skill2Level,
+    			filterOptions: [0, 1, 2, 3, 4, 5, 6, 7],
     			sortable: true
     		},
     		...Array.from({ length: N_CHARM_SLOT_MAX }, (_, i) => i + 1).map(i => ({
@@ -4341,7 +4923,9 @@ for (const input of inputs) {
     		{
     			key: "evaluation",
     			title: "合計Lv",
-    			value: v => v.evaluation,
+    			value: v => v.evaluation || "-",
+    			// filterOptions: rows => [...new Set(rows.map(i => i.evaluation))],
+    			filterOptions: [...Array(21).keys()],
     			sortable: true
     		},
     		{
@@ -4358,10 +4942,15 @@ for (const input of inputs) {
     		{
     			key: "substitutableCharms",
     			title: "代替",
-    			value: v => v.substitutableCharms ? "有り" : "無し",
-    			renderValue: v => v.substitutableCharms
-    			? "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-arrow-up-square-fill\" viewBox=\"0 0 16 16\"> <path d=\"M2 16a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2zm6.5-4.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 1 0z\"/> </svg>"
-    			: "",
+    			value: v => (v.substitutableCharms?.length) ? "有り" : "無し",
+    			renderValue: v => {
+    				const question = "<span style=\"color: gray\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-question-square-fill\" viewBox=\"0 0 16 16\"> <path d=\"M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.496 6.033a.237.237 0 0 1-.24-.247C5.35 4.091 6.737 3.5 8.005 3.5c1.396 0 2.672.73 2.672 2.24 0 1.08-.635 1.594-1.244 2.057-.737.559-1.01.768-1.01 1.486v.105a.25.25 0 0 1-.25.25h-.81a.25.25 0 0 1-.25-.246l-.004-.217c-.038-.927.495-1.498 1.168-1.987.59-.444.965-.736.965-1.371 0-.825-.628-1.168-1.314-1.168-.803 0-1.253.478-1.342 1.134-.018.137-.128.25-.266.25h-.825zm2.325 6.443c-.584 0-1.009-.394-1.009-.927 0-.552.425-.94 1.01-.94.609 0 1.028.388 1.028.94 0 .533-.42.927-1.029.927z\"/> </svg> </span>";
+    				const up = "<span style=\"color: mediumseagreen\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-arrow-up-square-fill\" viewBox=\"0 0 16 16\"> <path d=\"M2 16a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2zm6.5-4.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 1 0z\"/> </svg> </span>";
+
+    				return v.substitutableCharms == null
+    				? question
+    				: v.substitutableCharms.length ? up : "";
+    			},
     			sortable: true,
     			filterOptions: ["有り", "無し"]
     		}
@@ -4378,10 +4967,35 @@ for (const input of inputs) {
     			setTimeout(init, 1000);
     		} else {
     			await updateCharmTable();
+    			searchSubstitutableCharms();
     		}
     	};
 
     	init();
+
+    	// functions
+    	async function updateCharmTable() {
+    		$$invalidate(0, charms = [...await charmManager.searchCharms("select rowid,* from charms")].map(row => {
+    			row.evaluation = skillToSlotLevel[row.skill1] * row.skill1Level + skillToSlotLevel[row.skill2] * row.skill2Level + row.slot1 + row.slot2 + row.slot3;
+    			return row;
+    		}));
+    	}
+
+    	async function searchSubstitutableCharms() {
+    		for (const index in charms) {
+    			const row = charms[index];
+    			console.log(row.rowid);
+
+    			const substitutableCharms = await charmManager.findSubstitutableCharms({
+    				skills: [row.skill1, row.skill2],
+    				skillLevels: [row.skill1Level, row.skill2Level],
+    				slots: [row.slot1, row.slot2, row.slot3]
+    			});
+
+    			// use "charms[index]" to tell update to svelte
+    			$$invalidate(0, charms[index].substitutableCharms = substitutableCharms, charms);
+    		}
+    	}
 
     	// handlers
     	function onSort(event) {
@@ -4389,7 +5003,8 @@ for (const input of inputs) {
     		charms.forEach(i => i.isScrennshotShown = i.isSubstitutableCharmsShown = false);
     	}
 
-    	function onClickRow({ e, index }) {
+    	function onClickRow({ row }) {
+    		const index = row.rowid - 1;
     		$$invalidate(0, charms[index].isSubstitutableCharmsShown = !charms[index].isSubstitutableCharmsShown, charms);
     	}
 
@@ -4419,23 +5034,26 @@ for (const input of inputs) {
     		}
     	};
 
-    	const click_handler_1 = (n, e) => onClickRow({ e, index: n });
+    	const click_handler_1 = (row, e) => onClickRow({ row });
 
     	$$self.$capture_state = () => ({
     		slide,
     		SvelteTable,
     		MHRiseCharmManager,
-    		skillToSlotLevel: skillToSlotLevel$1,
-    		updateCharmTable,
-    		onActivate,
+    		skillToSlotLevel,
+    		allSkills,
+    		fRefleshCharmTable,
     		N_CHARM_SLOT_MAX,
     		columns,
     		charmManager,
     		charms,
     		init,
+    		updateCharmTable,
+    		searchSubstitutableCharms,
     		onSort,
     		onClickRow,
-    		toggleScreenshot
+    		toggleScreenshot,
+    		$fRefleshCharmTable
     	});
 
     	$$self.$inject_state = $$props => {
@@ -4447,13 +5065,25 @@ for (const input of inputs) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*$fRefleshCharmTable*/ 16) {
+    			if ($fRefleshCharmTable) {
+    				(async () => {
+    					console.log("reflesh table");
+    					fRefleshCharmTable.set(false);
+    					await updateCharmTable();
+    					searchSubstitutableCharms();
+    				})();
+    			}
+    		}
+    	};
+
     	return [
     		charms,
     		columns,
     		onSort,
     		onClickRow,
-    		updateCharmTable,
-    		onActivate,
+    		$fRefleshCharmTable,
     		click_handler,
     		click_handler_1
     	];
@@ -4462,7 +5092,7 @@ for (const input of inputs) {
     class CharmList extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$4, create_fragment$4, safe_not_equal, { updateCharmTable: 4, onActivate: 5 });
+    		init(this, options, instance$4, create_fragment$4, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -4471,74 +5101,6 @@ for (const input of inputs) {
     			id: create_fragment$4.name
     		});
     	}
-
-    	get updateCharmTable() {
-    		return this.$$.ctx[4];
-    	}
-
-    	set updateCharmTable(value) {
-    		throw new Error("<CharmList>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get onActivate() {
-    		return this.$$.ctx[5];
-    	}
-
-    	set onActivate(value) {
-    		throw new Error("<CharmList>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    const subscriber_queue = [];
-    /**
-     * Create a `Writable` store that allows both updating and reading by subscription.
-     * @param {*=}value initial value
-     * @param {StartStopNotifier=}start start and stop notifications for subscriptions
-     */
-    function writable(value, start = noop) {
-        let stop;
-        const subscribers = [];
-        function set(new_value) {
-            if (safe_not_equal(value, new_value)) {
-                value = new_value;
-                if (stop) { // store is ready
-                    const run_queue = !subscriber_queue.length;
-                    for (let i = 0; i < subscribers.length; i += 1) {
-                        const s = subscribers[i];
-                        s[1]();
-                        subscriber_queue.push(s, value);
-                    }
-                    if (run_queue) {
-                        for (let i = 0; i < subscriber_queue.length; i += 2) {
-                            subscriber_queue[i][0](subscriber_queue[i + 1]);
-                        }
-                        subscriber_queue.length = 0;
-                    }
-                }
-            }
-        }
-        function update(fn) {
-            set(fn(value));
-        }
-        function subscribe(run, invalidate = noop) {
-            const subscriber = [run, invalidate];
-            subscribers.push(subscriber);
-            if (subscribers.length === 1) {
-                stop = start(set) || noop;
-            }
-            run(value);
-            return () => {
-                const index = subscribers.indexOf(subscriber);
-                if (index !== -1) {
-                    subscribers.splice(index, 1);
-                }
-                if (subscribers.length === 0) {
-                    stop();
-                    stop = null;
-                }
-            };
-        }
-        return { set, update, subscribe };
     }
 
     /* src/VideoReader.svelte generated by Svelte v3.38.2 */
@@ -4919,7 +5481,7 @@ for (const input of inputs) {
     	return child_ctx;
     }
 
-    // (103:4) {#each $videoReaderProps as props}
+    // (105:4) {#each $videoReaderProps as props}
     function create_each_block$1(ctx) {
     	let videoreader;
     	let current;
@@ -4965,14 +5527,14 @@ for (const input of inputs) {
     		block,
     		id: create_each_block$1.name,
     		type: "each",
-    		source: "(103:4) {#each $videoReaderProps as props}",
+    		source: "(105:4) {#each $videoReaderProps as props}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (109:31) 
+    // (111:31) 
     function create_if_block_2(ctx) {
     	let t0;
     	let t1_value = 1 + Number(/*currentFileIndex*/ ctx[4]) + "";
@@ -5014,14 +5576,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(109:31) ",
+    		source: "(111:31) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (107:4) {#if isScanFinished}
+    // (109:4) {#if isScanFinished}
     function create_if_block_1(ctx) {
     	let t;
 
@@ -5042,14 +5604,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(107:4) {#if isScanFinished}",
+    		source: "(109:4) {#if isScanFinished}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (165:2) {:else}
+    // (167:2) {:else}
     function create_else_block(ctx) {
     	let div;
 
@@ -5057,7 +5619,7 @@ for (const input of inputs) {
     		c: function create() {
     			div = element("div");
     			div.textContent = "Loading Files...";
-    			add_location(div, file$2, 165, 4, 4652);
+    			add_location(div, file$2, 167, 4, 4734);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -5072,14 +5634,14 @@ for (const input of inputs) {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(165:2) {:else}",
+    		source: "(167:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (153:2) {#if fInitialized}
+    // (155:2) {#if fInitialized}
     function create_if_block(ctx) {
     	let div1;
     	let input;
@@ -5105,16 +5667,16 @@ for (const input of inputs) {
     			attr_dev(input, "accept", ".mp4");
     			input.multiple = true;
     			attr_dev(input, "class", "svelte-1nkacec");
-    			add_location(input, file$2, 154, 6, 4229);
+    			add_location(input, file$2, 156, 6, 4311);
     			if (img.src !== (img_src_value = "https://static.thenounproject.com/png/625182-200.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "");
     			attr_dev(img, "class", "svelte-1nkacec");
-    			add_location(img, file$2, 161, 6, 4446);
+    			add_location(img, file$2, 163, 6, 4528);
     			attr_dev(div0, "class", "svelte-1nkacec");
-    			add_location(div0, file$2, 162, 6, 4560);
+    			add_location(div0, file$2, 164, 6, 4642);
     			attr_dev(div1, "id", "upload");
     			attr_dev(div1, "class", "svelte-1nkacec");
-    			add_location(div1, file$2, 153, 4, 4205);
+    			add_location(div1, file$2, 155, 4, 4287);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
@@ -5149,7 +5711,7 @@ for (const input of inputs) {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(153:2) {#if fInitialized}",
+    		source: "(155:2) {#if fInitialized}",
     		ctx
     	});
 
@@ -5221,17 +5783,17 @@ for (const input of inputs) {
     			if_block1.c();
     			attr_dev(div0, "id", "status");
     			attr_dev(div0, "class", "svelte-1nkacec");
-    			add_location(div0, file$2, 101, 2, 2418);
+    			add_location(div0, file$2, 103, 2, 2500);
     			attr_dev(textarea, "placeholder", "charms will be exported here");
     			textarea.value = /*exportData*/ ctx[7];
     			attr_dev(textarea, "class", "svelte-1nkacec");
-    			add_location(textarea, file$2, 147, 6, 4014);
-    			add_location(div1, file$2, 148, 6, 4097);
+    			add_location(textarea, file$2, 149, 6, 4096);
+    			add_location(div1, file$2, 150, 6, 4179);
     			attr_dev(div2, "id", "result");
     			attr_dev(div2, "class", "svelte-1nkacec");
-    			add_location(div2, file$2, 145, 2, 3961);
+    			add_location(div2, file$2, 147, 2, 4043);
     			attr_dev(div3, "id", "scanner");
-    			add_location(div3, file$2, 100, 0, 2397);
+    			add_location(div3, file$2, 102, 0, 2479);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -5466,6 +6028,8 @@ for (const input of inputs) {
 
     		// await charmManager.registerCharms(charms)
     		$$invalidate(5, isScanFinished = true);
+
+    		fRefleshCharmTable.set(true);
     	}
 
     	function onFinishVideoRead() {
@@ -5513,6 +6077,7 @@ for (const input of inputs) {
     	$$self.$capture_state = () => ({
     		writable,
     		VideoReader,
+    		fRefleshCharmTable,
     		VIDEO_WIDTH,
     		VIDEO_HEIGHT,
     		VIDEO_FRAME_RATE,
@@ -6264,7 +6829,7 @@ for (const input of inputs) {
     }
 
     const TITLE = "MHRise Charm Scanner";
-    const VERSION = "0.2.5";
+    const VERSION = "0.3.0";
 
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
