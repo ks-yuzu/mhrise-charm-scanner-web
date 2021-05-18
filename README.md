@@ -5,7 +5,7 @@ MHRise (Monster Hunter Rise) の護石を自動読み取りする web アプリ�
 その他, 護石の管理機能 (全護石の一覧表示, 読み取り時のキャプチャ画像の表示, 上位互換護石の表示など) があります.
 
 # 使い方
-[https://mhrise-charm-scanner.yuzu-k.com/](https://mhrise-charm-scanner.yuzu-k.com/) でアクセス
+[https://mhrise-charm-scanner.yuzu-k.com/](https://mhrise-charm-scanner.yuzu-k.com/) へ GO !
 
 # 自分で動かしたい人用メモ
 いないと思いますが一応書いておきます.
@@ -19,7 +19,7 @@ npm install
 ```bash
 npm run dev
 ```
-[localhost:5000](http://localhost:5000) でアクセス
+[localhost:5000](http://localhost:5000) でアクセスできます
 
 ## リリースビルド
 ```bash
