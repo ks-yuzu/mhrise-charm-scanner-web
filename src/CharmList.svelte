@@ -155,7 +155,7 @@
     const substitutes = JSON.parse(res)
 
     for (const i in charms) {
-      const [baseId, upperIds] = substitutes[0]
+      const [baseId, upperIds] = substitutes[0] || [Number.MAX_SAFE_INTEGER, []]
 
       if ( charms[i].rowid > baseId ) {
         console.log('internal error')
