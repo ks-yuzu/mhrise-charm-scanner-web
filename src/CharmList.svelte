@@ -11,7 +11,7 @@
     (async () => {
       console.log('reflesh table')
 
-      fRefleshCharmTable.set(false)
+      $fRefleshCharmTable = false
 
       await updateCharmTable()
       searchSubstitutableCharms()

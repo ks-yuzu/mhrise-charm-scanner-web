@@ -89,7 +89,7 @@
 
     // await charmManager.registerCharms(charms)
     isScanFinished = true
-    fRefleshCharmTable.set(true)
+    $fRefleshCharmTable = true
   }
 
 
