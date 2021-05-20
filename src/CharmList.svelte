@@ -18,6 +18,7 @@
     })()
   }
 
+
   // constants
   const N_CHARM_SLOT_MAX = 3
   const columns = [
@@ -170,19 +171,31 @@
   }
 
   async function searchSubstitutableCharms() {
-    for ( const index in charms ) {
-      const row = charms[index]
-      console.log(row.rowid)
-
-      const substitutableCharms = await charmManager.findSubstitutableCharms({
-        skills     : [row.skill1,      row.skill2],
-        skillLevels: [row.skill1Level, row.skill2Level],
-        slots      : [row.slot1, row.slot2, row.slot3],
-      })
-
-      // use "charms[index]" to tell update to svelte
-      charms[index].substitutableCharms = substitutableCharms
+    while ( typeof Module.getSubstitutes !== 'function' ) {
+      await new Promise(r => setTimeout(r, 100))
     }
+
+    const res = Module.getSubstitutes( JSON.stringify(charms) ) // use wasm module
+    const substitutes = JSON.parse(res)
+
+    for (const i in charms) {
+      const [baseId, upperIds] = substitutes[0]
+
+      if ( charms[i].rowid > baseId ) {
+        console.log('internal error')
+      }
+      else if ( charms[i].rowid < baseId ) {
+        charms[i].substitutableCharms = []
+      }
+      else {
+        charms[i].substitutableCharms = upperIds.map(u => charms[u - 1])
+        substitutes.shift()
+      }
+    }
+
+    // for (const [baseId, upperIds] of substitutes) {
+    //   charms[baseId - 1].substitutableCharms = upperIds.map(i => charms[i - 1])
+    // }
   }
 
 
@@ -249,8 +262,10 @@
         {#if row.isSubstitutableCharmsShown}
           {#if row.substitutableCharms == null}
             <div style="width: 100%; border-bottom: solid 1px #ddd">searching...</div>
+          {:else if row.substitutableCharms.length === 0}
+            <!-- none -->
           {:else}
-            <div transition:slide={{duration: 100}}>
+            <div class="row-substitutes" transition:slide={{duration: 150}}>
             {#each row.substitutableCharms as c}
               <div style="width: 100%; text-align: left; padding: 0.3rem 2rem">
                 {c.rowid}: {c.skill1}{c.skill1Level}, {c.skill2}{c.skill2Level}, {c.slot1}-{c.slot2}-{c.slot3}
@@ -339,9 +354,23 @@
     width:  100%;
   }
 
-  :global(#charm-list > table tbody tr) {
+  :global(#charm-list > table tbody > tr) {
     height: 1.9rem;
   }
+
+  :global(#charm-list > table tbody > div) {
+    margin:  0;
+    padding: 0;
+  }
+
+  :global(#charm-list > table tbody > div > div.row-substitutes) {
+    margin:  0;
+    padding: 0.5rem 2rem;
+
+    max-height: 20rem;
+    overflow:   auto;
+  }
+
 
   :global(
     #charm-list > table th,
