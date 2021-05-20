@@ -133,7 +133,7 @@ export default class MHRiseCharmManager {
       }
     }
 
-    return substitutableCharms
+    return substitutableCharms.sort((a, b) => (a.rowid < b.rowid) ? -1 : (a.rowid > b.rowid) ? 1 : 0)
   }
 
   // TODO: charm class 作ってコンストラクタでやる
