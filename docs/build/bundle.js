@@ -1033,7 +1033,7 @@ var app = (function () {
           }
         }
 
-        return substitutableCharms
+        return substitutableCharms.sort((a, b) => (a.rowid < b.rowid) ? -1 : (a.rowid > b.rowid) ? 1 : 0)
       }
 
       // TODO: charm class 作ってコンストラクタでやる
@@ -1628,7 +1628,7 @@ for (const input of inputs) {
     			br8 = element("br");
     			t18 = text("\n      - ");
     			span0 = element("span");
-    			span0.textContent = "装飾品を外した状態でないと、装飾品分のスキルも読み込まれてしまいます。";
+    			span0.textContent = "装飾品をつけたままだと、装飾品分のスキルも読み込まれてしまいます。";
     			t20 = text(" (一括解除が有用です)");
     			br9 = element("br");
     			t21 = text("\n      - キャプチャ動画のファイル名はデフォルトのまま使用することを推奨します。");
@@ -1694,8 +1694,8 @@ for (const input of inputs) {
     			add_location(br8, file$6, 22, 10, 704);
     			set_style(span0, "color", "red");
     			add_location(span0, file$6, 23, 8, 717);
-    			add_location(br9, file$6, 23, 87, 796);
-    			add_location(br10, file$6, 24, 43, 844);
+    			add_location(br9, file$6, 23, 85, 794);
+    			add_location(br10, file$6, 24, 43, 842);
     			attr_dev(p1, "class", "svelte-15kmx5q");
     			add_location(p1, file$6, 14, 4, 327);
     			attr_dev(div2, "class", "card-body");
@@ -1704,30 +1704,30 @@ for (const input of inputs) {
     			attr_dev(div3, "class", "card border border-light shadow-sm svelte-15kmx5q");
     			add_location(div3, file$6, 10, 0, 208);
     			attr_dev(h32, "class", "svelte-15kmx5q");
-    			add_location(h32, file$6, 31, 4, 971);
-    			add_location(br11, file$6, 33, 28, 1023);
-    			add_location(br12, file$6, 34, 40, 1068);
-    			add_location(br13, file$6, 35, 6, 1079);
-    			add_location(br14, file$6, 36, 23, 1107);
+    			add_location(h32, file$6, 31, 4, 969);
+    			add_location(br11, file$6, 33, 28, 1021);
+    			add_location(br12, file$6, 34, 40, 1066);
+    			add_location(br13, file$6, 35, 6, 1077);
+    			add_location(br14, file$6, 36, 23, 1105);
     			attr_dev(span1, "class", "px-3 font-weight-bold");
-    			add_location(span1, file$6, 37, 6, 1118);
-    			add_location(br15, file$6, 37, 92, 1204);
-    			add_location(br16, file$6, 38, 17, 1226);
-    			add_location(br17, file$6, 39, 6, 1237);
-    			add_location(br18, file$6, 40, 37, 1279);
+    			add_location(span1, file$6, 37, 6, 1116);
+    			add_location(br15, file$6, 37, 92, 1202);
+    			add_location(br16, file$6, 38, 17, 1224);
+    			add_location(br17, file$6, 39, 6, 1235);
+    			add_location(br18, file$6, 40, 37, 1277);
     			attr_dev(span2, "class", "px-3");
-    			add_location(span2, file$6, 41, 6, 1290);
-    			add_location(br19, file$6, 41, 61, 1345);
-    			add_location(br20, file$6, 42, 6, 1356);
-    			add_location(br21, file$6, 43, 44, 1405);
-    			add_location(br22, file$6, 44, 56, 1466);
+    			add_location(span2, file$6, 41, 6, 1288);
+    			add_location(br19, file$6, 41, 61, 1343);
+    			add_location(br20, file$6, 42, 6, 1354);
+    			add_location(br21, file$6, 43, 44, 1403);
+    			add_location(br22, file$6, 44, 56, 1464);
     			attr_dev(p2, "class", "svelte-15kmx5q");
-    			add_location(p2, file$6, 32, 4, 991);
+    			add_location(p2, file$6, 32, 4, 989);
     			attr_dev(div4, "class", "card-body");
-    			add_location(div4, file$6, 29, 2, 942);
+    			add_location(div4, file$6, 29, 2, 940);
     			attr_dev(div5, "id", "description");
     			attr_dev(div5, "class", "card border border-light shadow-sm svelte-15kmx5q");
-    			add_location(div5, file$6, 28, 0, 874);
+    			add_location(div5, file$6, 28, 0, 872);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2115,7 +2115,7 @@ for (const input of inputs) {
     }
 
     // (121:12) {#if col.searchValue !== undefined}
-    function create_if_block_5(ctx) {
+    function create_if_block_5$1(ctx) {
     	let input;
     	let mounted;
     	let dispose;
@@ -2154,7 +2154,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_5.name,
+    		id: create_if_block_5$1.name,
     		type: "if",
     		source: "(121:12) {#if col.searchValue !== undefined}",
     		ctx
@@ -2212,7 +2212,7 @@ for (const input of inputs) {
     	let t;
 
     	function select_block_type(ctx, dirty) {
-    		if (/*col*/ ctx[36].searchValue !== undefined) return create_if_block_5;
+    		if (/*col*/ ctx[36].searchValue !== undefined) return create_if_block_5$1;
     		if (/*filterValues*/ ctx[12][/*col*/ ctx[36].key] !== undefined) return create_if_block_6;
     	}
 
@@ -3824,7 +3824,7 @@ for (const input of inputs) {
     	return child_ctx;
     }
 
-    // (224:2) {:else}
+    // (213:2) {:else}
     function create_else_block$1(ctx) {
     	let sveltetable;
     	let current;
@@ -3890,14 +3890,14 @@ for (const input of inputs) {
     		block,
     		id: create_else_block$1.name,
     		type: "else",
-    		source: "(224:2) {:else}",
+    		source: "(213:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (220:2) {#if charms == null}
+    // (209:2) {#if charms == null}
     function create_if_block$1(ctx) {
     	let div;
     	let span;
@@ -3908,11 +3908,11 @@ for (const input of inputs) {
     			span = element("span");
     			span.textContent = "Loading...";
     			attr_dev(span, "class", "visually-hidden");
-    			add_location(span, file$4, 221, 6, 7880);
+    			add_location(span, file$4, 210, 6, 7382);
     			set_style(div, "margin-top", "20%");
     			attr_dev(div, "class", "spinner-border text-info");
     			attr_dev(div, "role", "status");
-    			add_location(div, file$4, 220, 4, 7797);
+    			add_location(div, file$4, 209, 4, 7299);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3930,14 +3930,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block$1.name,
     		type: "if",
-    		source: "(220:2) {#if charms == null}",
+    		source: "(209:2) {#if charms == null}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (242:12) {:else}
+    // (231:12) {:else}
     function create_else_block_2(ctx) {
     	let html_tag;
 
@@ -3973,15 +3973,15 @@ for (const input of inputs) {
     		block,
     		id: create_else_block_2.name,
     		type: "else",
-    		source: "(242:12) {:else}",
+    		source: "(231:12) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (236:12) {#if col.renderComponent}
-    function create_if_block_4(ctx) {
+    // (225:12) {#if col.renderComponent}
+    function create_if_block_5(ctx) {
     	let switch_instance;
     	let switch_instance_anchor;
     	let current;
@@ -4074,16 +4074,16 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_4.name,
+    		id: create_if_block_5.name,
     		type: "if",
-    		source: "(236:12) {#if col.renderComponent}",
+    		source: "(225:12) {#if col.renderComponent}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (232:8) {#each columns as col}
+    // (221:8) {#each columns as col}
     function create_each_block_1$1(ctx) {
     	let td;
     	let current_block_type_index;
@@ -4092,7 +4092,7 @@ for (const input of inputs) {
     	let current;
     	let mounted;
     	let dispose;
-    	const if_block_creators = [create_if_block_4, create_else_block_2];
+    	const if_block_creators = [create_if_block_5, create_else_block_2];
     	const if_blocks = [];
 
     	function select_block_type_2(ctx, dirty) {
@@ -4113,7 +4113,7 @@ for (const input of inputs) {
     			if_block.c();
     			t = space();
     			attr_dev(td, "class", [/*col*/ ctx[17].class].join(" "));
-    			add_location(td, file$4, 232, 10, 8352);
+    			add_location(td, file$4, 221, 10, 7854);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, td, anchor);
@@ -4151,14 +4151,14 @@ for (const input of inputs) {
     		block,
     		id: create_each_block_1$1.name,
     		type: "each",
-    		source: "(232:8) {#each columns as col}",
+    		source: "(221:8) {#each columns as col}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (231:6) 
+    // (220:6) 
     function create_row_slot(ctx) {
     	let tr;
     	let current;
@@ -4189,7 +4189,7 @@ for (const input of inputs) {
     			}
 
     			attr_dev(tr, "slot", "row");
-    			add_location(tr, file$4, 230, 6, 8245);
+    			add_location(tr, file$4, 219, 6, 7747);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, tr, anchor);
@@ -4266,25 +4266,26 @@ for (const input of inputs) {
     		block,
     		id: create_row_slot.name,
     		type: "slot",
-    		source: "(231:6) ",
+    		source: "(220:6) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (249:8) {#if row.isSubstitutableCharmsShown}
+    // (238:8) {#if row.isSubstitutableCharmsShown}
     function create_if_block_2$1(ctx) {
     	let current_block_type_index;
     	let if_block;
     	let if_block_anchor;
     	let current;
-    	const if_block_creators = [create_if_block_3, create_else_block_1];
+    	const if_block_creators = [create_if_block_3, create_if_block_4, create_else_block_1];
     	const if_blocks = [];
 
     	function select_block_type_1(ctx, dirty) {
     		if (/*row*/ ctx[13].substitutableCharms == null) return 0;
-    		return 1;
+    		if (/*row*/ ctx[13].substitutableCharms.length === 0) return 1;
+    		return 2;
     	}
 
     	current_block_type_index = select_block_type_1(ctx);
@@ -4346,14 +4347,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_2$1.name,
     		type: "if",
-    		source: "(249:8) {#if row.isSubstitutableCharmsShown}",
+    		source: "(238:8) {#if row.isSubstitutableCharmsShown}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (252:10) {:else}
+    // (243:10) {:else}
     function create_else_block_1(ctx) {
     	let div;
     	let div_transition;
@@ -4374,7 +4375,8 @@ for (const input of inputs) {
     				each_blocks[i].c();
     			}
 
-    			add_location(div, file$4, 252, 12, 9208);
+    			attr_dev(div, "class", "row-substitutes");
+    			add_location(div, file$4, 243, 12, 8794);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -4414,14 +4416,14 @@ for (const input of inputs) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 100 }, true);
+    				if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 150 }, true);
     				div_transition.run(1);
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 100 }, false);
+    			if (!div_transition) div_transition = create_bidirectional_transition(div, slide, { duration: 150 }, false);
     			div_transition.run(0);
     			current = false;
     		},
@@ -4436,14 +4438,36 @@ for (const input of inputs) {
     		block,
     		id: create_else_block_1.name,
     		type: "else",
-    		source: "(252:10) {:else}",
+    		source: "(243:10) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (250:10) {#if row.substitutableCharms == null}
+    // (241:57) 
+    function create_if_block_4(ctx) {
+    	const block = {
+    		c: noop,
+    		m: noop,
+    		p: noop,
+    		i: noop,
+    		o: noop,
+    		d: noop
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_4.name,
+    		type: "if",
+    		source: "(241:57) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (239:10) {#if row.substitutableCharms == null}
     function create_if_block_3(ctx) {
     	let div;
 
@@ -4453,7 +4477,7 @@ for (const input of inputs) {
     			div.textContent = "searching...";
     			set_style(div, "width", "100%");
     			set_style(div, "border-bottom", "solid 1px #ddd");
-    			add_location(div, file$4, 250, 12, 9103);
+    			add_location(div, file$4, 239, 12, 8605);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -4470,14 +4494,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_3.name,
     		type: "if",
-    		source: "(250:10) {#if row.substitutableCharms == null}",
+    		source: "(239:10) {#if row.substitutableCharms == null}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (254:12) {#each row.substitutableCharms as c}
+    // (245:12) {#each row.substitutableCharms as c}
     function create_each_block$2(ctx) {
     	let div;
     	let t0_value = /*c*/ ctx[14].rowid + "";
@@ -4523,7 +4547,7 @@ for (const input of inputs) {
     			set_style(div, "width", "100%");
     			set_style(div, "text-align", "left");
     			set_style(div, "padding", "0.3rem 2rem");
-    			add_location(div, file$4, 254, 14, 9312);
+    			add_location(div, file$4, 245, 14, 8922);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -4561,14 +4585,14 @@ for (const input of inputs) {
     		block,
     		id: create_each_block$2.name,
     		type: "each",
-    		source: "(254:12) {#each row.substitutableCharms as c}",
+    		source: "(245:12) {#each row.substitutableCharms as c}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (263:8) {#if charms[n].isScrennshotShown}
+    // (254:8) {#if charms[n].isScrennshotShown}
     function create_if_block_1$1(ctx) {
     	let div;
     	let canvas;
@@ -4582,11 +4606,11 @@ for (const input of inputs) {
     			canvas = element("canvas");
     			attr_dev(canvas, "id", canvas_id_value = "charm-table-row-" + /*n*/ ctx[12] + "-screenshot");
     			set_style(canvas, "width", "100%");
-    			attr_dev(canvas, "class", "svelte-1hiit2s");
-    			add_location(canvas, file$4, 264, 12, 9736);
+    			attr_dev(canvas, "class", "svelte-12fulg3");
+    			add_location(canvas, file$4, 255, 12, 9346);
     			set_style(div, "width", "100%");
     			set_style(div, "border-bottom", "solid 1px #ddd");
-    			add_location(div, file$4, 263, 10, 9632);
+    			add_location(div, file$4, 254, 10, 9242);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -4623,14 +4647,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_1$1.name,
     		type: "if",
-    		source: "(263:8) {#if charms[n].isScrennshotShown}",
+    		source: "(254:8) {#if charms[n].isScrennshotShown}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (248:6) 
+    // (237:6) 
     function create_after_row_slot(ctx) {
     	let div;
     	let t;
@@ -4648,8 +4672,8 @@ for (const input of inputs) {
     			attr_dev(div, "slot", "after-row");
     			attr_dev(div, "id", div_id_value = "charm-table-row-" + /*n*/ ctx[12]);
     			set_style(div, "width", "100%");
-    			attr_dev(div, "class", "svelte-1hiit2s");
-    			add_location(div, file$4, 247, 6, 8916);
+    			attr_dev(div, "class", "svelte-12fulg3");
+    			add_location(div, file$4, 236, 6, 8418);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -4731,7 +4755,7 @@ for (const input of inputs) {
     		block,
     		id: create_after_row_slot.name,
     		type: "slot",
-    		source: "(248:6) ",
+    		source: "(237:6) ",
     		ctx
     	});
 
@@ -4759,8 +4783,8 @@ for (const input of inputs) {
     			div = element("div");
     			if_block.c();
     			attr_dev(div, "id", "charm-list");
-    			attr_dev(div, "class", "svelte-1hiit2s");
-    			add_location(div, file$4, 218, 0, 7748);
+    			attr_dev(div, "class", "svelte-12fulg3");
+    			add_location(div, file$4, 207, 0, 7250);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4841,7 +4865,7 @@ for (const input of inputs) {
     			filterOptions: rows => {
     				const UNIT = 50;
 
-    				// generate groupings of 0-10, 10-20 etc...
+    				// generate groupings of 1-50, 51-100, etc...
     				let nums = {};
 
     				rows.forEach(row => {
@@ -4860,30 +4884,6 @@ for (const input of inputs) {
     			},
     			filterValue: v => Math.floor((v.rowid - 1) / 50)
     		},
-    		// {
-    		//   key: "first_name",
-    		//   title: "FIRST_NAME",
-    		//   value: v => v.first_name,
-    		//   sortable: true,
-    		//   filterOptions: rows => {
-    		//     // use first letter of first_name to generate filter
-    		//     let letrs = {};
-    		//     rows.forEach(row => {
-    		//       let letr = row.first_name.charAt(0);
-    		//       if (letrs[letr] === undefined)
-    		//         letrs[letr] = {
-    		//           name: `${letr.toUpperCase()}`,
-    		//           value: letr.toLowerCase()
-    		//         };
-    		//     });
-    		//     // fix order
-    		//     letrs = Object.entries(letrs)
-    		//       .sort()
-    		//       .reduce((o, [k, v]) => ((o[k] = v), o), {});
-    		//     return Object.values(letrs);
-    		//   },
-    		//   filterValue: v => v.first_name.charAt(0).toLowerCase()
-    		// },
     		{
     			key: "skill1",
     			title: "スキル1",
@@ -4982,21 +4982,29 @@ for (const input of inputs) {
     	}
 
     	async function searchSubstitutableCharms() {
-    		for (const index in charms) {
-    			const row = charms[index];
-    			console.log(row.rowid);
-
-    			const substitutableCharms = await charmManager.findSubstitutableCharms({
-    				skills: [row.skill1, row.skill2],
-    				skillLevels: [row.skill1Level, row.skill2Level],
-    				slots: [row.slot1, row.slot2, row.slot3]
-    			});
-
-    			// use "charms[index]" to tell update to svelte
-    			$$invalidate(0, charms[index].substitutableCharms = substitutableCharms, charms);
+    		while (typeof Module.getSubstitutes !== "function") {
+    			await new Promise(r => setTimeout(r, 100));
     		}
-    	}
 
+    		const res = Module.getSubstitutes(JSON.stringify(charms)); // use wasm module
+    		const substitutes = JSON.parse(res);
+
+    		for (const i in charms) {
+    			const [baseId, upperIds] = substitutes[0];
+
+    			if (charms[i].rowid > baseId) {
+    				console.log("internal error");
+    			} else if (charms[i].rowid < baseId) {
+    				$$invalidate(0, charms[i].substitutableCharms = [], charms);
+    			} else {
+    				$$invalidate(0, charms[i].substitutableCharms = upperIds.map(u => charms[u - 1]), charms);
+    				substitutes.shift();
+    			}
+    		}
+    	} // for (const [baseId, upperIds] of substitutes) {
+    	//   charms[baseId - 1].substitutableCharms = upperIds.map(i => charms[i - 1])
+
+    	// }
     	// handlers
     	function onSort(event) {
     		// close all accordion
@@ -6829,7 +6837,7 @@ for (const input of inputs) {
     }
 
     const TITLE = "MHRise Charm Scanner";
-    const VERSION = "0.3.0";
+    const VERSION = "0.4.0";
 
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
