@@ -2,7 +2,7 @@
 
 TARGET := build/mhrise-charm-substitutes-search.html
 
-$(TARGET): src/*
+$(TARGET): src/* template.html
 	mkdir -p build
 	docker run --rm -v `pwd`:/src emscripten/emsdk\
     em++ -I./lib -std=c++17 -O2 -fno-exceptions\

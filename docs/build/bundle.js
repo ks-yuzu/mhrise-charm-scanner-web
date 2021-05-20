@@ -10146,7 +10146,7 @@ for (const input of inputs) {
     }
 
     const TITLE = "MHRise Charm Scanner";
-    const VERSION = "0.4.3";
+    const VERSION = "0.4.4";
 
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
