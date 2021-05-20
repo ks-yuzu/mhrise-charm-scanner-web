@@ -26,3 +26,17 @@ npm run dev
 npm run build
 ```
 
+## その他
+### index.html の更新
+emscripten の入力に使っている wasm-modules/template.html を更新し,
+WebAssembly モジュールのビルドを行う
+
+### WebAssembly モジュールのビルド
+上位互換護石の検索に使用している wasm モジュール関連の
+`docs/index.html`, `docs/mhrise-charm-substitutes-search.{js,wasm}` の更新
+
+```
+cd wasm-modules
+make
+```
+
