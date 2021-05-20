@@ -7213,11 +7213,11 @@ for (const input of inputs) {
     			span = element("span");
     			span.textContent = "Loading...";
     			attr_dev(span, "class", "visually-hidden");
-    			add_location(span, file$4, 210, 6, 7380);
+    			add_location(span, file$4, 210, 6, 7413);
     			set_style(div, "margin-top", "20%");
     			attr_dev(div, "class", "spinner-border text-info");
     			attr_dev(div, "role", "status");
-    			add_location(div, file$4, 209, 4, 7297);
+    			add_location(div, file$4, 209, 4, 7330);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -7418,7 +7418,7 @@ for (const input of inputs) {
     			if_block.c();
     			t = space();
     			attr_dev(td, "class", [/*col*/ ctx[17].class].join(" "));
-    			add_location(td, file$4, 221, 10, 7852);
+    			add_location(td, file$4, 221, 10, 7885);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, td, anchor);
@@ -7494,7 +7494,7 @@ for (const input of inputs) {
     			}
 
     			attr_dev(tr, "slot", "row");
-    			add_location(tr, file$4, 219, 6, 7745);
+    			add_location(tr, file$4, 219, 6, 7778);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, tr, anchor);
@@ -7681,7 +7681,7 @@ for (const input of inputs) {
     			}
 
     			attr_dev(div, "class", "row-substitutes");
-    			add_location(div, file$4, 243, 12, 8792);
+    			add_location(div, file$4, 243, 12, 8825);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -7782,7 +7782,7 @@ for (const input of inputs) {
     			div.textContent = "searching...";
     			set_style(div, "width", "100%");
     			set_style(div, "border-bottom", "solid 1px #ddd");
-    			add_location(div, file$4, 239, 12, 8603);
+    			add_location(div, file$4, 239, 12, 8636);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -7852,7 +7852,7 @@ for (const input of inputs) {
     			set_style(div, "width", "100%");
     			set_style(div, "text-align", "left");
     			set_style(div, "padding", "0.3rem 2rem");
-    			add_location(div, file$4, 245, 14, 8920);
+    			add_location(div, file$4, 245, 14, 8953);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -7912,10 +7912,10 @@ for (const input of inputs) {
     			attr_dev(canvas, "id", canvas_id_value = "charm-table-row-" + /*n*/ ctx[12] + "-screenshot");
     			set_style(canvas, "width", "100%");
     			attr_dev(canvas, "class", "svelte-12fulg3");
-    			add_location(canvas, file$4, 255, 12, 9344);
+    			add_location(canvas, file$4, 255, 12, 9377);
     			set_style(div, "width", "100%");
     			set_style(div, "border-bottom", "solid 1px #ddd");
-    			add_location(div, file$4, 254, 10, 9240);
+    			add_location(div, file$4, 254, 10, 9273);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -7978,7 +7978,7 @@ for (const input of inputs) {
     			attr_dev(div, "id", div_id_value = "charm-table-row-" + /*n*/ ctx[12]);
     			set_style(div, "width", "100%");
     			attr_dev(div, "class", "svelte-12fulg3");
-    			add_location(div, file$4, 236, 6, 8416);
+    			add_location(div, file$4, 236, 6, 8449);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -8089,7 +8089,7 @@ for (const input of inputs) {
     			if_block.c();
     			attr_dev(div, "id", "charm-list");
     			attr_dev(div, "class", "svelte-12fulg3");
-    			add_location(div, file$4, 207, 0, 7248);
+    			add_location(div, file$4, 207, 0, 7281);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -8295,7 +8295,7 @@ for (const input of inputs) {
     		const substitutes = JSON.parse(res);
 
     		for (const i in charms) {
-    			const [baseId, upperIds] = substitutes[0];
+    			const [baseId, upperIds] = substitutes[0] || [Number.MAX_SAFE_INTEGER, []];
 
     			if (charms[i].rowid > baseId) {
     				console.log("internal error");
@@ -10146,7 +10146,7 @@ for (const input of inputs) {
     }
 
     const TITLE = "MHRise Charm Scanner";
-    const VERSION = "0.4.2";
+    const VERSION = "0.4.3";
 
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
