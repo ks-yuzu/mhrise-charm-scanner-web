@@ -10,6 +10,7 @@ export default class MHRiseCharmManager {
   constructor() {
     this.db = openDatabase('mhrise-charm-manager', '', 'MHRise charm manager', 5000)
     this._createTable()
+    this.sql(`alter table charms add column imagename varchar(128)`).catch(() => {}) // for old schema
 
     this.indexeddb = new Dexie('charms')
     this.indexeddb.version(1).stores({images: 'name'})

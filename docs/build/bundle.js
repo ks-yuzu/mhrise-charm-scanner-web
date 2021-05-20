@@ -919,6 +919,7 @@ var app = (function () {
       constructor() {
         this.db = openDatabase('mhrise-charm-manager', '', 'MHRise charm manager', 5000);
         this._createTable();
+        this.sql(`alter table charms add column imagename varchar(128)`).catch(() => {}); // for old schema
 
         this.indexeddb = new Dexie('charms');
         this.indexeddb.version(1).stores({images: 'name'});
@@ -7212,11 +7213,11 @@ for (const input of inputs) {
     			span = element("span");
     			span.textContent = "Loading...";
     			attr_dev(span, "class", "visually-hidden");
-    			add_location(span, file$4, 210, 6, 7382);
+    			add_location(span, file$4, 210, 6, 7380);
     			set_style(div, "margin-top", "20%");
     			attr_dev(div, "class", "spinner-border text-info");
     			attr_dev(div, "role", "status");
-    			add_location(div, file$4, 209, 4, 7299);
+    			add_location(div, file$4, 209, 4, 7297);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -7417,7 +7418,7 @@ for (const input of inputs) {
     			if_block.c();
     			t = space();
     			attr_dev(td, "class", [/*col*/ ctx[17].class].join(" "));
-    			add_location(td, file$4, 221, 10, 7854);
+    			add_location(td, file$4, 221, 10, 7852);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, td, anchor);
@@ -7493,7 +7494,7 @@ for (const input of inputs) {
     			}
 
     			attr_dev(tr, "slot", "row");
-    			add_location(tr, file$4, 219, 6, 7747);
+    			add_location(tr, file$4, 219, 6, 7745);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, tr, anchor);
@@ -7680,7 +7681,7 @@ for (const input of inputs) {
     			}
 
     			attr_dev(div, "class", "row-substitutes");
-    			add_location(div, file$4, 243, 12, 8794);
+    			add_location(div, file$4, 243, 12, 8792);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -7781,7 +7782,7 @@ for (const input of inputs) {
     			div.textContent = "searching...";
     			set_style(div, "width", "100%");
     			set_style(div, "border-bottom", "solid 1px #ddd");
-    			add_location(div, file$4, 239, 12, 8605);
+    			add_location(div, file$4, 239, 12, 8603);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -7851,7 +7852,7 @@ for (const input of inputs) {
     			set_style(div, "width", "100%");
     			set_style(div, "text-align", "left");
     			set_style(div, "padding", "0.3rem 2rem");
-    			add_location(div, file$4, 245, 14, 8922);
+    			add_location(div, file$4, 245, 14, 8920);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -7911,10 +7912,10 @@ for (const input of inputs) {
     			attr_dev(canvas, "id", canvas_id_value = "charm-table-row-" + /*n*/ ctx[12] + "-screenshot");
     			set_style(canvas, "width", "100%");
     			attr_dev(canvas, "class", "svelte-12fulg3");
-    			add_location(canvas, file$4, 255, 12, 9346);
+    			add_location(canvas, file$4, 255, 12, 9344);
     			set_style(div, "width", "100%");
     			set_style(div, "border-bottom", "solid 1px #ddd");
-    			add_location(div, file$4, 254, 10, 9242);
+    			add_location(div, file$4, 254, 10, 9240);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -7977,7 +7978,7 @@ for (const input of inputs) {
     			attr_dev(div, "id", div_id_value = "charm-table-row-" + /*n*/ ctx[12]);
     			set_style(div, "width", "100%");
     			attr_dev(div, "class", "svelte-12fulg3");
-    			add_location(div, file$4, 236, 6, 8418);
+    			add_location(div, file$4, 236, 6, 8416);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -8088,7 +8089,7 @@ for (const input of inputs) {
     			if_block.c();
     			attr_dev(div, "id", "charm-list");
     			attr_dev(div, "class", "svelte-12fulg3");
-    			add_location(div, file$4, 207, 0, 7250);
+    			add_location(div, file$4, 207, 0, 7248);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -8382,7 +8383,7 @@ for (const input of inputs) {
     			if ($fRefleshCharmTable) {
     				(async () => {
     					console.log("reflesh table");
-    					fRefleshCharmTable.set(false);
+    					set_store_value(fRefleshCharmTable, $fRefleshCharmTable = false, $fRefleshCharmTable);
     					await updateCharmTable();
     					searchSubstitutableCharms();
     				})();
@@ -8789,7 +8790,7 @@ for (const input of inputs) {
 
     function get_each_context$1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[22] = list[i];
+    	child_ctx[23] = list[i];
     	return child_ctx;
     }
 
@@ -8797,7 +8798,7 @@ for (const input of inputs) {
     function create_each_block$1(ctx) {
     	let videoreader;
     	let current;
-    	const videoreader_spread_levels = [/*props*/ ctx[22]];
+    	const videoreader_spread_levels = [/*props*/ ctx[23]];
     	let videoreader_props = {};
 
     	for (let i = 0; i < videoreader_spread_levels.length; i += 1) {
@@ -8816,7 +8817,7 @@ for (const input of inputs) {
     		},
     		p: function update(ctx, dirty) {
     			const videoreader_changes = (dirty & /*$videoReaderProps*/ 256)
-    			? get_spread_update(videoreader_spread_levels, [get_spread_object(/*props*/ ctx[22])])
+    			? get_spread_update(videoreader_spread_levels, [get_spread_object(/*props*/ ctx[23])])
     			: {};
 
     			videoreader.$set(videoreader_changes);
@@ -8931,7 +8932,7 @@ for (const input of inputs) {
     		c: function create() {
     			div = element("div");
     			div.textContent = "Loading Files...";
-    			add_location(div, file$2, 167, 4, 4734);
+    			add_location(div, file$2, 167, 4, 4732);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -8979,16 +8980,16 @@ for (const input of inputs) {
     			attr_dev(input, "accept", ".mp4");
     			input.multiple = true;
     			attr_dev(input, "class", "svelte-1nkacec");
-    			add_location(input, file$2, 156, 6, 4311);
+    			add_location(input, file$2, 156, 6, 4309);
     			if (img.src !== (img_src_value = "https://static.thenounproject.com/png/625182-200.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "");
     			attr_dev(img, "class", "svelte-1nkacec");
-    			add_location(img, file$2, 163, 6, 4528);
+    			add_location(img, file$2, 163, 6, 4526);
     			attr_dev(div0, "class", "svelte-1nkacec");
-    			add_location(div0, file$2, 164, 6, 4642);
+    			add_location(div0, file$2, 164, 6, 4640);
     			attr_dev(div1, "id", "upload");
     			attr_dev(div1, "class", "svelte-1nkacec");
-    			add_location(div1, file$2, 155, 4, 4287);
+    			add_location(div1, file$2, 155, 4, 4285);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
@@ -9095,17 +9096,17 @@ for (const input of inputs) {
     			if_block1.c();
     			attr_dev(div0, "id", "status");
     			attr_dev(div0, "class", "svelte-1nkacec");
-    			add_location(div0, file$2, 103, 2, 2500);
+    			add_location(div0, file$2, 103, 2, 2498);
     			attr_dev(textarea, "placeholder", "charms will be exported here");
     			textarea.value = /*exportData*/ ctx[7];
     			attr_dev(textarea, "class", "svelte-1nkacec");
-    			add_location(textarea, file$2, 149, 6, 4096);
-    			add_location(div1, file$2, 150, 6, 4179);
+    			add_location(textarea, file$2, 149, 6, 4094);
+    			add_location(div1, file$2, 150, 6, 4177);
     			attr_dev(div2, "id", "result");
     			attr_dev(div2, "class", "svelte-1nkacec");
-    			add_location(div2, file$2, 147, 2, 4043);
+    			add_location(div2, file$2, 147, 2, 4041);
     			attr_dev(div3, "id", "scanner");
-    			add_location(div3, file$2, 102, 0, 2479);
+    			add_location(div3, file$2, 102, 0, 2477);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -9241,6 +9242,9 @@ for (const input of inputs) {
     		$$unsubscribe_videoReaderProps = noop,
     		$$subscribe_videoReaderProps = () => ($$unsubscribe_videoReaderProps(), $$unsubscribe_videoReaderProps = subscribe(videoReaderProps, $$value => $$invalidate(8, $videoReaderProps = $$value)), videoReaderProps);
 
+    	let $fRefleshCharmTable;
+    	validate_store(fRefleshCharmTable, "fRefleshCharmTable");
+    	component_subscribe($$self, fRefleshCharmTable, $$value => $$invalidate(19, $fRefleshCharmTable = $$value));
     	$$self.$$.on_destroy.push(() => $$unsubscribe_videoReaderProps());
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("CharmScanner", slots, []);
@@ -9341,7 +9345,7 @@ for (const input of inputs) {
     		// await charmManager.registerCharms(charms)
     		$$invalidate(5, isScanFinished = true);
 
-    		fRefleshCharmTable.set(true);
+    		set_store_value(fRefleshCharmTable, $fRefleshCharmTable = true, $fRefleshCharmTable);
     	}
 
     	function onFinishVideoRead() {
@@ -9409,7 +9413,8 @@ for (const input of inputs) {
     		initVideoReaders,
     		onFileSelected,
     		onFinishVideoRead,
-    		$videoReaderProps
+    		$videoReaderProps,
+    		$fRefleshCharmTable
     	});
 
     	$$self.$inject_state = $$props => {
@@ -10141,7 +10146,7 @@ for (const input of inputs) {
     }
 
     const TITLE = "MHRise Charm Scanner";
-    const VERSION = "0.4.1";
+    const VERSION = "0.4.2";
 
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
