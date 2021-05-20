@@ -29,7 +29,7 @@
       sortable: true,
       filterOptions: rows => {
         const UNIT = 50
-        // generate groupings of 0-10, 10-20 etc...
+        // generate groupings of 1-50, 51-100, etc...
         let nums = {}
         rows.forEach(row => {
           let num = Math.floor(row.rowid / UNIT)
@@ -44,30 +44,6 @@
       },
       filterValue: v => Math.floor((v.rowid - 1) / 50),
     },
-    // {
-    //   key: "first_name",
-    //   title: "FIRST_NAME",
-    //   value: v => v.first_name,
-    //   sortable: true,
-    //   filterOptions: rows => {
-    //     // use first letter of first_name to generate filter
-    //     let letrs = {};
-    //     rows.forEach(row => {
-    //       let letr = row.first_name.charAt(0);
-    //       if (letrs[letr] === undefined)
-    //         letrs[letr] = {
-    //           name: `${letr.toUpperCase()}`,
-    //           value: letr.toLowerCase()
-    //         };
-    //     });
-    //     // fix order
-    //     letrs = Object.entries(letrs)
-    //       .sort()
-    //       .reduce((o, [k, v]) => ((o[k] = v), o), {});
-    //     return Object.values(letrs);
-    //   },
-    //   filterValue: v => v.first_name.charAt(0).toLowerCase()
-    // },
     {
       key:           'skill1',
       title:         'スキル1',
@@ -414,8 +390,6 @@
   ) {
     width: 3rem;
   }
-
-  /* :global(#charm-list > table > tbody > tr > td:nth-child(11)) { color: mediumseagreen; } */
 
   :global(#charm-list > table > :not(caption) > * > *) {
     padding-left:  0;
