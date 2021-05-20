@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <meta name='description' content='MHRise のキャプチャ動画から護石を自動読み取りします。'>
+  <meta name='keywords' content='モンハン,ライズ,MHRise,MHR,護石,お守り,おまもり,自動,読み取り,一括'>
+  <meta name="google-site-verification" content="1AjZmWoDlkIvE3WkaWwiWi45HUAzYGq5vCmnTM83s7E" />
+  <meta name="google-site-verification" content="PUD8NwUDg26v0eyTbFj5gJgiG1fgS-w9SHpOyLscUFY" />
+  <script data-ad-client="ca-pub-9685540257794332" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+  <title>MHRise Charm Scanner</title>
+
+  <link rel='icon' type='image/png' href='favicon.png'>
+  <link rel="stylesheet" href="mdb5/css/mdb.min.css">
+  <link rel='stylesheet' href='global.css'>
+  <link rel='stylesheet' href='build/bundle.css'>
+
+  <script defer src='build/bundle.js'></script>
+  <script src='js/opencv.js'></script>
+  <script src="https://unpkg.com/dexie@3.0.2/dist/dexie.min.js"></script>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MG7QRZMWD4"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-MG7QRZMWD4');
+  </script>
+</head>
+
+<body>
+  <script type='text/javascript'>
+    var Module = {
+      preRun: [],
+      postRun: [],
+      print: function(text) {
+        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+        console.log(text);
+      },
+      printErr: function(text) {
+        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+        console.error(text);
+      },
+      setStatus: function(text) {
+        console.log(text);
+      },
+      totalDependencies: 0,
+      monitorRunDependencies: function(left) {
+        this.totalDependencies = Math.max(this.totalDependencies, left);
+        Module.setStatus(
+          left
+            ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')'
+            : 'All downloads complete.'
+        );
+      }
+    };
+  </script>
+  {{{ SCRIPT }}}
+</body>
+</html>
