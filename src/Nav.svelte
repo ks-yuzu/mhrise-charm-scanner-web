@@ -6,7 +6,7 @@
   export let charmScanner
   export let charmManager
 
-  let currentNavOptionId = 2
+  let currentNavOptionId = 1
   let currentNavOption = navOptions[currentNavOptionId]
 
   let onActivate = {}
