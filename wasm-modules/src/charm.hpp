@@ -65,6 +65,14 @@ class Charm {
     skillLevels({c["skill1Level"], c["skill2Level"]}) {
   }
 
+  bool operator==(const Charm& another) const {
+    if ( this == &another ) { return true; }
+
+    return std::equal(ALL(slots),       std::begin(another.slots))
+        && std::equal(ALL(skills),      std::begin(another.skills))
+        && std::equal(ALL(skillLevels), std::begin(skillLevels));
+  }
+
   bool operator<(const Charm& another) const {
     if ( this == &another ) { return false; }
 

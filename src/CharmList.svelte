@@ -147,11 +147,11 @@
   }
 
   async function searchSubstitutableCharms() {
-    while ( typeof Module.getSubstitutes !== 'function' ) {
+    while ( typeof Module.getSubstitutesAll !== 'function' ) {
       await new Promise(r => setTimeout(r, 100))
     }
 
-    const res = Module.getSubstitutes( JSON.stringify(charms) ) // use wasm module
+    const res = Module.getSubstitutesAll( JSON.stringify(charms) ) // use wasm module
     const substitutes = JSON.parse(res)
 
     for (const i in charms) {
