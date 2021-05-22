@@ -5,7 +5,7 @@ import { Lightbox } from 'svelte-lightbox'
 <div id="description">
   <div class="card border border-light shadow-sm">
     <div class="card-body">
-      <h3>■ 概要</h3>
+      <h2>■ 概要</h2>
       <p>
         モンスターハンターライズの護石用ツールです。<br>
         機能追加、UI 改善は随時行っています。<br>
@@ -15,7 +15,7 @@ import { Lightbox } from 'svelte-lightbox'
 
   <div class="card border border-light shadow-sm">
     <div class="card-body">
-      <h3>■ 護石スキャン</h3>
+      <h2>■ 護石スキャン</h2>
       <p>
         護石のスキルやスロットを自動読み取りします。<br>
         Nintendo Switch の 30 秒キャプチャ動画を用意するだけで、自動でデータ化できます。
@@ -39,7 +39,7 @@ import { Lightbox } from 'svelte-lightbox'
 
   <div class="card border border-light shadow-sm">
     <div class="card-body">
-      <h3>■ 護石管理</h3>
+      <h2>■ 護石管理</h2>
       <p>
         スキャンした護石の一覧を見ることができます。<br>
         護石データは蓄積され、次回、同じブラウザで開いた時にも保持されます。<br>
@@ -53,6 +53,9 @@ import { Lightbox } from 'svelte-lightbox'
         <br>
         右端の画像ボタンを押すことで、スキャン時のスクリーンショットを確認できます。<br>
         右端に上向き矢印がある場合、上位互換の護石があります。クリックで該当の護石を確認することができます。<br>
+        <br>
+        <span style="color: red">輪廻錬金の際は充分に確認し、自己責任にて行ってください。<br></span>
+        <!-- 本ツールを使用したことにより不利益が生じた場合、一切責任を負いかねます。<br> -->
       </p>
 
       <div class="lightboxes">
@@ -65,6 +68,15 @@ import { Lightbox } from 'svelte-lightbox'
       </div>
     </div>
   </div>
+
+  <div class="card border border-light shadow-sm">
+    <div class="card-body">
+      <h2>■ お問い合わせ</h2>
+      <p>
+        不具合報告や要望は <a href="https://github.com/ks-yuzu/mhrise-charm-scanner-web/issues">GitHub issue</a> にてお願いします。
+      </p>
+    </div>
+  </div>
 </div>
 
 
@@ -72,19 +84,18 @@ import { Lightbox } from 'svelte-lightbox'
   #description {
     width:       100%;
     height:      100%;
-    padding-top: 2px;
 
     overflow:    auto;
   }
 
   #description > div.card {
-    margin: 2rem auto;
+    margin: 1rem auto;
 
     width:     56rem;
-    max-width: 100%;
+    max-width: 98%;
   }
 
-  #description h3 {
+  #description h2 {
     font-size:   1rem;
     font-weight: bold;
     text-align:  left;

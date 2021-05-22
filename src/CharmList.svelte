@@ -205,9 +205,10 @@
 </script>
 
 
+<div class="tab-content">
 <div id="charm-list">
   {#if charms == null}
-    <div style="margin-top: 20%" class="spinner-border text-info" role="status">
+    <div class="spinner-border text-info" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
   {:else}
@@ -260,15 +261,34 @@
     </SvelteTable>
   {/if}
 </div>
-
+</div>
 
 <style>
   :global(.hide-first-child > *:first-child) {
     display: none;
   }
 
-  :global(#charm-list) {
+  .tab-content {
+    margin:     0;
+    padding:    0;
+    height:     100%;
+    overflow:   hidden;
+  }
+
+  #charm-list{
+    padding:     8px;
+
+    margin-top: 2px;
+    width:      100%;
+    height:     100%;
+
     font-family: monospace;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  #charm-list .spinner-border {
+    margin: 30% calc(50% - 1rem);
   }
 
   :global(#charm-list td) {
@@ -311,7 +331,7 @@
   }
 
   :global(#charm-list > table > thead > :nth-child(2)) {
-    background: #262626;
+    background: mediumseagreen;
   }
 
   :global(#charm-list > table > thead th) {
@@ -319,7 +339,7 @@
   }
 
   :global(#charm-list > table > tbody) {
-    height:     calc(100% - 8rem);
+    height:     calc(100% - 6rem);
     overflow-x: auto;
     overflow-y: scroll;
 
@@ -392,21 +412,12 @@
   }
 
   :global(#charm-list > table > :not(caption) > * > *) {
-    padding-left:  0;
-    padding-right: 0;
+    padding: 0.5rem 0;
+    border:  none;
   }
 
   :global(#charm-list > table > thead > tr[class]:first-child > th) {
     padding-left:  0.5rem;
     padding-right: 0.5rem;
-  }
-
-  #charm-list {
-    max-width:  100%;
-    height:     100%;
-    margin-top: 2px;
-
-    overflow-x: scroll;
-    overflow-y: hidden;
   }
 </style>

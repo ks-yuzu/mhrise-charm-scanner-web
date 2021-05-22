@@ -1,32 +1,32 @@
 <script lang:ts>
   import MHRiseCharmManager from './mhrise-charm-manager.js'
   import MHRiseCharmScanner from './mhrise-charm-scanner.js'
+  import Hamburger from './Hamburger.svelte'
   import Nav from './Nav.svelte'
 
   const TITLE   = 'MHRise Charm Scanner'
-  const VERSION = '0.4.4'
+  const VERSION = '0.5.0'
 
+  let isNavigationOpen = false
   let fInitialized = false
   let charmScanner
   let charmManager
-
-  // let updateCharmTable
-
 
   window.addEventListener('load', async () => {
     charmScanner = new MHRiseCharmScanner()
     charmManager = new MHRiseCharmManager()
     await charmScanner.init()
     fInitialized = true
-
-    // updateCharmTable()
   })
 </script>
 
 <main>
-	<h1>{TITLE}</h1>
+  <header>
+    <Hamburger bind:isOpen={isNavigationOpen}/>
+	  <h1>{TITLE}</h1>
+  </header>
   <div id="nav-wrapper">
-    <Nav {...{fInitialized, charmScanner, charmManager}}></Nav>
+    <Nav {...{isNavigationOpen, fInitialized, charmScanner, charmManager}}></Nav>
   </div>
   <div id="version">v{VERSION}</div>
 </main>
@@ -34,26 +34,36 @@
 
 <style>
 	main {
-    width:  100%;
-    height: 100%;
+    width:   100%;
+    height:  100%;
 
-    margin: 0;
+    margin:  0;
+    padding: 0;
 
-		text-align: center;
-		padding:    1rem;
-		max-width:  240px;
+		text-align: left;
 	}
 
-	h1 {
-		color: #ff3e00;
-		font-size: 4em;
-		font-weight: 100;
+  header {
+    display: flex;
+    background: #222;
+  }
 
-    height: 5rem;
+	header h1 {
+    margin:  0;
+    padding: 0;
+		/* color: #ff3e00; */
+    color: white;
+
+		font-weight: 400;
+		font-size: 1.5em;
+    line-height: 3rem;
+    height: 3rem;
+
+    border: none;
 	}
 
   #nav-wrapper {
-    height: calc(100% - 5rem);
+    height: calc(100% - 3rem);
   }
 
   #version {
