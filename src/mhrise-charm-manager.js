@@ -9,13 +9,17 @@ export default class MHRiseCharmManager {
   db        = null              // WebSQL
   indexeddb = null              // IndexedDB
 
-  constructor() {
-    this.db = openDatabase('mhrise-charm-manager', '', 'MHRise charm manager', 5000)
-    this._createTable()
-    this.sql(`alter table charms add column imagename varchar(128)`).catch(() => {}) // for old schema
+  charmTableName = 'charms'
 
-    this.indexeddb = new Dexie('charms')
-    this.indexeddb.version(1).stores({images: 'name'})
+
+  constructor(params = {}) {
+    const {isDemoMode} = params
+
+    if ( isDemoMode ) {
+      this.charmTableName = 'demoCharms'
+    }
+
+    this._init()
   }
 
 
@@ -33,8 +37,20 @@ export default class MHRiseCharmManager {
   }
 
 
+  async _init() {
+    this.db = openDatabase('mhrise-charm-manager', '', 'MHRise charm manager', 5000)
+    await this._createTable()
+    await this.sql(`alter table ${this.charmTableName} add column imagename varchar(128)`).catch(() => {}) // for old schema
+
+    this.indexeddb = new Dexie(this.charmTableName)
+    this.indexeddb.version(1).stores({images: 'name'})
+
+    this.updateCharmArray()
+  }
+
+
   async reset() {
-    await this.sql('drop table if exists charms')
+    await this.sql(`drop table if exists ${this.charmTableName}`)
     await this._createTable()
   }
 
@@ -45,7 +61,7 @@ export default class MHRiseCharmManager {
       .join(',\n')
 
     console.log(values)
-    await this.sql(`insert or ignore into charms values ${values}`)
+    await this.sql(`insert or ignore into ${this.charmTableName} values ${values}`)
   }
 
 
@@ -56,7 +72,7 @@ export default class MHRiseCharmManager {
 
 
   async _createTable() {
-    await this.sql(`create table if not exists charms(
+    await this.sql(`create table if not exists ${this.charmTableName}(
                skill1      varchar(20),
                skill1Level int,
                skill2      varchar(20),
@@ -67,9 +83,9 @@ export default class MHRiseCharmManager {
                imagename   varchar(128),
                unique (skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3))`)
 
-    await this.sql(`create index if not exists 'charms.skill1' on charms(skill1, skill1Level)`)
-    await this.sql(`create index if not exists 'charms.skill2' on charms(skill2, skill2Level)`)
-    await this.sql(`create index if not exists 'charms.slots' on charms(slot1, slot2, slot3)`)
+    await this.sql(`create index if not exists '${this.charmTableName}.skill1' on ${this.charmTableName}(skill1, skill1Level)`)
+    await this.sql(`create index if not exists '${this.charmTableName}.skill2' on ${this.charmTableName}(skill2, skill2Level)`)
+    await this.sql(`create index if not exists '${this.charmTableName}.slots'  on ${this.charmTableName}(slot1, slot2, slot3)`)
   }
 
 
@@ -124,7 +140,7 @@ export default class MHRiseCharmManager {
               ? '(' + [`(${skillConstraints})`, `(${skillConstraintsRev})`].filter(i => i).join(' or ') + ') and '
               : ''
 
-        const query =`select rowid,* from charms where ${sc} slot1 >= ${requiredSlots[0] || 0} and slot2 >= ${requiredSlots[1] || 0} and slot3 >= ${requiredSlots[2] || 0}`
+        const query =`select rowid,* from ${this.charmTableName} where ${sc} slot1 >= ${requiredSlots[0] || 0} and slot2 >= ${requiredSlots[1] || 0} and slot3 >= ${requiredSlots[2] || 0}`
         // console.log(query)
         const {result} = await this.sql(query)
         // console.log(result.rows)
