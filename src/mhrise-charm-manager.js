@@ -8,6 +8,7 @@ export default class MHRiseCharmManager {
 
   db        = null              // WebSQL
   indexeddb = null              // IndexedDB
+  charms    = null
 
   charmTableName = 'charms'
 
@@ -62,6 +63,8 @@ export default class MHRiseCharmManager {
 
     console.log(values)
     await this.sql(`insert or ignore into ${this.charmTableName} values ${values}`)
+
+    this.updateCharmArray()
   }
 
 
@@ -154,6 +157,61 @@ export default class MHRiseCharmManager {
 
     return substitutableCharms.sort((a, b) => (a.rowid < b.rowid) ? -1 : (a.rowid > b.rowid) ? 1 : 0)
   }
+
+
+  async updateCharmArray() {
+    this.charms = [
+      ...(await this.searchCharms(`select rowid,* from ${this.charmTableName}`))
+    ].map(row => {
+      row.evaluation = skillToSlotLevel[row.skill1] * row.skill1Level
+                     + skillToSlotLevel[row.skill2] * row.skill2Level
+                     + row.slot1
+                     + row.slot2
+                     + row.slot3
+      return row
+    })
+
+    this.searchSubstitutableCharms()
+  }
+
+
+  async searchSubstitutableCharms() {
+    while ( typeof Module.getSubstitutesAll !== 'function' ) {
+      await new Promise(r => setTimeout(r, 100))
+    }
+
+    const res = Module.getSubstitutesAll( JSON.stringify(this.charms) ) // use wasm module
+    const substitutes = JSON.parse(res)
+
+    for (const i in this.charms) {
+      const [baseId, upperIds] = substitutes[0] || [Number.MAX_SAFE_INTEGER, []]
+
+      if ( this.charms[i].rowid > baseId ) {
+        console.log('internal error')
+      }
+      else if ( this.charms[i].rowid < baseId ) {
+        this.charms[i].substitutableCharms = []
+      }
+      else {
+        this.charms[i].substitutableCharms = upperIds.map(u => this.charms[u - 1])
+        substitutes.shift()
+      }
+    }
+
+    // for (const [baseId, upperIds] of substitutes) {
+    //   charms[baseId - 1].substitutableCharms = upperIds.map(i => charms[i - 1])
+    // }
+  }
+
+  // async exportIdx() {
+  //   const blob = await exportDB(this.indexeddb, {
+  //     filter: (table) => table === 'images'
+  //   })
+  // }
+
+  // async importIdx() {
+  // }
+
 
   // TODO: charm class 作ってコンストラクタでやる
   _row2obj(row) {
