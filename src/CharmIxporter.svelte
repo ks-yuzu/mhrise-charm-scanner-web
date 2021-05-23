@@ -1,5 +1,5 @@
 <script>
-  export let charmManager
+  import {charmManager} from './stores.js'
 
   let textareaValue = ''
 
@@ -10,13 +10,14 @@
   }
 
   async function exportCharms() {
-    textareaValue = [
-      ...(await charmManager.sql('select * from charms')).result.rows
-    ] .map(row => {
-        const {skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3} = row
-        return [skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3].join(',')
-      })
-      .join('\n')
+    console.log($charmManager.charmTableName)
+
+    textareaValue = $charmManager.charms.map(row => {
+      const {skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3} = row
+      return [skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3].join(',')
+    }).join('\n')
+
+    $charmManager.exportIdx()
   }
 </script>
 
@@ -27,7 +28,7 @@
 
     <div>
       <!-- <button class="btn btn-primary shadow-0 {(String(textareaValue).trim().length && charmManager) ? 'disabled' : 'disabled'}" on:click={importCharms}>import</button> -->
-      <button class="btn btn-primary shadow-0 {charmManager ? '' : 'disabled'}" on:click={exportCharms}>export</button>
+      <button class="btn btn-primary shadow-0 {$charmManager ? '' : 'disabled'}" on:click={exportCharms}>export</button>
     </div>
   </div>
 </div>
