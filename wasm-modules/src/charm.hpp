@@ -90,13 +90,21 @@ class Charm {
         }
       }
 
+      if ( level <= 0 ) {
+        continue;
+      }
+
+      // precheck if decoration exsists becouse wasm does not support exception
+      if ( skillToSlotLevel.count(this->skills[i]) == 0 ) {
+        // skill have to be realized by decoration and decoration not fount
+        return false;
+      }
+
       const int skillRank = skillToSlotLevel.at(this->skills[i]);
       // std::cout << "skill rank: " << skillRank << std::endl;
       // std::cout << "reduced level: " << level << std::endl;
 
-      if ( level > 0 ) {
-        requiredSlots.insert(std::end(requiredSlots), level, skillRank);
-      }
+      requiredSlots.insert(std::end(requiredSlots), level, skillRank);
     }
     std::sort(std::begin(requiredSlots), std::end(requiredSlots));
     // std::cout << "required slots: " << requiredSlots << std::endl;
