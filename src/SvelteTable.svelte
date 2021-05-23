@@ -14,8 +14,13 @@
   export let classNameRow = '';
   export let classNameCell = '';
   export let filterSelections = {};
+
+  export let sliceBegin = null
+  export let sliceEnd   = null
+  export let disableFilterHeader = false
+
   let sortFunction = () => "";
-  let showFilterHeader = columns.some(c => {
+  let showFilterHeader = !disableFilterHeader && columns.some(c => {
     // check if there are any filter or search headers
     return c.filterOptions !== undefined || c.searchValue !== undefined
   });
@@ -55,7 +60,8 @@
       if (a.$sortOn > b.$sortOn) return sortOrder;
       else if (a.$sortOn < b.$sortOn) return -sortOrder;
       return 0;
-    });
+    })
+    .slice(sliceBegin || 0, sliceEnd || undefined);
   const asStringArray = (v) => [].concat(v).filter(v => typeof v === 'string' && v !== "").join(' ');
   const calculateFilterValues = () => {
     filterValues = {};
@@ -115,7 +121,7 @@
 <table class={asStringArray(classNameTable)}>
   <thead class={asStringArray(classNameThead)}>
     {#if showFilterHeader}
-      <tr>
+      <tr class="row-filter-header">
         {#each columns as col}
           <th>
             {#if col.searchValue !== undefined}
@@ -133,7 +139,7 @@
       </tr>
     {/if}
     <slot name="header" sortOrder={sortOrder} sortBy={sortBy}>
-      <tr>
+      <tr class="row-title-header">
         {#each columns as col}
           {#if col.sortable}
             <th

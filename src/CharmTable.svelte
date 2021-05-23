@@ -2,9 +2,17 @@
   import {slide} from "svelte/transition"
   import SvelteTable from "./SvelteTable.svelte"
   import {getAllSkillNames} from './mhrise-skills.js'
+  import {charmManager} from './stores.js'
 
+  export let headerColor           = 'mediumseagreen'
+  export let disableFilterHeader   = false
+  export let showImageColumn       = true
+  export let showSubstitutesColumn = true
   export let charms
-  export let charmManager
+
+  export let sliceBegin
+  export let sliceEnd
+
 
   // constants
   const N_CHARM_SLOT_MAX = 3
@@ -100,136 +108,171 @@
       sortable:      true,
       filterOptions: ["有り", "無し"],
     },
-  ]
+  ].filter(i => {
+    switch (i.key) {
+      case 'image':               return showImageColumn
+      case 'substitutableCharms': return showSubstitutesColumn
+      default:                    return true
+    }
+  })
+
+
+  // fields
+  let isScreenshotShown = []
+  let isSubstitutableCharmsShown = []
 
 
   // handlers
   function onSort(event) {
     // close all accordion
-    charms.forEach(i => i.isScrennshotShown = i.isSubstitutableCharmsShown = false)
+    isScreenshotShown = []
+    isSubstitutableCharmsShown = []
   }
 
   function onClickRow({row}) {
-    const index = row.rowid - 1
-    charms[index].isSubstitutableCharmsShown = !charms[index].isSubstitutableCharmsShown
+    const index = row.rowid
+    isSubstitutableCharmsShown[index] = !isSubstitutableCharmsShown[index]
   }
 
-  async function toggleScreenshot({e, row, index}) {
+  async function toggleScreenshot({e, row}) {
     e.stopPropagation()
 
-    const toShow = ! charms[index].isScrennshotShown
-    charms[index].isScrennshotShown = toShow
+    const index = row.rowid
+    const toShow = ! isScreenshotShown[index]
+    isScreenshotShown[index] = toShow
 
     if ( toShow ) {
       // console.log(charms[index].imagename)
-      const screenshot = await charmManager.getScreenshot(row.imagename)
+      const screenshot = await $charmManager.getScreenshot(row.imagename)
 
       // await new Promise((resolve) => requestAnimationFrame(resolve))
       cv.imshow(`charm-table-row-${index}-screenshot`, screenshot)
     }
   }
 
+
+  $: styleVars = Object.entries({
+    'header-background-color': headerColor,
+    'table-width': `${61 + (showImageColumn ? 3 : 0) + (showSubstitutesColumn ? 3 : 0)}rem`,
+  }).map(([k, v]) => `--${k}:${v}`)
+    .join(';')
 </script>
 
-
-<SvelteTable columns="{columns}"
-             rows="{charms}"
-             classNameTable={['table table-striped table-hover table-responsible']}
-             classNameThead={['table-dark hide-first-child.disabled']}
-             on:clickCol={onSort}
-             >
-  <tr slot="row" let:row let:n on:click={(e) => onClickRow({row})}>
-    {#each columns as col}
-      <td on:click={(e) => { if (col.onClick) {col.onClick({e, row, col, index: n})} }}
-          class={[col.class].join(' ')}
-          >
-        {#if col.renderComponent}
-          <svelte:component
-            this={col.renderComponent.component || col.renderComponent} {...(col.renderComponent.props || {})}
-            row={row}
-            col={col}
-            />
+<div class="charm-table" style="{styleVars}">
+  <SvelteTable columns="{columns}"
+               rows="{charms}"
+               classNameTable={['table table-striped table-hover table-responsible']}
+               classNameThead={['table-dark hide-first-child.disabled']}
+               disableFilterHeader={disableFilterHeader}
+               bind:sliceBegin
+               bind:sliceEnd
+               on:clickCol={onSort}
+               >
+    <tr slot="row" let:row let:n on:click={(e) => onClickRow({row})}>
+      {#each columns as col}
+        <td on:click={(e) => { if (col.onClick) {col.onClick({e, row, col, index: n})} }}
+            class={[col.class].join(' ')}
+            >
+          {#if col.renderComponent}
+            <svelte:component
+              this={col.renderComponent.component || col.renderComponent} {...(col.renderComponent.props || {})}
+              row={row}
+              col={col}
+              />
+          {:else}
+            {@html col.renderValue ? col.renderValue(row) : col.value(row)}
+          {/if}
+        </td>
+      {/each}
+    </tr>
+    <div slot="after-row" let:row let:n id="charm-table-row-{row.rowid}" style="width: 100%">
+      {#if isSubstitutableCharmsShown[row.rowid]}
+        {#if row.substitutableCharms == null}
+          <div style="width: 100%; border-bottom: solid 1px #ddd">searching...</div>
+        {:else if row.substitutableCharms.length === 0}
+          <!-- none -->
         {:else}
-          {@html col.renderValue ? col.renderValue(row) : col.value(row)}
-        {/if}
-      </td>
-    {/each}
-  </tr>
-  <div slot="after-row" let:row let:n id="charm-table-row-{n}" style="width: 100%">
-    {#if row.isSubstitutableCharmsShown}
-      {#if row.substitutableCharms == null}
-        <div style="width: 100%; border-bottom: solid 1px #ddd">searching...</div>
-      {:else if row.substitutableCharms.length === 0}
-        <!-- none -->
-      {:else}
-        <div class="row-substitutes" transition:slide={{duration: 150}}>
-        {#each row.substitutableCharms as c}
-          <div style="width: 100%; text-align: left; padding: 0.3rem 2rem">
-            {c.rowid}: {c.skill1}{c.skill1Level}, {c.skill2}{c.skill2Level}, {c.slot1}-{c.slot2}-{c.slot3}
+          <div class="row-substitutes" transition:slide={{duration: 150}}>
+          {#each row.substitutableCharms as c}
+            <div style="width: 100%; text-align: left; padding: 0.3rem 2rem">
+              {c.rowid}: {c.skill1}{c.skill1Level}, {c.skill2}{c.skill2Level}, {c.slot1}-{c.slot2}-{c.slot3}
+            </div>
+          {/each}
           </div>
-        {/each}
+        {/if}
+      {/if}
+
+      {#if isScreenshotShown[row.rowid]}
+        <div style="width: 100%; border-bottom: solid 1px #ddd" transition:slide={{duration: 100}}>
+          <canvas id="charm-table-row-{row.rowid}-screenshot" style="width: 100%"></canvas>
         </div>
       {/if}
-    {/if}
-
-    {#if charms[n].isScrennshotShown}
-      <div style="width: 100%; border-bottom: solid 1px #ddd" transition:slide={{duration: 100}}>
-        <canvas id="charm-table-row-{n}-screenshot" style="width: 100%"></canvas>
-      </div>
-    {/if}
-  </div>
-</SvelteTable>
+    </div>
+  </SvelteTable>
+</div>
 
 
 <style>
-  :global(#charm-list td) {
-    padding: 0.3rem;
+  .charm-table {
+    height: 100%;
+    font-family: monospace;
   }
 
-  :global(#charm-list td) {
-    padding: 0.3rem;
-  }
-
-  :global(#charm-list table) {
+  :global(.charm-table > table) {
     display: block;
     height:  100%;
   }
 
   :global(
-    #charm-list table thead,
-    #charm-list table tbody,
-    #charm-list table tr
+    .charm-table > table thead,
+    .charm-table > table tbody,
+    .charm-table > table tr
   ) {
     display: flex;
     flex-shrink: 0;
   }
 
   :global(
-    #charm-list thead,
-    #charm-list tbody
+    .charm-table > table thead,
+    .charm-table > table tbody
   ) {
     flex-direction: row;
     flex-wrap: wrap;
   }
 
-  :global(#charm-list > table > thead) {
-    /*padding-right: 15px; /* tbody のスクロールバーに合わせる */
+  :global(.charm-table > table thead) {
     background: none;
   }
 
-  :global(#charm-list > table > thead > :nth-child(1)) {
+  :global(.charm-table > table > thead > .row-filter-header) {
     border: none;
   }
 
-  :global(#charm-list > table > thead > :nth-child(2)) {
-    background: mediumseagreen;
+  :global(.charm-table > table > thead > .row-title-header) {
+    background: var(--header-background-color);
   }
 
-  :global(#charm-list > table > thead th) {
+  :global(.charm-table > table > :not(caption) > * > *) {
+    padding-left:  0;
+    padding-right: 0;
+    border:        none;
+  }
+
+  :global(.charm-table > table > thead > .row-filter-header > th) {
+    padding-left:  0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  :global(.charm-table > table > thead > .row-title-header > th) {
+    padding-top:    0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  :global(.charm-table > table > thead th) {
     background: inherit;
   }
 
-  :global(#charm-list > table > tbody) {
+  :global(.charm-table > table > tbody) {
     height:     calc(100% - 6rem);
     overflow-x: auto;
     overflow-y: scroll;
@@ -237,20 +280,20 @@
     align-content: flex-start;
   }
 
-  :global(#charm-list > table tr) {
+  :global(.charm-table > table tr) {
     width:  100%;
   }
 
-  :global(#charm-list > table tbody > tr) {
+  :global(.charm-table > table tbody > tr) {
     height: 1.9rem;
   }
 
-  :global(#charm-list > table tbody > div) {
+  :global(.charm-table > table tbody > div) {
     margin:  0;
     padding: 0;
   }
 
-  :global(#charm-list > table tbody > div > div.row-substitutes) {
+  :global(.charm-table > table tbody > div > div.row-substitutes) {
     margin:  0;
     padding: 0.5rem 2rem;
 
@@ -258,27 +301,32 @@
     overflow:   auto;
   }
 
-
   :global(
-    #charm-list > table th,
-    #charm-list > table td
+    .charm-table > table th,
+    .charm-table > table td
   ) {
     text-align: center;
     display:    inline-block;
   }
 
+  :global(.charm-table > table td) {
+    padding: 0.3rem;
+  }
+
 
   /* width */
-  :global(#charm-list > table) { width: 67rem; }
+  :global(.charm-table > table) {
+    width: var(--table-width) !important;
+  }
 
-  :global(#charm-list > table > * > tr > *:nth-child(1)) {
+  :global(.charm-table > table > * > tr > *:nth-child(1)) {
     width: 4rem;
     padding-right: 1rem;
     text-align: right;
   }
   :global(
-    #charm-list > table > * > tr > *:nth-child(2),
-    #charm-list > table > * > tr > *:nth-child(4)
+    .charm-table > table > * > tr > *:nth-child(2),
+    .charm-table > table > * > tr > *:nth-child(4)
   ) {
     /* width: calc((100% - 52rem - 6rem) / 2); */
     width: 10rem;
@@ -286,29 +334,19 @@
     text-align: left;
   }
   :global(
-    #charm-list > table > * > tr > *:nth-child(3),
-    #charm-list > table > * > tr > *:nth-child(5),
-    #charm-list > table > * > tr > *:nth-child(6),
-    #charm-list > table > * > tr > *:nth-child(7),
-    #charm-list > table > * > tr > *:nth-child(8),
-    #charm-list > table > * > tr > *:nth-child(9)
+    .charm-table > table > * > tr > *:nth-child(3),
+    .charm-table > table > * > tr > *:nth-child(5),
+    .charm-table > table > * > tr > *:nth-child(6),
+    .charm-table > table > * > tr > *:nth-child(7),
+    .charm-table > table > * > tr > *:nth-child(8),
+    .charm-table > table > * > tr > *:nth-child(9)
   ) {
     width: 6rem;
   }
   :global(
-    #charm-list > table > * > tr > *:nth-child(10),
-    #charm-list > table > * > tr > *:nth-child(11)
+    .charm-table > table > * > tr > *:nth-child(10),
+    .charm-table > table > * > tr > *:nth-child(11)
   ) {
     width: 3rem;
-  }
-
-  :global(#charm-list > table > :not(caption) > * > *) {
-    padding: 0.5rem 0;
-    border:  none;
-  }
-
-  :global(#charm-list > table > thead > tr[class]:first-child > th) {
-    padding-left:  0.5rem;
-    padding-right: 0.5rem;
   }
 </style>
