@@ -3,6 +3,7 @@
   import MHRiseCharmScanner from './mhrise-charm-scanner.js'
   import Hamburger from './Hamburger.svelte'
   import Nav from './Nav.svelte'
+  import {charmManager} from './stores.js'
 
   const TITLE   = 'MHRise Charm Scanner'
   const VERSION = '0.5.0'
@@ -10,11 +11,10 @@
   let isNavigationOpen = false
   let fInitialized = false
   let charmScanner
-  let charmManager
 
   window.addEventListener('load', async () => {
     charmScanner = new MHRiseCharmScanner()
-    charmManager = new MHRiseCharmManager()
+    $charmManager = new MHRiseCharmManager()
     await charmScanner.init()
     fInitialized = true
   })
@@ -26,7 +26,7 @@
 	  <h1>{TITLE}</h1>
   </header>
   <div id="nav-wrapper">
-    <Nav {...{isNavigationOpen, fInitialized, charmScanner, charmManager}}></Nav>
+    <Nav {...{isNavigationOpen, fInitialized, charmScanner}} />
   </div>
   <div id="version">v{VERSION}</div>
 </main>
