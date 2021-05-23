@@ -52,9 +52,9 @@ class Charm {
  public:
   Charm(): id(), slots(), skills() {}
   Charm(
-    const std::vector<int>& slots,
     const std::vector<std::string>& skills,
     const std::vector<int>& skillLevels,
+    const std::vector<int>& slots,
     int id = -1
   ): id(id), slots(slots), skills(skills), skillLevels(skillLevels) {}
 
@@ -64,6 +64,9 @@ class Charm {
     skills({c["skill1"], c["skill2"]}),
     skillLevels({c["skill1Level"], c["skill2Level"]}) {
   }
+
+  Charm(Charm&&) = default;
+
 
   bool operator==(const Charm& another) const {
     if ( this == &another ) { return true; }

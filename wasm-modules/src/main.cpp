@@ -150,7 +150,8 @@ std::string getSubstitutesAll(const std::string& input) {
  * allCharms の中から base の上位互換を探す
  */
 std::string getSubstitutes(const std::string& _allCharms, const std::string& _base) {
-  Charm base(JSON::parse(_base));
+  const auto baseJson = JSON::parse(_base);
+  const Charm base(baseJson["skills"], baseJson["skillLevels"], baseJson["slots"]);
 
   std::vector<Charm> allCharms;
   allCharms.reserve(1000);
@@ -179,7 +180,8 @@ int main(void) {
   std::cout << getSubstitutes(
     #include "../test-data/charms.txt"
     ,
-    "{\"rowid\": -1, \"skill1\": \"ブレ抑制\", \"skill1Level\": 1, \"skill2\": \"業物\", \"skill2Level\": 1, \"slot1\": 1, \"slot2\": 0, \"slot3\": 0}"
+    "{\"rowid\": -1, \"skills\": [\"ブレ抑制\", \"業物\"], \"skillLevels\": [1, 1], \"slots\": [1, 0, 0]}"
+    //"{\"rowid\": -1, \"skills\": [\"ブレ抑制\", \"炎\"], \"skillLevels\": [1, 1], \"slots\": [1, 0, 0]}"
   ) << std::endl;
 
 // std::cout << getSubstitutesAll(
