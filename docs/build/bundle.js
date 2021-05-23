@@ -1,5 +1,5 @@
 
-(function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(window.document);
+(function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35730/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(window.document);
 var app = (function () {
     'use strict';
 
@@ -801,6 +801,4423 @@ var app = (function () {
         $inject_state() { }
     }
 
+    /*
+     * Dexie.js - a minimalistic wrapper for IndexedDB
+     * ===============================================
+     *
+     * By David Fahlander, david.fahlander@gmail.com
+     *
+     * Version 3.0.3, Wed Nov 18 2020
+     *
+     * http://dexie.org
+     *
+     * Apache License Version 2.0, January 2004, http://www.apache.org/licenses/
+     */
+     
+    var __assign = function() {
+        __assign = Object.assign || function __assign(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+                s = arguments[i];
+                for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+            }
+            return t;
+        };
+        return __assign.apply(this, arguments);
+    };
+
+
+
+
+
+
+
+
+
+
+    function __spreadArrays() {
+        for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+        for (var r = Array(s), k = 0, i = 0; i < il; i++)
+            for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+                r[k] = a[j];
+        return r;
+    }
+
+    var keys = Object.keys;
+    var isArray = Array.isArray;
+    var _global = typeof self !== 'undefined' ? self :
+        typeof window !== 'undefined' ? window :
+            global;
+    if (typeof Promise !== 'undefined' && !_global.Promise) {
+        _global.Promise = Promise;
+    }
+    function extend(obj, extension) {
+        if (typeof extension !== 'object')
+            return obj;
+        keys(extension).forEach(function (key) {
+            obj[key] = extension[key];
+        });
+        return obj;
+    }
+    var getProto = Object.getPrototypeOf;
+    var _hasOwn = {}.hasOwnProperty;
+    function hasOwn(obj, prop) {
+        return _hasOwn.call(obj, prop);
+    }
+    function props(proto, extension) {
+        if (typeof extension === 'function')
+            extension = extension(getProto(proto));
+        keys(extension).forEach(function (key) {
+            setProp(proto, key, extension[key]);
+        });
+    }
+    var defineProperty = Object.defineProperty;
+    function setProp(obj, prop, functionOrGetSet, options) {
+        defineProperty(obj, prop, extend(functionOrGetSet && hasOwn(functionOrGetSet, "get") && typeof functionOrGetSet.get === 'function' ?
+            { get: functionOrGetSet.get, set: functionOrGetSet.set, configurable: true } :
+            { value: functionOrGetSet, configurable: true, writable: true }, options));
+    }
+    function derive(Child) {
+        return {
+            from: function (Parent) {
+                Child.prototype = Object.create(Parent.prototype);
+                setProp(Child.prototype, "constructor", Child);
+                return {
+                    extend: props.bind(null, Child.prototype)
+                };
+            }
+        };
+    }
+    var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+    function getPropertyDescriptor(obj, prop) {
+        var pd = getOwnPropertyDescriptor(obj, prop);
+        var proto;
+        return pd || (proto = getProto(obj)) && getPropertyDescriptor(proto, prop);
+    }
+    var _slice = [].slice;
+    function slice(args, start, end) {
+        return _slice.call(args, start, end);
+    }
+    function override(origFunc, overridedFactory) {
+        return overridedFactory(origFunc);
+    }
+    function assert(b) {
+        if (!b)
+            throw new Error("Assertion Failed");
+    }
+    function asap(fn) {
+        if (_global.setImmediate)
+            setImmediate(fn);
+        else
+            setTimeout(fn, 0);
+    }
+
+    function arrayToObject(array, extractor) {
+        return array.reduce(function (result, item, i) {
+            var nameAndValue = extractor(item, i);
+            if (nameAndValue)
+                result[nameAndValue[0]] = nameAndValue[1];
+            return result;
+        }, {});
+    }
+
+    function tryCatch(fn, onerror, args) {
+        try {
+            fn.apply(null, args);
+        }
+        catch (ex) {
+            onerror && onerror(ex);
+        }
+    }
+    function getByKeyPath(obj, keyPath) {
+        if (hasOwn(obj, keyPath))
+            return obj[keyPath];
+        if (!keyPath)
+            return obj;
+        if (typeof keyPath !== 'string') {
+            var rv = [];
+            for (var i = 0, l = keyPath.length; i < l; ++i) {
+                var val = getByKeyPath(obj, keyPath[i]);
+                rv.push(val);
+            }
+            return rv;
+        }
+        var period = keyPath.indexOf('.');
+        if (period !== -1) {
+            var innerObj = obj[keyPath.substr(0, period)];
+            return innerObj === undefined ? undefined : getByKeyPath(innerObj, keyPath.substr(period + 1));
+        }
+        return undefined;
+    }
+    function setByKeyPath(obj, keyPath, value) {
+        if (!obj || keyPath === undefined)
+            return;
+        if ('isFrozen' in Object && Object.isFrozen(obj))
+            return;
+        if (typeof keyPath !== 'string' && 'length' in keyPath) {
+            assert(typeof value !== 'string' && 'length' in value);
+            for (var i = 0, l = keyPath.length; i < l; ++i) {
+                setByKeyPath(obj, keyPath[i], value[i]);
+            }
+        }
+        else {
+            var period = keyPath.indexOf('.');
+            if (period !== -1) {
+                var currentKeyPath = keyPath.substr(0, period);
+                var remainingKeyPath = keyPath.substr(period + 1);
+                if (remainingKeyPath === "")
+                    if (value === undefined) {
+                        if (isArray(obj) && !isNaN(parseInt(currentKeyPath)))
+                            obj.splice(currentKeyPath, 1);
+                        else
+                            delete obj[currentKeyPath];
+                    }
+                    else
+                        obj[currentKeyPath] = value;
+                else {
+                    var innerObj = obj[currentKeyPath];
+                    if (!innerObj)
+                        innerObj = (obj[currentKeyPath] = {});
+                    setByKeyPath(innerObj, remainingKeyPath, value);
+                }
+            }
+            else {
+                if (value === undefined) {
+                    if (isArray(obj) && !isNaN(parseInt(keyPath)))
+                        obj.splice(keyPath, 1);
+                    else
+                        delete obj[keyPath];
+                }
+                else
+                    obj[keyPath] = value;
+            }
+        }
+    }
+    function delByKeyPath(obj, keyPath) {
+        if (typeof keyPath === 'string')
+            setByKeyPath(obj, keyPath, undefined);
+        else if ('length' in keyPath)
+            [].map.call(keyPath, function (kp) {
+                setByKeyPath(obj, kp, undefined);
+            });
+    }
+    function shallowClone(obj) {
+        var rv = {};
+        for (var m in obj) {
+            if (hasOwn(obj, m))
+                rv[m] = obj[m];
+        }
+        return rv;
+    }
+    var concat = [].concat;
+    function flatten(a) {
+        return concat.apply([], a);
+    }
+    var intrinsicTypeNames = "Boolean,String,Date,RegExp,Blob,File,FileList,ArrayBuffer,DataView,Uint8ClampedArray,ImageData,Map,Set"
+        .split(',').concat(flatten([8, 16, 32, 64].map(function (num) { return ["Int", "Uint", "Float"].map(function (t) { return t + num + "Array"; }); }))).filter(function (t) { return _global[t]; });
+    var intrinsicTypes = intrinsicTypeNames.map(function (t) { return _global[t]; });
+    var intrinsicTypeNameSet = arrayToObject(intrinsicTypeNames, function (x) { return [x, true]; });
+    function deepClone(any) {
+        if (!any || typeof any !== 'object')
+            return any;
+        var rv;
+        if (isArray(any)) {
+            rv = [];
+            for (var i = 0, l = any.length; i < l; ++i) {
+                rv.push(deepClone(any[i]));
+            }
+        }
+        else if (intrinsicTypes.indexOf(any.constructor) >= 0) {
+            rv = any;
+        }
+        else {
+            rv = any.constructor ? Object.create(any.constructor.prototype) : {};
+            for (var prop in any) {
+                if (hasOwn(any, prop)) {
+                    rv[prop] = deepClone(any[prop]);
+                }
+            }
+        }
+        return rv;
+    }
+    var toString = {}.toString;
+    function toStringTag(o) {
+        return toString.call(o).slice(8, -1);
+    }
+    var getValueOf = function (val, type) {
+        return type === "Array" ? '' + val.map(function (v) { return getValueOf(v, toStringTag(v)); }) :
+            type === "ArrayBuffer" ? '' + new Uint8Array(val) :
+                type === "Date" ? val.getTime() :
+                    ArrayBuffer.isView(val) ? '' + new Uint8Array(val.buffer) :
+                        val;
+    };
+    function getObjectDiff(a, b, rv, prfx) {
+        rv = rv || {};
+        prfx = prfx || '';
+        keys(a).forEach(function (prop) {
+            if (!hasOwn(b, prop))
+                rv[prfx + prop] = undefined;
+            else {
+                var ap = a[prop], bp = b[prop];
+                if (typeof ap === 'object' && typeof bp === 'object' && ap && bp) {
+                    var apTypeName = toStringTag(ap);
+                    var bpTypeName = toStringTag(bp);
+                    if (apTypeName === bpTypeName) {
+                        if (intrinsicTypeNameSet[apTypeName]) {
+                            if (getValueOf(ap, apTypeName) !== getValueOf(bp, bpTypeName)) {
+                                rv[prfx + prop] = b[prop];
+                            }
+                        }
+                        else {
+                            getObjectDiff(ap, bp, rv, prfx + prop + ".");
+                        }
+                    }
+                    else {
+                        rv[prfx + prop] = b[prop];
+                    }
+                }
+                else if (ap !== bp)
+                    rv[prfx + prop] = b[prop];
+            }
+        });
+        keys(b).forEach(function (prop) {
+            if (!hasOwn(a, prop)) {
+                rv[prfx + prop] = b[prop];
+            }
+        });
+        return rv;
+    }
+    var iteratorSymbol = typeof Symbol !== 'undefined' && Symbol.iterator;
+    var getIteratorOf = iteratorSymbol ? function (x) {
+        var i;
+        return x != null && (i = x[iteratorSymbol]) && i.apply(x);
+    } : function () { return null; };
+    var NO_CHAR_ARRAY = {};
+    function getArrayOf(arrayLike) {
+        var i, a, x, it;
+        if (arguments.length === 1) {
+            if (isArray(arrayLike))
+                return arrayLike.slice();
+            if (this === NO_CHAR_ARRAY && typeof arrayLike === 'string')
+                return [arrayLike];
+            if ((it = getIteratorOf(arrayLike))) {
+                a = [];
+                while (x = it.next(), !x.done)
+                    a.push(x.value);
+                return a;
+            }
+            if (arrayLike == null)
+                return [arrayLike];
+            i = arrayLike.length;
+            if (typeof i === 'number') {
+                a = new Array(i);
+                while (i--)
+                    a[i] = arrayLike[i];
+                return a;
+            }
+            return [arrayLike];
+        }
+        i = arguments.length;
+        a = new Array(i);
+        while (i--)
+            a[i] = arguments[i];
+        return a;
+    }
+    var isAsyncFunction = typeof Symbol !== 'undefined'
+        ? function (fn) { return fn[Symbol.toStringTag] === 'AsyncFunction'; }
+        : function () { return false; };
+
+    var debug = typeof location !== 'undefined' &&
+        /^(http|https):\/\/(localhost|127\.0\.0\.1)/.test(location.href);
+    function setDebug(value, filter) {
+        debug = value;
+        libraryFilter = filter;
+    }
+    var libraryFilter = function () { return true; };
+    var NEEDS_THROW_FOR_STACK = !new Error("").stack;
+    function getErrorWithStack() {
+        if (NEEDS_THROW_FOR_STACK)
+            try {
+                throw new Error();
+            }
+            catch (e) {
+                return e;
+            }
+        return new Error();
+    }
+    function prettyStack(exception, numIgnoredFrames) {
+        var stack = exception.stack;
+        if (!stack)
+            return "";
+        numIgnoredFrames = (numIgnoredFrames || 0);
+        if (stack.indexOf(exception.name) === 0)
+            numIgnoredFrames += (exception.name + exception.message).split('\n').length;
+        return stack.split('\n')
+            .slice(numIgnoredFrames)
+            .filter(libraryFilter)
+            .map(function (frame) { return "\n" + frame; })
+            .join('');
+    }
+
+    var dexieErrorNames = [
+        'Modify',
+        'Bulk',
+        'OpenFailed',
+        'VersionChange',
+        'Schema',
+        'Upgrade',
+        'InvalidTable',
+        'MissingAPI',
+        'NoSuchDatabase',
+        'InvalidArgument',
+        'SubTransaction',
+        'Unsupported',
+        'Internal',
+        'DatabaseClosed',
+        'PrematureCommit',
+        'ForeignAwait'
+    ];
+    var idbDomErrorNames = [
+        'Unknown',
+        'Constraint',
+        'Data',
+        'TransactionInactive',
+        'ReadOnly',
+        'Version',
+        'NotFound',
+        'InvalidState',
+        'InvalidAccess',
+        'Abort',
+        'Timeout',
+        'QuotaExceeded',
+        'Syntax',
+        'DataClone'
+    ];
+    var errorList = dexieErrorNames.concat(idbDomErrorNames);
+    var defaultTexts = {
+        VersionChanged: "Database version changed by other database connection",
+        DatabaseClosed: "Database has been closed",
+        Abort: "Transaction aborted",
+        TransactionInactive: "Transaction has already completed or failed"
+    };
+    function DexieError(name, msg) {
+        this._e = getErrorWithStack();
+        this.name = name;
+        this.message = msg;
+    }
+    derive(DexieError).from(Error).extend({
+        stack: {
+            get: function () {
+                return this._stack ||
+                    (this._stack = this.name + ": " + this.message + prettyStack(this._e, 2));
+            }
+        },
+        toString: function () { return this.name + ": " + this.message; }
+    });
+    function getMultiErrorMessage(msg, failures) {
+        return msg + ". Errors: " + Object.keys(failures)
+            .map(function (key) { return failures[key].toString(); })
+            .filter(function (v, i, s) { return s.indexOf(v) === i; })
+            .join('\n');
+    }
+    function ModifyError(msg, failures, successCount, failedKeys) {
+        this._e = getErrorWithStack();
+        this.failures = failures;
+        this.failedKeys = failedKeys;
+        this.successCount = successCount;
+        this.message = getMultiErrorMessage(msg, failures);
+    }
+    derive(ModifyError).from(DexieError);
+    function BulkError(msg, failures) {
+        this._e = getErrorWithStack();
+        this.name = "BulkError";
+        this.failures = failures;
+        this.message = getMultiErrorMessage(msg, failures);
+    }
+    derive(BulkError).from(DexieError);
+    var errnames = errorList.reduce(function (obj, name) { return (obj[name] = name + "Error", obj); }, {});
+    var BaseException = DexieError;
+    var exceptions = errorList.reduce(function (obj, name) {
+        var fullName = name + "Error";
+        function DexieError(msgOrInner, inner) {
+            this._e = getErrorWithStack();
+            this.name = fullName;
+            if (!msgOrInner) {
+                this.message = defaultTexts[name] || fullName;
+                this.inner = null;
+            }
+            else if (typeof msgOrInner === 'string') {
+                this.message = "" + msgOrInner + (!inner ? '' : '\n ' + inner);
+                this.inner = inner || null;
+            }
+            else if (typeof msgOrInner === 'object') {
+                this.message = msgOrInner.name + " " + msgOrInner.message;
+                this.inner = msgOrInner;
+            }
+        }
+        derive(DexieError).from(BaseException);
+        obj[name] = DexieError;
+        return obj;
+    }, {});
+    exceptions.Syntax = SyntaxError;
+    exceptions.Type = TypeError;
+    exceptions.Range = RangeError;
+    var exceptionMap = idbDomErrorNames.reduce(function (obj, name) {
+        obj[name + "Error"] = exceptions[name];
+        return obj;
+    }, {});
+    function mapError(domError, message) {
+        if (!domError || domError instanceof DexieError || domError instanceof TypeError || domError instanceof SyntaxError || !domError.name || !exceptionMap[domError.name])
+            return domError;
+        var rv = new exceptionMap[domError.name](message || domError.message, domError);
+        if ("stack" in domError) {
+            setProp(rv, "stack", { get: function () {
+                    return this.inner.stack;
+                } });
+        }
+        return rv;
+    }
+    var fullNameExceptions = errorList.reduce(function (obj, name) {
+        if (["Syntax", "Type", "Range"].indexOf(name) === -1)
+            obj[name + "Error"] = exceptions[name];
+        return obj;
+    }, {});
+    fullNameExceptions.ModifyError = ModifyError;
+    fullNameExceptions.DexieError = DexieError;
+    fullNameExceptions.BulkError = BulkError;
+
+    function nop() { }
+    function mirror(val) { return val; }
+    function pureFunctionChain(f1, f2) {
+        if (f1 == null || f1 === mirror)
+            return f2;
+        return function (val) {
+            return f2(f1(val));
+        };
+    }
+    function callBoth(on1, on2) {
+        return function () {
+            on1.apply(this, arguments);
+            on2.apply(this, arguments);
+        };
+    }
+    function hookCreatingChain(f1, f2) {
+        if (f1 === nop)
+            return f2;
+        return function () {
+            var res = f1.apply(this, arguments);
+            if (res !== undefined)
+                arguments[0] = res;
+            var onsuccess = this.onsuccess,
+            onerror = this.onerror;
+            this.onsuccess = null;
+            this.onerror = null;
+            var res2 = f2.apply(this, arguments);
+            if (onsuccess)
+                this.onsuccess = this.onsuccess ? callBoth(onsuccess, this.onsuccess) : onsuccess;
+            if (onerror)
+                this.onerror = this.onerror ? callBoth(onerror, this.onerror) : onerror;
+            return res2 !== undefined ? res2 : res;
+        };
+    }
+    function hookDeletingChain(f1, f2) {
+        if (f1 === nop)
+            return f2;
+        return function () {
+            f1.apply(this, arguments);
+            var onsuccess = this.onsuccess,
+            onerror = this.onerror;
+            this.onsuccess = this.onerror = null;
+            f2.apply(this, arguments);
+            if (onsuccess)
+                this.onsuccess = this.onsuccess ? callBoth(onsuccess, this.onsuccess) : onsuccess;
+            if (onerror)
+                this.onerror = this.onerror ? callBoth(onerror, this.onerror) : onerror;
+        };
+    }
+    function hookUpdatingChain(f1, f2) {
+        if (f1 === nop)
+            return f2;
+        return function (modifications) {
+            var res = f1.apply(this, arguments);
+            extend(modifications, res);
+            var onsuccess = this.onsuccess,
+            onerror = this.onerror;
+            this.onsuccess = null;
+            this.onerror = null;
+            var res2 = f2.apply(this, arguments);
+            if (onsuccess)
+                this.onsuccess = this.onsuccess ? callBoth(onsuccess, this.onsuccess) : onsuccess;
+            if (onerror)
+                this.onerror = this.onerror ? callBoth(onerror, this.onerror) : onerror;
+            return res === undefined ?
+                (res2 === undefined ? undefined : res2) :
+                (extend(res, res2));
+        };
+    }
+    function reverseStoppableEventChain(f1, f2) {
+        if (f1 === nop)
+            return f2;
+        return function () {
+            if (f2.apply(this, arguments) === false)
+                return false;
+            return f1.apply(this, arguments);
+        };
+    }
+
+    function promisableChain(f1, f2) {
+        if (f1 === nop)
+            return f2;
+        return function () {
+            var res = f1.apply(this, arguments);
+            if (res && typeof res.then === 'function') {
+                var thiz = this, i = arguments.length, args = new Array(i);
+                while (i--)
+                    args[i] = arguments[i];
+                return res.then(function () {
+                    return f2.apply(thiz, args);
+                });
+            }
+            return f2.apply(this, arguments);
+        };
+    }
+
+    var INTERNAL = {};
+    var LONG_STACKS_CLIP_LIMIT = 100;
+    var MAX_LONG_STACKS = 20;
+    var ZONE_ECHO_LIMIT = 100;
+    var _a = typeof Promise === 'undefined' ?
+        [] :
+        (function () {
+            var globalP = Promise.resolve();
+            if (typeof crypto === 'undefined' || !crypto.subtle)
+                return [globalP, globalP.__proto__, globalP];
+            var nativeP = crypto.subtle.digest("SHA-512", new Uint8Array([0]));
+            return [
+                nativeP,
+                nativeP.__proto__,
+                globalP
+            ];
+        })();
+    var resolvedNativePromise = _a[0];
+    var nativePromiseProto = _a[1];
+    var resolvedGlobalPromise = _a[2];
+    var nativePromiseThen = nativePromiseProto && nativePromiseProto.then;
+    var NativePromise = resolvedNativePromise && resolvedNativePromise.constructor;
+    var patchGlobalPromise = !!resolvedGlobalPromise;
+    var stack_being_generated = false;
+    var schedulePhysicalTick = resolvedGlobalPromise ?
+        function () { resolvedGlobalPromise.then(physicalTick); }
+        :
+            _global.setImmediate ?
+                setImmediate.bind(null, physicalTick) :
+                _global.MutationObserver ?
+                    function () {
+                        var hiddenDiv = document.createElement("div");
+                        (new MutationObserver(function () {
+                            physicalTick();
+                            hiddenDiv = null;
+                        })).observe(hiddenDiv, { attributes: true });
+                        hiddenDiv.setAttribute('i', '1');
+                    } :
+                    function () { setTimeout(physicalTick, 0); };
+    var asap$1 = function (callback, args) {
+        microtickQueue.push([callback, args]);
+        if (needsNewPhysicalTick) {
+            schedulePhysicalTick();
+            needsNewPhysicalTick = false;
+        }
+    };
+    var isOutsideMicroTick = true;
+    var needsNewPhysicalTick = true;
+    var unhandledErrors = [];
+    var rejectingErrors = [];
+    var currentFulfiller = null;
+    var rejectionMapper = mirror;
+    var globalPSD = {
+        id: 'global',
+        global: true,
+        ref: 0,
+        unhandleds: [],
+        onunhandled: globalError,
+        pgp: false,
+        env: {},
+        finalize: function () {
+            this.unhandleds.forEach(function (uh) {
+                try {
+                    globalError(uh[0], uh[1]);
+                }
+                catch (e) { }
+            });
+        }
+    };
+    var PSD = globalPSD;
+    var microtickQueue = [];
+    var numScheduledCalls = 0;
+    var tickFinalizers = [];
+    function DexiePromise(fn) {
+        if (typeof this !== 'object')
+            throw new TypeError('Promises must be constructed via new');
+        this._listeners = [];
+        this.onuncatched = nop;
+        this._lib = false;
+        var psd = (this._PSD = PSD);
+        if (debug) {
+            this._stackHolder = getErrorWithStack();
+            this._prev = null;
+            this._numPrev = 0;
+        }
+        if (typeof fn !== 'function') {
+            if (fn !== INTERNAL)
+                throw new TypeError('Not a function');
+            this._state = arguments[1];
+            this._value = arguments[2];
+            if (this._state === false)
+                handleRejection(this, this._value);
+            return;
+        }
+        this._state = null;
+        this._value = null;
+        ++psd.ref;
+        executePromiseTask(this, fn);
+    }
+    var thenProp = {
+        get: function () {
+            var psd = PSD, microTaskId = totalEchoes;
+            function then(onFulfilled, onRejected) {
+                var _this = this;
+                var possibleAwait = !psd.global && (psd !== PSD || microTaskId !== totalEchoes);
+                var cleanup = possibleAwait && !decrementExpectedAwaits();
+                var rv = new DexiePromise(function (resolve, reject) {
+                    propagateToListener(_this, new Listener(nativeAwaitCompatibleWrap(onFulfilled, psd, possibleAwait, cleanup), nativeAwaitCompatibleWrap(onRejected, psd, possibleAwait, cleanup), resolve, reject, psd));
+                });
+                debug && linkToPreviousPromise(rv, this);
+                return rv;
+            }
+            then.prototype = INTERNAL;
+            return then;
+        },
+        set: function (value) {
+            setProp(this, 'then', value && value.prototype === INTERNAL ?
+                thenProp :
+                {
+                    get: function () {
+                        return value;
+                    },
+                    set: thenProp.set
+                });
+        }
+    };
+    props(DexiePromise.prototype, {
+        then: thenProp,
+        _then: function (onFulfilled, onRejected) {
+            propagateToListener(this, new Listener(null, null, onFulfilled, onRejected, PSD));
+        },
+        catch: function (onRejected) {
+            if (arguments.length === 1)
+                return this.then(null, onRejected);
+            var type = arguments[0], handler = arguments[1];
+            return typeof type === 'function' ? this.then(null, function (err) {
+                return err instanceof type ? handler(err) : PromiseReject(err);
+            })
+                : this.then(null, function (err) {
+                    return err && err.name === type ? handler(err) : PromiseReject(err);
+                });
+        },
+        finally: function (onFinally) {
+            return this.then(function (value) {
+                onFinally();
+                return value;
+            }, function (err) {
+                onFinally();
+                return PromiseReject(err);
+            });
+        },
+        stack: {
+            get: function () {
+                if (this._stack)
+                    return this._stack;
+                try {
+                    stack_being_generated = true;
+                    var stacks = getStack(this, [], MAX_LONG_STACKS);
+                    var stack = stacks.join("\nFrom previous: ");
+                    if (this._state !== null)
+                        this._stack = stack;
+                    return stack;
+                }
+                finally {
+                    stack_being_generated = false;
+                }
+            }
+        },
+        timeout: function (ms, msg) {
+            var _this = this;
+            return ms < Infinity ?
+                new DexiePromise(function (resolve, reject) {
+                    var handle = setTimeout(function () { return reject(new exceptions.Timeout(msg)); }, ms);
+                    _this.then(resolve, reject).finally(clearTimeout.bind(null, handle));
+                }) : this;
+        }
+    });
+    if (typeof Symbol !== 'undefined' && Symbol.toStringTag)
+        setProp(DexiePromise.prototype, Symbol.toStringTag, 'Dexie.Promise');
+    globalPSD.env = snapShot();
+    function Listener(onFulfilled, onRejected, resolve, reject, zone) {
+        this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
+        this.onRejected = typeof onRejected === 'function' ? onRejected : null;
+        this.resolve = resolve;
+        this.reject = reject;
+        this.psd = zone;
+    }
+    props(DexiePromise, {
+        all: function () {
+            var values = getArrayOf.apply(null, arguments)
+                .map(onPossibleParallellAsync);
+            return new DexiePromise(function (resolve, reject) {
+                if (values.length === 0)
+                    resolve([]);
+                var remaining = values.length;
+                values.forEach(function (a, i) { return DexiePromise.resolve(a).then(function (x) {
+                    values[i] = x;
+                    if (!--remaining)
+                        resolve(values);
+                }, reject); });
+            });
+        },
+        resolve: function (value) {
+            if (value instanceof DexiePromise)
+                return value;
+            if (value && typeof value.then === 'function')
+                return new DexiePromise(function (resolve, reject) {
+                    value.then(resolve, reject);
+                });
+            var rv = new DexiePromise(INTERNAL, true, value);
+            linkToPreviousPromise(rv, currentFulfiller);
+            return rv;
+        },
+        reject: PromiseReject,
+        race: function () {
+            var values = getArrayOf.apply(null, arguments).map(onPossibleParallellAsync);
+            return new DexiePromise(function (resolve, reject) {
+                values.map(function (value) { return DexiePromise.resolve(value).then(resolve, reject); });
+            });
+        },
+        PSD: {
+            get: function () { return PSD; },
+            set: function (value) { return PSD = value; }
+        },
+        totalEchoes: { get: function () { return totalEchoes; } },
+        newPSD: newScope,
+        usePSD: usePSD,
+        scheduler: {
+            get: function () { return asap$1; },
+            set: function (value) { asap$1 = value; }
+        },
+        rejectionMapper: {
+            get: function () { return rejectionMapper; },
+            set: function (value) { rejectionMapper = value; }
+        },
+        follow: function (fn, zoneProps) {
+            return new DexiePromise(function (resolve, reject) {
+                return newScope(function (resolve, reject) {
+                    var psd = PSD;
+                    psd.unhandleds = [];
+                    psd.onunhandled = reject;
+                    psd.finalize = callBoth(function () {
+                        var _this = this;
+                        run_at_end_of_this_or_next_physical_tick(function () {
+                            _this.unhandleds.length === 0 ? resolve() : reject(_this.unhandleds[0]);
+                        });
+                    }, psd.finalize);
+                    fn();
+                }, zoneProps, resolve, reject);
+            });
+        }
+    });
+    if (NativePromise) {
+        if (NativePromise.allSettled)
+            setProp(DexiePromise, "allSettled", function () {
+                var possiblePromises = getArrayOf.apply(null, arguments).map(onPossibleParallellAsync);
+                return new DexiePromise(function (resolve) {
+                    if (possiblePromises.length === 0)
+                        resolve([]);
+                    var remaining = possiblePromises.length;
+                    var results = new Array(remaining);
+                    possiblePromises.forEach(function (p, i) { return DexiePromise.resolve(p).then(function (value) { return results[i] = { status: "fulfilled", value: value }; }, function (reason) { return results[i] = { status: "rejected", reason: reason }; })
+                        .then(function () { return --remaining || resolve(results); }); });
+                });
+            });
+        if (NativePromise.any && typeof AggregateError !== 'undefined')
+            setProp(DexiePromise, "any", function () {
+                var possiblePromises = getArrayOf.apply(null, arguments).map(onPossibleParallellAsync);
+                return new DexiePromise(function (resolve, reject) {
+                    if (possiblePromises.length === 0)
+                        reject(new AggregateError([]));
+                    var remaining = possiblePromises.length;
+                    var failures = new Array(remaining);
+                    possiblePromises.forEach(function (p, i) { return DexiePromise.resolve(p).then(function (value) { return resolve(value); }, function (failure) {
+                        failures[i] = failure;
+                        if (!--remaining)
+                            reject(new AggregateError(failures));
+                    }); });
+                });
+            });
+    }
+    function executePromiseTask(promise, fn) {
+        try {
+            fn(function (value) {
+                if (promise._state !== null)
+                    return;
+                if (value === promise)
+                    throw new TypeError('A promise cannot be resolved with itself.');
+                var shouldExecuteTick = promise._lib && beginMicroTickScope();
+                if (value && typeof value.then === 'function') {
+                    executePromiseTask(promise, function (resolve, reject) {
+                        value instanceof DexiePromise ?
+                            value._then(resolve, reject) :
+                            value.then(resolve, reject);
+                    });
+                }
+                else {
+                    promise._state = true;
+                    promise._value = value;
+                    propagateAllListeners(promise);
+                }
+                if (shouldExecuteTick)
+                    endMicroTickScope();
+            }, handleRejection.bind(null, promise));
+        }
+        catch (ex) {
+            handleRejection(promise, ex);
+        }
+    }
+    function handleRejection(promise, reason) {
+        rejectingErrors.push(reason);
+        if (promise._state !== null)
+            return;
+        var shouldExecuteTick = promise._lib && beginMicroTickScope();
+        reason = rejectionMapper(reason);
+        promise._state = false;
+        promise._value = reason;
+        debug && reason !== null && typeof reason === 'object' && !reason._promise && tryCatch(function () {
+            var origProp = getPropertyDescriptor(reason, "stack");
+            reason._promise = promise;
+            setProp(reason, "stack", {
+                get: function () {
+                    return stack_being_generated ?
+                        origProp && (origProp.get ?
+                            origProp.get.apply(reason) :
+                            origProp.value) :
+                        promise.stack;
+                }
+            });
+        });
+        addPossiblyUnhandledError(promise);
+        propagateAllListeners(promise);
+        if (shouldExecuteTick)
+            endMicroTickScope();
+    }
+    function propagateAllListeners(promise) {
+        var listeners = promise._listeners;
+        promise._listeners = [];
+        for (var i = 0, len = listeners.length; i < len; ++i) {
+            propagateToListener(promise, listeners[i]);
+        }
+        var psd = promise._PSD;
+        --psd.ref || psd.finalize();
+        if (numScheduledCalls === 0) {
+            ++numScheduledCalls;
+            asap$1(function () {
+                if (--numScheduledCalls === 0)
+                    finalizePhysicalTick();
+            }, []);
+        }
+    }
+    function propagateToListener(promise, listener) {
+        if (promise._state === null) {
+            promise._listeners.push(listener);
+            return;
+        }
+        var cb = promise._state ? listener.onFulfilled : listener.onRejected;
+        if (cb === null) {
+            return (promise._state ? listener.resolve : listener.reject)(promise._value);
+        }
+        ++listener.psd.ref;
+        ++numScheduledCalls;
+        asap$1(callListener, [cb, promise, listener]);
+    }
+    function callListener(cb, promise, listener) {
+        try {
+            currentFulfiller = promise;
+            var ret, value = promise._value;
+            if (promise._state) {
+                ret = cb(value);
+            }
+            else {
+                if (rejectingErrors.length)
+                    rejectingErrors = [];
+                ret = cb(value);
+                if (rejectingErrors.indexOf(value) === -1)
+                    markErrorAsHandled(promise);
+            }
+            listener.resolve(ret);
+        }
+        catch (e) {
+            listener.reject(e);
+        }
+        finally {
+            currentFulfiller = null;
+            if (--numScheduledCalls === 0)
+                finalizePhysicalTick();
+            --listener.psd.ref || listener.psd.finalize();
+        }
+    }
+    function getStack(promise, stacks, limit) {
+        if (stacks.length === limit)
+            return stacks;
+        var stack = "";
+        if (promise._state === false) {
+            var failure = promise._value, errorName, message;
+            if (failure != null) {
+                errorName = failure.name || "Error";
+                message = failure.message || failure;
+                stack = prettyStack(failure, 0);
+            }
+            else {
+                errorName = failure;
+                message = "";
+            }
+            stacks.push(errorName + (message ? ": " + message : "") + stack);
+        }
+        if (debug) {
+            stack = prettyStack(promise._stackHolder, 2);
+            if (stack && stacks.indexOf(stack) === -1)
+                stacks.push(stack);
+            if (promise._prev)
+                getStack(promise._prev, stacks, limit);
+        }
+        return stacks;
+    }
+    function linkToPreviousPromise(promise, prev) {
+        var numPrev = prev ? prev._numPrev + 1 : 0;
+        if (numPrev < LONG_STACKS_CLIP_LIMIT) {
+            promise._prev = prev;
+            promise._numPrev = numPrev;
+        }
+    }
+    function physicalTick() {
+        beginMicroTickScope() && endMicroTickScope();
+    }
+    function beginMicroTickScope() {
+        var wasRootExec = isOutsideMicroTick;
+        isOutsideMicroTick = false;
+        needsNewPhysicalTick = false;
+        return wasRootExec;
+    }
+    function endMicroTickScope() {
+        var callbacks, i, l;
+        do {
+            while (microtickQueue.length > 0) {
+                callbacks = microtickQueue;
+                microtickQueue = [];
+                l = callbacks.length;
+                for (i = 0; i < l; ++i) {
+                    var item = callbacks[i];
+                    item[0].apply(null, item[1]);
+                }
+            }
+        } while (microtickQueue.length > 0);
+        isOutsideMicroTick = true;
+        needsNewPhysicalTick = true;
+    }
+    function finalizePhysicalTick() {
+        var unhandledErrs = unhandledErrors;
+        unhandledErrors = [];
+        unhandledErrs.forEach(function (p) {
+            p._PSD.onunhandled.call(null, p._value, p);
+        });
+        var finalizers = tickFinalizers.slice(0);
+        var i = finalizers.length;
+        while (i)
+            finalizers[--i]();
+    }
+    function run_at_end_of_this_or_next_physical_tick(fn) {
+        function finalizer() {
+            fn();
+            tickFinalizers.splice(tickFinalizers.indexOf(finalizer), 1);
+        }
+        tickFinalizers.push(finalizer);
+        ++numScheduledCalls;
+        asap$1(function () {
+            if (--numScheduledCalls === 0)
+                finalizePhysicalTick();
+        }, []);
+    }
+    function addPossiblyUnhandledError(promise) {
+        if (!unhandledErrors.some(function (p) { return p._value === promise._value; }))
+            unhandledErrors.push(promise);
+    }
+    function markErrorAsHandled(promise) {
+        var i = unhandledErrors.length;
+        while (i)
+            if (unhandledErrors[--i]._value === promise._value) {
+                unhandledErrors.splice(i, 1);
+                return;
+            }
+    }
+    function PromiseReject(reason) {
+        return new DexiePromise(INTERNAL, false, reason);
+    }
+    function wrap(fn, errorCatcher) {
+        var psd = PSD;
+        return function () {
+            var wasRootExec = beginMicroTickScope(), outerScope = PSD;
+            try {
+                switchToZone(psd, true);
+                return fn.apply(this, arguments);
+            }
+            catch (e) {
+                errorCatcher && errorCatcher(e);
+            }
+            finally {
+                switchToZone(outerScope, false);
+                if (wasRootExec)
+                    endMicroTickScope();
+            }
+        };
+    }
+    var task = { awaits: 0, echoes: 0, id: 0 };
+    var taskCounter = 0;
+    var zoneStack = [];
+    var zoneEchoes = 0;
+    var totalEchoes = 0;
+    var zone_id_counter = 0;
+    function newScope(fn, props$$1, a1, a2) {
+        var parent = PSD, psd = Object.create(parent);
+        psd.parent = parent;
+        psd.ref = 0;
+        psd.global = false;
+        psd.id = ++zone_id_counter;
+        var globalEnv = globalPSD.env;
+        psd.env = patchGlobalPromise ? {
+            Promise: DexiePromise,
+            PromiseProp: { value: DexiePromise, configurable: true, writable: true },
+            all: DexiePromise.all,
+            race: DexiePromise.race,
+            allSettled: DexiePromise.allSettled,
+            any: DexiePromise.any,
+            resolve: DexiePromise.resolve,
+            reject: DexiePromise.reject,
+            nthen: getPatchedPromiseThen(globalEnv.nthen, psd),
+            gthen: getPatchedPromiseThen(globalEnv.gthen, psd)
+        } : {};
+        if (props$$1)
+            extend(psd, props$$1);
+        ++parent.ref;
+        psd.finalize = function () {
+            --this.parent.ref || this.parent.finalize();
+        };
+        var rv = usePSD(psd, fn, a1, a2);
+        if (psd.ref === 0)
+            psd.finalize();
+        return rv;
+    }
+    function incrementExpectedAwaits() {
+        if (!task.id)
+            task.id = ++taskCounter;
+        ++task.awaits;
+        task.echoes += ZONE_ECHO_LIMIT;
+        return task.id;
+    }
+    function decrementExpectedAwaits() {
+        if (!task.awaits)
+            return false;
+        if (--task.awaits === 0)
+            task.id = 0;
+        task.echoes = task.awaits * ZONE_ECHO_LIMIT;
+        return true;
+    }
+    if (('' + nativePromiseThen).indexOf('[native code]') === -1) {
+        incrementExpectedAwaits = decrementExpectedAwaits = nop;
+    }
+    function onPossibleParallellAsync(possiblePromise) {
+        if (task.echoes && possiblePromise && possiblePromise.constructor === NativePromise) {
+            incrementExpectedAwaits();
+            return possiblePromise.then(function (x) {
+                decrementExpectedAwaits();
+                return x;
+            }, function (e) {
+                decrementExpectedAwaits();
+                return rejection(e);
+            });
+        }
+        return possiblePromise;
+    }
+    function zoneEnterEcho(targetZone) {
+        ++totalEchoes;
+        if (!task.echoes || --task.echoes === 0) {
+            task.echoes = task.id = 0;
+        }
+        zoneStack.push(PSD);
+        switchToZone(targetZone, true);
+    }
+    function zoneLeaveEcho() {
+        var zone = zoneStack[zoneStack.length - 1];
+        zoneStack.pop();
+        switchToZone(zone, false);
+    }
+    function switchToZone(targetZone, bEnteringZone) {
+        var currentZone = PSD;
+        if (bEnteringZone ? task.echoes && (!zoneEchoes++ || targetZone !== PSD) : zoneEchoes && (!--zoneEchoes || targetZone !== PSD)) {
+            enqueueNativeMicroTask(bEnteringZone ? zoneEnterEcho.bind(null, targetZone) : zoneLeaveEcho);
+        }
+        if (targetZone === PSD)
+            return;
+        PSD = targetZone;
+        if (currentZone === globalPSD)
+            globalPSD.env = snapShot();
+        if (patchGlobalPromise) {
+            var GlobalPromise_1 = globalPSD.env.Promise;
+            var targetEnv = targetZone.env;
+            nativePromiseProto.then = targetEnv.nthen;
+            GlobalPromise_1.prototype.then = targetEnv.gthen;
+            if (currentZone.global || targetZone.global) {
+                Object.defineProperty(_global, 'Promise', targetEnv.PromiseProp);
+                GlobalPromise_1.all = targetEnv.all;
+                GlobalPromise_1.race = targetEnv.race;
+                GlobalPromise_1.resolve = targetEnv.resolve;
+                GlobalPromise_1.reject = targetEnv.reject;
+                if (targetEnv.allSettled)
+                    GlobalPromise_1.allSettled = targetEnv.allSettled;
+                if (targetEnv.any)
+                    GlobalPromise_1.any = targetEnv.any;
+            }
+        }
+    }
+    function snapShot() {
+        var GlobalPromise = _global.Promise;
+        return patchGlobalPromise ? {
+            Promise: GlobalPromise,
+            PromiseProp: Object.getOwnPropertyDescriptor(_global, "Promise"),
+            all: GlobalPromise.all,
+            race: GlobalPromise.race,
+            allSettled: GlobalPromise.allSettled,
+            any: GlobalPromise.any,
+            resolve: GlobalPromise.resolve,
+            reject: GlobalPromise.reject,
+            nthen: nativePromiseProto.then,
+            gthen: GlobalPromise.prototype.then
+        } : {};
+    }
+    function usePSD(psd, fn, a1, a2, a3) {
+        var outerScope = PSD;
+        try {
+            switchToZone(psd, true);
+            return fn(a1, a2, a3);
+        }
+        finally {
+            switchToZone(outerScope, false);
+        }
+    }
+    function enqueueNativeMicroTask(job) {
+        nativePromiseThen.call(resolvedNativePromise, job);
+    }
+    function nativeAwaitCompatibleWrap(fn, zone, possibleAwait, cleanup) {
+        return typeof fn !== 'function' ? fn : function () {
+            var outerZone = PSD;
+            if (possibleAwait)
+                incrementExpectedAwaits();
+            switchToZone(zone, true);
+            try {
+                return fn.apply(this, arguments);
+            }
+            finally {
+                switchToZone(outerZone, false);
+                if (cleanup)
+                    enqueueNativeMicroTask(decrementExpectedAwaits);
+            }
+        };
+    }
+    function getPatchedPromiseThen(origThen, zone) {
+        return function (onResolved, onRejected) {
+            return origThen.call(this, nativeAwaitCompatibleWrap(onResolved, zone), nativeAwaitCompatibleWrap(onRejected, zone));
+        };
+    }
+    var UNHANDLEDREJECTION = "unhandledrejection";
+    function globalError(err, promise) {
+        var rv;
+        try {
+            rv = promise.onuncatched(err);
+        }
+        catch (e) { }
+        if (rv !== false)
+            try {
+                var event, eventData = { promise: promise, reason: err };
+                if (_global.document && document.createEvent) {
+                    event = document.createEvent('Event');
+                    event.initEvent(UNHANDLEDREJECTION, true, true);
+                    extend(event, eventData);
+                }
+                else if (_global.CustomEvent) {
+                    event = new CustomEvent(UNHANDLEDREJECTION, { detail: eventData });
+                    extend(event, eventData);
+                }
+                if (event && _global.dispatchEvent) {
+                    dispatchEvent(event);
+                    if (!_global.PromiseRejectionEvent && _global.onunhandledrejection)
+                        try {
+                            _global.onunhandledrejection(event);
+                        }
+                        catch (_) { }
+                }
+                if (debug && event && !event.defaultPrevented) {
+                    console.warn("Unhandled rejection: " + (err.stack || err));
+                }
+            }
+            catch (e) { }
+    }
+    var rejection = DexiePromise.reject;
+
+    function tempTransaction(db, mode, storeNames, fn) {
+        if (!db._state.openComplete && (!PSD.letThrough)) {
+            if (!db._state.isBeingOpened) {
+                if (!db._options.autoOpen)
+                    return rejection(new exceptions.DatabaseClosed());
+                db.open().catch(nop);
+            }
+            return db._state.dbReadyPromise.then(function () { return tempTransaction(db, mode, storeNames, fn); });
+        }
+        else {
+            var trans = db._createTransaction(mode, storeNames, db._dbSchema);
+            try {
+                trans.create();
+            }
+            catch (ex) {
+                return rejection(ex);
+            }
+            return trans._promise(mode, function (resolve, reject) {
+                return newScope(function () {
+                    PSD.trans = trans;
+                    return fn(resolve, reject, trans);
+                });
+            }).then(function (result) {
+                return trans._completion.then(function () { return result; });
+            });
+        }
+    }
+
+    var DEXIE_VERSION = '3.0.3';
+    var maxString = String.fromCharCode(65535);
+    var minKey = -Infinity;
+    var INVALID_KEY_ARGUMENT = "Invalid key provided. Keys must be of type string, number, Date or Array<string | number | Date>.";
+    var STRING_EXPECTED = "String expected.";
+    var connections = [];
+    var isIEOrEdge = typeof navigator !== 'undefined' && /(MSIE|Trident|Edge)/.test(navigator.userAgent);
+    var hasIEDeleteObjectStoreBug = isIEOrEdge;
+    var hangsOnDeleteLargeKeyRange = isIEOrEdge;
+    var dexieStackFrameFilter = function (frame) { return !/(dexie\.js|dexie\.min\.js)/.test(frame); };
+    var DBNAMES_DB = '__dbnames';
+    var READONLY = 'readonly';
+    var READWRITE = 'readwrite';
+
+    function combine(filter1, filter2) {
+        return filter1 ?
+            filter2 ?
+                function () { return filter1.apply(this, arguments) && filter2.apply(this, arguments); } :
+                filter1 :
+            filter2;
+    }
+
+    var AnyRange = {
+        type: 3          ,
+        lower: -Infinity,
+        lowerOpen: false,
+        upper: [[]],
+        upperOpen: false
+    };
+
+    function workaroundForUndefinedPrimKey(keyPath) {
+        return function (obj) {
+            if (getByKeyPath(obj, keyPath) === undefined) {
+                obj = deepClone(obj);
+                delByKeyPath(obj, keyPath);
+            }
+            return obj;
+        };
+    }
+
+    var Table =               (function () {
+        function Table() {
+        }
+        Table.prototype._trans = function (mode, fn, writeLocked) {
+            var trans = this._tx || PSD.trans;
+            var tableName = this.name;
+            function checkTableInTransaction(resolve, reject, trans) {
+                if (!trans.schema[tableName])
+                    throw new exceptions.NotFound("Table " + tableName + " not part of transaction");
+                return fn(trans.idbtrans, trans);
+            }
+            var wasRootExec = beginMicroTickScope();
+            try {
+                return trans && trans.db === this.db ?
+                    trans === PSD.trans ?
+                        trans._promise(mode, checkTableInTransaction, writeLocked) :
+                        newScope(function () { return trans._promise(mode, checkTableInTransaction, writeLocked); }, { trans: trans, transless: PSD.transless || PSD }) :
+                    tempTransaction(this.db, mode, [this.name], checkTableInTransaction);
+            }
+            finally {
+                if (wasRootExec)
+                    endMicroTickScope();
+            }
+        };
+        Table.prototype.get = function (keyOrCrit, cb) {
+            var _this = this;
+            if (keyOrCrit && keyOrCrit.constructor === Object)
+                return this.where(keyOrCrit).first(cb);
+            return this._trans('readonly', function (trans) {
+                return _this.core.get({ trans: trans, key: keyOrCrit })
+                    .then(function (res) { return _this.hook.reading.fire(res); });
+            }).then(cb);
+        };
+        Table.prototype.where = function (indexOrCrit) {
+            if (typeof indexOrCrit === 'string')
+                return new this.db.WhereClause(this, indexOrCrit);
+            if (isArray(indexOrCrit))
+                return new this.db.WhereClause(this, "[" + indexOrCrit.join('+') + "]");
+            var keyPaths = keys(indexOrCrit);
+            if (keyPaths.length === 1)
+                return this
+                    .where(keyPaths[0])
+                    .equals(indexOrCrit[keyPaths[0]]);
+            var compoundIndex = this.schema.indexes.concat(this.schema.primKey).filter(function (ix) {
+                return ix.compound &&
+                    keyPaths.every(function (keyPath) { return ix.keyPath.indexOf(keyPath) >= 0; }) &&
+                    ix.keyPath.every(function (keyPath) { return keyPaths.indexOf(keyPath) >= 0; });
+            })[0];
+            if (compoundIndex && this.db._maxKey !== maxString)
+                return this
+                    .where(compoundIndex.name)
+                    .equals(compoundIndex.keyPath.map(function (kp) { return indexOrCrit[kp]; }));
+            if (!compoundIndex && debug)
+                console.warn("The query " + JSON.stringify(indexOrCrit) + " on " + this.name + " would benefit of a " +
+                    ("compound index [" + keyPaths.join('+') + "]"));
+            var idxByName = this.schema.idxByName;
+            var idb = this.db._deps.indexedDB;
+            function equals(a, b) {
+                try {
+                    return idb.cmp(a, b) === 0;
+                }
+                catch (e) {
+                    return false;
+                }
+            }
+            var _a = keyPaths.reduce(function (_a, keyPath) {
+                var prevIndex = _a[0], prevFilterFn = _a[1];
+                var index = idxByName[keyPath];
+                var value = indexOrCrit[keyPath];
+                return [
+                    prevIndex || index,
+                    prevIndex || !index ?
+                        combine(prevFilterFn, index && index.multi ?
+                            function (x) {
+                                var prop = getByKeyPath(x, keyPath);
+                                return isArray(prop) && prop.some(function (item) { return equals(value, item); });
+                            } : function (x) { return equals(value, getByKeyPath(x, keyPath)); })
+                        : prevFilterFn
+                ];
+            }, [null, null]), idx = _a[0], filterFunction = _a[1];
+            return idx ?
+                this.where(idx.name).equals(indexOrCrit[idx.keyPath])
+                    .filter(filterFunction) :
+                compoundIndex ?
+                    this.filter(filterFunction) :
+                    this.where(keyPaths).equals('');
+        };
+        Table.prototype.filter = function (filterFunction) {
+            return this.toCollection().and(filterFunction);
+        };
+        Table.prototype.count = function (thenShortcut) {
+            return this.toCollection().count(thenShortcut);
+        };
+        Table.prototype.offset = function (offset) {
+            return this.toCollection().offset(offset);
+        };
+        Table.prototype.limit = function (numRows) {
+            return this.toCollection().limit(numRows);
+        };
+        Table.prototype.each = function (callback) {
+            return this.toCollection().each(callback);
+        };
+        Table.prototype.toArray = function (thenShortcut) {
+            return this.toCollection().toArray(thenShortcut);
+        };
+        Table.prototype.toCollection = function () {
+            return new this.db.Collection(new this.db.WhereClause(this));
+        };
+        Table.prototype.orderBy = function (index) {
+            return new this.db.Collection(new this.db.WhereClause(this, isArray(index) ?
+                "[" + index.join('+') + "]" :
+                index));
+        };
+        Table.prototype.reverse = function () {
+            return this.toCollection().reverse();
+        };
+        Table.prototype.mapToClass = function (constructor) {
+            this.schema.mappedClass = constructor;
+            var readHook = function (obj) {
+                if (!obj)
+                    return obj;
+                var res = Object.create(constructor.prototype);
+                for (var m in obj)
+                    if (hasOwn(obj, m))
+                        try {
+                            res[m] = obj[m];
+                        }
+                        catch (_) { }
+                return res;
+            };
+            if (this.schema.readHook) {
+                this.hook.reading.unsubscribe(this.schema.readHook);
+            }
+            this.schema.readHook = readHook;
+            this.hook("reading", readHook);
+            return constructor;
+        };
+        Table.prototype.defineClass = function () {
+            function Class(content) {
+                extend(this, content);
+            }
+            
+            return this.mapToClass(Class);
+        };
+        Table.prototype.add = function (obj, key) {
+            var _this = this;
+            var _a = this.schema.primKey, auto = _a.auto, keyPath = _a.keyPath;
+            var objToAdd = obj;
+            if (keyPath && auto) {
+                objToAdd = workaroundForUndefinedPrimKey(keyPath)(obj);
+            }
+            return this._trans('readwrite', function (trans) {
+                return _this.core.mutate({ trans: trans, type: 'add', keys: key != null ? [key] : null, values: [objToAdd] });
+            }).then(function (res) { return res.numFailures ? DexiePromise.reject(res.failures[0]) : res.lastResult; })
+                .then(function (lastResult) {
+                if (keyPath) {
+                    try {
+                        setByKeyPath(obj, keyPath, lastResult);
+                    }
+                    catch (_) { }
+                    
+                }
+                return lastResult;
+            });
+        };
+        Table.prototype.update = function (keyOrObject, modifications) {
+            if (typeof modifications !== 'object' || isArray(modifications))
+                throw new exceptions.InvalidArgument("Modifications must be an object.");
+            if (typeof keyOrObject === 'object' && !isArray(keyOrObject)) {
+                keys(modifications).forEach(function (keyPath) {
+                    setByKeyPath(keyOrObject, keyPath, modifications[keyPath]);
+                });
+                var key = getByKeyPath(keyOrObject, this.schema.primKey.keyPath);
+                if (key === undefined)
+                    return rejection(new exceptions.InvalidArgument("Given object does not contain its primary key"));
+                return this.where(":id").equals(key).modify(modifications);
+            }
+            else {
+                return this.where(":id").equals(keyOrObject).modify(modifications);
+            }
+        };
+        Table.prototype.put = function (obj, key) {
+            var _this = this;
+            var _a = this.schema.primKey, auto = _a.auto, keyPath = _a.keyPath;
+            var objToAdd = obj;
+            if (keyPath && auto) {
+                objToAdd = workaroundForUndefinedPrimKey(keyPath)(obj);
+            }
+            return this._trans('readwrite', function (trans) { return _this.core.mutate({ trans: trans, type: 'put', values: [objToAdd], keys: key != null ? [key] : null }); })
+                .then(function (res) { return res.numFailures ? DexiePromise.reject(res.failures[0]) : res.lastResult; })
+                .then(function (lastResult) {
+                if (keyPath) {
+                    try {
+                        setByKeyPath(obj, keyPath, lastResult);
+                    }
+                    catch (_) { }
+                    
+                }
+                return lastResult;
+            });
+        };
+        Table.prototype.delete = function (key) {
+            var _this = this;
+            return this._trans('readwrite', function (trans) { return _this.core.mutate({ trans: trans, type: 'delete', keys: [key] }); })
+                .then(function (res) { return res.numFailures ? DexiePromise.reject(res.failures[0]) : undefined; });
+        };
+        Table.prototype.clear = function () {
+            var _this = this;
+            return this._trans('readwrite', function (trans) { return _this.core.mutate({ trans: trans, type: 'deleteRange', range: AnyRange }); })
+                .then(function (res) { return res.numFailures ? DexiePromise.reject(res.failures[0]) : undefined; });
+        };
+        Table.prototype.bulkGet = function (keys$$1) {
+            var _this = this;
+            return this._trans('readonly', function (trans) {
+                return _this.core.getMany({
+                    keys: keys$$1,
+                    trans: trans
+                }).then(function (result) { return result.map(function (res) { return _this.hook.reading.fire(res); }); });
+            });
+        };
+        Table.prototype.bulkAdd = function (objects, keysOrOptions, options) {
+            var _this = this;
+            var keys$$1 = Array.isArray(keysOrOptions) ? keysOrOptions : undefined;
+            options = options || (keys$$1 ? undefined : keysOrOptions);
+            var wantResults = options ? options.allKeys : undefined;
+            return this._trans('readwrite', function (trans) {
+                var _a = _this.schema.primKey, auto = _a.auto, keyPath = _a.keyPath;
+                if (keyPath && keys$$1)
+                    throw new exceptions.InvalidArgument("bulkAdd(): keys argument invalid on tables with inbound keys");
+                if (keys$$1 && keys$$1.length !== objects.length)
+                    throw new exceptions.InvalidArgument("Arguments objects and keys must have the same length");
+                var numObjects = objects.length;
+                var objectsToAdd = keyPath && auto ?
+                    objects.map(workaroundForUndefinedPrimKey(keyPath)) :
+                    objects;
+                return _this.core.mutate({ trans: trans, type: 'add', keys: keys$$1, values: objectsToAdd, wantResults: wantResults })
+                    .then(function (_a) {
+                    var numFailures = _a.numFailures, results = _a.results, lastResult = _a.lastResult, failures = _a.failures;
+                    var result = wantResults ? results : lastResult;
+                    if (numFailures === 0)
+                        return result;
+                    throw new BulkError(_this.name + ".bulkAdd(): " + numFailures + " of " + numObjects + " operations failed", Object.keys(failures).map(function (pos) { return failures[pos]; }));
+                });
+            });
+        };
+        Table.prototype.bulkPut = function (objects, keysOrOptions, options) {
+            var _this = this;
+            var keys$$1 = Array.isArray(keysOrOptions) ? keysOrOptions : undefined;
+            options = options || (keys$$1 ? undefined : keysOrOptions);
+            var wantResults = options ? options.allKeys : undefined;
+            return this._trans('readwrite', function (trans) {
+                var _a = _this.schema.primKey, auto = _a.auto, keyPath = _a.keyPath;
+                if (keyPath && keys$$1)
+                    throw new exceptions.InvalidArgument("bulkPut(): keys argument invalid on tables with inbound keys");
+                if (keys$$1 && keys$$1.length !== objects.length)
+                    throw new exceptions.InvalidArgument("Arguments objects and keys must have the same length");
+                var numObjects = objects.length;
+                var objectsToPut = keyPath && auto ?
+                    objects.map(workaroundForUndefinedPrimKey(keyPath)) :
+                    objects;
+                return _this.core.mutate({ trans: trans, type: 'put', keys: keys$$1, values: objectsToPut, wantResults: wantResults })
+                    .then(function (_a) {
+                    var numFailures = _a.numFailures, results = _a.results, lastResult = _a.lastResult, failures = _a.failures;
+                    var result = wantResults ? results : lastResult;
+                    if (numFailures === 0)
+                        return result;
+                    throw new BulkError(_this.name + ".bulkPut(): " + numFailures + " of " + numObjects + " operations failed", Object.keys(failures).map(function (pos) { return failures[pos]; }));
+                });
+            });
+        };
+        Table.prototype.bulkDelete = function (keys$$1) {
+            var _this = this;
+            var numKeys = keys$$1.length;
+            return this._trans('readwrite', function (trans) {
+                return _this.core.mutate({ trans: trans, type: 'delete', keys: keys$$1 });
+            }).then(function (_a) {
+                var numFailures = _a.numFailures, lastResult = _a.lastResult, failures = _a.failures;
+                if (numFailures === 0)
+                    return lastResult;
+                throw new BulkError(_this.name + ".bulkDelete(): " + numFailures + " of " + numKeys + " operations failed", failures);
+            });
+        };
+        return Table;
+    }());
+
+    function Events(ctx) {
+        var evs = {};
+        var rv = function (eventName, subscriber) {
+            if (subscriber) {
+                var i = arguments.length, args = new Array(i - 1);
+                while (--i)
+                    args[i - 1] = arguments[i];
+                evs[eventName].subscribe.apply(null, args);
+                return ctx;
+            }
+            else if (typeof (eventName) === 'string') {
+                return evs[eventName];
+            }
+        };
+        rv.addEventType = add;
+        for (var i = 1, l = arguments.length; i < l; ++i) {
+            add(arguments[i]);
+        }
+        return rv;
+        function add(eventName, chainFunction, defaultFunction) {
+            if (typeof eventName === 'object')
+                return addConfiguredEvents(eventName);
+            if (!chainFunction)
+                chainFunction = reverseStoppableEventChain;
+            if (!defaultFunction)
+                defaultFunction = nop;
+            var context = {
+                subscribers: [],
+                fire: defaultFunction,
+                subscribe: function (cb) {
+                    if (context.subscribers.indexOf(cb) === -1) {
+                        context.subscribers.push(cb);
+                        context.fire = chainFunction(context.fire, cb);
+                    }
+                },
+                unsubscribe: function (cb) {
+                    context.subscribers = context.subscribers.filter(function (fn) { return fn !== cb; });
+                    context.fire = context.subscribers.reduce(chainFunction, defaultFunction);
+                }
+            };
+            evs[eventName] = rv[eventName] = context;
+            return context;
+        }
+        function addConfiguredEvents(cfg) {
+            keys(cfg).forEach(function (eventName) {
+                var args = cfg[eventName];
+                if (isArray(args)) {
+                    add(eventName, cfg[eventName][0], cfg[eventName][1]);
+                }
+                else if (args === 'asap') {
+                    var context = add(eventName, mirror, function fire() {
+                        var i = arguments.length, args = new Array(i);
+                        while (i--)
+                            args[i] = arguments[i];
+                        context.subscribers.forEach(function (fn) {
+                            asap(function fireEvent() {
+                                fn.apply(null, args);
+                            });
+                        });
+                    });
+                }
+                else
+                    throw new exceptions.InvalidArgument("Invalid event config");
+            });
+        }
+    }
+
+    function makeClassConstructor(prototype, constructor) {
+        derive(constructor).from({ prototype: prototype });
+        return constructor;
+    }
+
+    function createTableConstructor(db) {
+        return makeClassConstructor(Table.prototype, function Table$$1(name, tableSchema, trans) {
+            this.db = db;
+            this._tx = trans;
+            this.name = name;
+            this.schema = tableSchema;
+            this.hook = db._allTables[name] ? db._allTables[name].hook : Events(null, {
+                "creating": [hookCreatingChain, nop],
+                "reading": [pureFunctionChain, mirror],
+                "updating": [hookUpdatingChain, nop],
+                "deleting": [hookDeletingChain, nop]
+            });
+        });
+    }
+
+    function isPlainKeyRange(ctx, ignoreLimitFilter) {
+        return !(ctx.filter || ctx.algorithm || ctx.or) &&
+            (ignoreLimitFilter ? ctx.justLimit : !ctx.replayFilter);
+    }
+    function addFilter(ctx, fn) {
+        ctx.filter = combine(ctx.filter, fn);
+    }
+    function addReplayFilter(ctx, factory, isLimitFilter) {
+        var curr = ctx.replayFilter;
+        ctx.replayFilter = curr ? function () { return combine(curr(), factory()); } : factory;
+        ctx.justLimit = isLimitFilter && !curr;
+    }
+    function addMatchFilter(ctx, fn) {
+        ctx.isMatch = combine(ctx.isMatch, fn);
+    }
+    function getIndexOrStore(ctx, coreSchema) {
+        if (ctx.isPrimKey)
+            return coreSchema.primaryKey;
+        var index = coreSchema.getIndexByKeyPath(ctx.index);
+        if (!index)
+            throw new exceptions.Schema("KeyPath " + ctx.index + " on object store " + coreSchema.name + " is not indexed");
+        return index;
+    }
+    function openCursor(ctx, coreTable, trans) {
+        var index = getIndexOrStore(ctx, coreTable.schema);
+        return coreTable.openCursor({
+            trans: trans,
+            values: !ctx.keysOnly,
+            reverse: ctx.dir === 'prev',
+            unique: !!ctx.unique,
+            query: {
+                index: index,
+                range: ctx.range
+            }
+        });
+    }
+    function iter(ctx, fn, coreTrans, coreTable) {
+        var filter = ctx.replayFilter ? combine(ctx.filter, ctx.replayFilter()) : ctx.filter;
+        if (!ctx.or) {
+            return iterate(openCursor(ctx, coreTable, coreTrans), combine(ctx.algorithm, filter), fn, !ctx.keysOnly && ctx.valueMapper);
+        }
+        else {
+            var set_1 = {};
+            var union = function (item, cursor, advance) {
+                if (!filter || filter(cursor, advance, function (result) { return cursor.stop(result); }, function (err) { return cursor.fail(err); })) {
+                    var primaryKey = cursor.primaryKey;
+                    var key = '' + primaryKey;
+                    if (key === '[object ArrayBuffer]')
+                        key = '' + new Uint8Array(primaryKey);
+                    if (!hasOwn(set_1, key)) {
+                        set_1[key] = true;
+                        fn(item, cursor, advance);
+                    }
+                }
+            };
+            return Promise.all([
+                ctx.or._iterate(union, coreTrans),
+                iterate(openCursor(ctx, coreTable, coreTrans), ctx.algorithm, union, !ctx.keysOnly && ctx.valueMapper)
+            ]);
+        }
+    }
+    function iterate(cursorPromise, filter, fn, valueMapper) {
+        var mappedFn = valueMapper ? function (x, c, a) { return fn(valueMapper(x), c, a); } : fn;
+        var wrappedFn = wrap(mappedFn);
+        return cursorPromise.then(function (cursor) {
+            if (cursor) {
+                return cursor.start(function () {
+                    var c = function () { return cursor.continue(); };
+                    if (!filter || filter(cursor, function (advancer) { return c = advancer; }, function (val) { cursor.stop(val); c = nop; }, function (e) { cursor.fail(e); c = nop; }))
+                        wrappedFn(cursor.value, cursor, function (advancer) { return c = advancer; });
+                    c();
+                });
+            }
+        });
+    }
+
+    var Collection =               (function () {
+        function Collection() {
+        }
+        Collection.prototype._read = function (fn, cb) {
+            var ctx = this._ctx;
+            return ctx.error ?
+                ctx.table._trans(null, rejection.bind(null, ctx.error)) :
+                ctx.table._trans('readonly', fn).then(cb);
+        };
+        Collection.prototype._write = function (fn) {
+            var ctx = this._ctx;
+            return ctx.error ?
+                ctx.table._trans(null, rejection.bind(null, ctx.error)) :
+                ctx.table._trans('readwrite', fn, "locked");
+        };
+        Collection.prototype._addAlgorithm = function (fn) {
+            var ctx = this._ctx;
+            ctx.algorithm = combine(ctx.algorithm, fn);
+        };
+        Collection.prototype._iterate = function (fn, coreTrans) {
+            return iter(this._ctx, fn, coreTrans, this._ctx.table.core);
+        };
+        Collection.prototype.clone = function (props$$1) {
+            var rv = Object.create(this.constructor.prototype), ctx = Object.create(this._ctx);
+            if (props$$1)
+                extend(ctx, props$$1);
+            rv._ctx = ctx;
+            return rv;
+        };
+        Collection.prototype.raw = function () {
+            this._ctx.valueMapper = null;
+            return this;
+        };
+        Collection.prototype.each = function (fn) {
+            var ctx = this._ctx;
+            return this._read(function (trans) { return iter(ctx, fn, trans, ctx.table.core); });
+        };
+        Collection.prototype.count = function (cb) {
+            var _this = this;
+            return this._read(function (trans) {
+                var ctx = _this._ctx;
+                var coreTable = ctx.table.core;
+                if (isPlainKeyRange(ctx, true)) {
+                    return coreTable.count({
+                        trans: trans,
+                        query: {
+                            index: getIndexOrStore(ctx, coreTable.schema),
+                            range: ctx.range
+                        }
+                    }).then(function (count) { return Math.min(count, ctx.limit); });
+                }
+                else {
+                    var count = 0;
+                    return iter(ctx, function () { ++count; return false; }, trans, coreTable)
+                        .then(function () { return count; });
+                }
+            }).then(cb);
+        };
+        Collection.prototype.sortBy = function (keyPath, cb) {
+            var parts = keyPath.split('.').reverse(), lastPart = parts[0], lastIndex = parts.length - 1;
+            function getval(obj, i) {
+                if (i)
+                    return getval(obj[parts[i]], i - 1);
+                return obj[lastPart];
+            }
+            var order = this._ctx.dir === "next" ? 1 : -1;
+            function sorter(a, b) {
+                var aVal = getval(a, lastIndex), bVal = getval(b, lastIndex);
+                return aVal < bVal ? -order : aVal > bVal ? order : 0;
+            }
+            return this.toArray(function (a) {
+                return a.sort(sorter);
+            }).then(cb);
+        };
+        Collection.prototype.toArray = function (cb) {
+            var _this = this;
+            return this._read(function (trans) {
+                var ctx = _this._ctx;
+                if (ctx.dir === 'next' && isPlainKeyRange(ctx, true) && ctx.limit > 0) {
+                    var valueMapper_1 = ctx.valueMapper;
+                    var index = getIndexOrStore(ctx, ctx.table.core.schema);
+                    return ctx.table.core.query({
+                        trans: trans,
+                        limit: ctx.limit,
+                        values: true,
+                        query: {
+                            index: index,
+                            range: ctx.range
+                        }
+                    }).then(function (_a) {
+                        var result = _a.result;
+                        return valueMapper_1 ? result.map(valueMapper_1) : result;
+                    });
+                }
+                else {
+                    var a_1 = [];
+                    return iter(ctx, function (item) { return a_1.push(item); }, trans, ctx.table.core).then(function () { return a_1; });
+                }
+            }, cb);
+        };
+        Collection.prototype.offset = function (offset) {
+            var ctx = this._ctx;
+            if (offset <= 0)
+                return this;
+            ctx.offset += offset;
+            if (isPlainKeyRange(ctx)) {
+                addReplayFilter(ctx, function () {
+                    var offsetLeft = offset;
+                    return function (cursor, advance) {
+                        if (offsetLeft === 0)
+                            return true;
+                        if (offsetLeft === 1) {
+                            --offsetLeft;
+                            return false;
+                        }
+                        advance(function () {
+                            cursor.advance(offsetLeft);
+                            offsetLeft = 0;
+                        });
+                        return false;
+                    };
+                });
+            }
+            else {
+                addReplayFilter(ctx, function () {
+                    var offsetLeft = offset;
+                    return function () { return (--offsetLeft < 0); };
+                });
+            }
+            return this;
+        };
+        Collection.prototype.limit = function (numRows) {
+            this._ctx.limit = Math.min(this._ctx.limit, numRows);
+            addReplayFilter(this._ctx, function () {
+                var rowsLeft = numRows;
+                return function (cursor, advance, resolve) {
+                    if (--rowsLeft <= 0)
+                        advance(resolve);
+                    return rowsLeft >= 0;
+                };
+            }, true);
+            return this;
+        };
+        Collection.prototype.until = function (filterFunction, bIncludeStopEntry) {
+            addFilter(this._ctx, function (cursor, advance, resolve) {
+                if (filterFunction(cursor.value)) {
+                    advance(resolve);
+                    return bIncludeStopEntry;
+                }
+                else {
+                    return true;
+                }
+            });
+            return this;
+        };
+        Collection.prototype.first = function (cb) {
+            return this.limit(1).toArray(function (a) { return a[0]; }).then(cb);
+        };
+        Collection.prototype.last = function (cb) {
+            return this.reverse().first(cb);
+        };
+        Collection.prototype.filter = function (filterFunction) {
+            addFilter(this._ctx, function (cursor) {
+                return filterFunction(cursor.value);
+            });
+            addMatchFilter(this._ctx, filterFunction);
+            return this;
+        };
+        Collection.prototype.and = function (filter) {
+            return this.filter(filter);
+        };
+        Collection.prototype.or = function (indexName) {
+            return new this.db.WhereClause(this._ctx.table, indexName, this);
+        };
+        Collection.prototype.reverse = function () {
+            this._ctx.dir = (this._ctx.dir === "prev" ? "next" : "prev");
+            if (this._ondirectionchange)
+                this._ondirectionchange(this._ctx.dir);
+            return this;
+        };
+        Collection.prototype.desc = function () {
+            return this.reverse();
+        };
+        Collection.prototype.eachKey = function (cb) {
+            var ctx = this._ctx;
+            ctx.keysOnly = !ctx.isMatch;
+            return this.each(function (val, cursor) { cb(cursor.key, cursor); });
+        };
+        Collection.prototype.eachUniqueKey = function (cb) {
+            this._ctx.unique = "unique";
+            return this.eachKey(cb);
+        };
+        Collection.prototype.eachPrimaryKey = function (cb) {
+            var ctx = this._ctx;
+            ctx.keysOnly = !ctx.isMatch;
+            return this.each(function (val, cursor) { cb(cursor.primaryKey, cursor); });
+        };
+        Collection.prototype.keys = function (cb) {
+            var ctx = this._ctx;
+            ctx.keysOnly = !ctx.isMatch;
+            var a = [];
+            return this.each(function (item, cursor) {
+                a.push(cursor.key);
+            }).then(function () {
+                return a;
+            }).then(cb);
+        };
+        Collection.prototype.primaryKeys = function (cb) {
+            var ctx = this._ctx;
+            if (ctx.dir === 'next' && isPlainKeyRange(ctx, true) && ctx.limit > 0) {
+                return this._read(function (trans) {
+                    var index = getIndexOrStore(ctx, ctx.table.core.schema);
+                    return ctx.table.core.query({
+                        trans: trans,
+                        values: false,
+                        limit: ctx.limit,
+                        query: {
+                            index: index,
+                            range: ctx.range
+                        }
+                    });
+                }).then(function (_a) {
+                    var result = _a.result;
+                    return result;
+                }).then(cb);
+            }
+            ctx.keysOnly = !ctx.isMatch;
+            var a = [];
+            return this.each(function (item, cursor) {
+                a.push(cursor.primaryKey);
+            }).then(function () {
+                return a;
+            }).then(cb);
+        };
+        Collection.prototype.uniqueKeys = function (cb) {
+            this._ctx.unique = "unique";
+            return this.keys(cb);
+        };
+        Collection.prototype.firstKey = function (cb) {
+            return this.limit(1).keys(function (a) { return a[0]; }).then(cb);
+        };
+        Collection.prototype.lastKey = function (cb) {
+            return this.reverse().firstKey(cb);
+        };
+        Collection.prototype.distinct = function () {
+            var ctx = this._ctx, idx = ctx.index && ctx.table.schema.idxByName[ctx.index];
+            if (!idx || !idx.multi)
+                return this;
+            var set = {};
+            addFilter(this._ctx, function (cursor) {
+                var strKey = cursor.primaryKey.toString();
+                var found = hasOwn(set, strKey);
+                set[strKey] = true;
+                return !found;
+            });
+            return this;
+        };
+        Collection.prototype.modify = function (changes) {
+            var _this = this;
+            var ctx = this._ctx;
+            return this._write(function (trans) {
+                var modifyer;
+                if (typeof changes === 'function') {
+                    modifyer = changes;
+                }
+                else {
+                    var keyPaths = keys(changes);
+                    var numKeys = keyPaths.length;
+                    modifyer = function (item) {
+                        var anythingModified = false;
+                        for (var i = 0; i < numKeys; ++i) {
+                            var keyPath = keyPaths[i], val = changes[keyPath];
+                            if (getByKeyPath(item, keyPath) !== val) {
+                                setByKeyPath(item, keyPath, val);
+                                anythingModified = true;
+                            }
+                        }
+                        return anythingModified;
+                    };
+                }
+                var coreTable = ctx.table.core;
+                var _a = coreTable.schema.primaryKey, outbound = _a.outbound, extractKey = _a.extractKey;
+                var limit = 'testmode' in Dexie ? 1 : 2000;
+                var cmp = _this.db.core.cmp;
+                var totalFailures = [];
+                var successCount = 0;
+                var failedKeys = [];
+                var applyMutateResult = function (expectedCount, res) {
+                    var failures = res.failures, numFailures = res.numFailures;
+                    successCount += expectedCount - numFailures;
+                    for (var _i = 0, _a = keys(failures); _i < _a.length; _i++) {
+                        var pos = _a[_i];
+                        totalFailures.push(failures[pos]);
+                    }
+                };
+                return _this.clone().primaryKeys().then(function (keys$$1) {
+                    var nextChunk = function (offset) {
+                        var count = Math.min(limit, keys$$1.length - offset);
+                        return coreTable.getMany({ trans: trans, keys: keys$$1.slice(offset, offset + count) }).then(function (values) {
+                            var addValues = [];
+                            var putValues = [];
+                            var putKeys = outbound ? [] : null;
+                            var deleteKeys = [];
+                            for (var i = 0; i < count; ++i) {
+                                var origValue = values[i];
+                                var ctx_1 = {
+                                    value: deepClone(origValue),
+                                    primKey: keys$$1[offset + i]
+                                };
+                                if (modifyer.call(ctx_1, ctx_1.value, ctx_1) !== false) {
+                                    if (ctx_1.value == null) {
+                                        deleteKeys.push(keys$$1[offset + i]);
+                                    }
+                                    else if (!outbound && cmp(extractKey(origValue), extractKey(ctx_1.value)) !== 0) {
+                                        deleteKeys.push(keys$$1[offset + i]);
+                                        addValues.push(ctx_1.value);
+                                    }
+                                    else {
+                                        putValues.push(ctx_1.value);
+                                        if (outbound)
+                                            putKeys.push(keys$$1[offset + i]);
+                                    }
+                                }
+                            }
+                            return Promise.resolve(addValues.length > 0 &&
+                                coreTable.mutate({ trans: trans, type: 'add', values: addValues })
+                                    .then(function (res) {
+                                    for (var pos in res.failures) {
+                                        deleteKeys.splice(parseInt(pos), 1);
+                                    }
+                                    applyMutateResult(addValues.length, res);
+                                })).then(function (res) { return putValues.length > 0 &&
+                                coreTable.mutate({ trans: trans, type: 'put', keys: putKeys, values: putValues })
+                                    .then(function (res) { return applyMutateResult(putValues.length, res); }); }).then(function () { return deleteKeys.length > 0 &&
+                                coreTable.mutate({ trans: trans, type: 'delete', keys: deleteKeys })
+                                    .then(function (res) { return applyMutateResult(deleteKeys.length, res); }); }).then(function () {
+                                return keys$$1.length > offset + count && nextChunk(offset + limit);
+                            });
+                        });
+                    };
+                    return nextChunk(0).then(function () {
+                        if (totalFailures.length > 0)
+                            throw new ModifyError("Error modifying one or more objects", totalFailures, successCount, failedKeys);
+                        return keys$$1.length;
+                    });
+                });
+            });
+        };
+        Collection.prototype.delete = function () {
+            var ctx = this._ctx, range = ctx.range;
+            if (isPlainKeyRange(ctx) &&
+                ((ctx.isPrimKey && !hangsOnDeleteLargeKeyRange) || range.type === 3          ))
+             {
+                return this._write(function (trans) {
+                    var primaryKey = ctx.table.core.schema.primaryKey;
+                    var coreRange = range;
+                    return ctx.table.core.count({ trans: trans, query: { index: primaryKey, range: coreRange } }).then(function (count) {
+                        return ctx.table.core.mutate({ trans: trans, type: 'deleteRange', range: coreRange })
+                            .then(function (_a) {
+                            var failures = _a.failures; _a.lastResult; _a.results; var numFailures = _a.numFailures;
+                            if (numFailures)
+                                throw new ModifyError("Could not delete some values", Object.keys(failures).map(function (pos) { return failures[pos]; }), count - numFailures);
+                            return count - numFailures;
+                        });
+                    });
+                });
+            }
+            return this.modify(function (value, ctx) { return ctx.value = null; });
+        };
+        return Collection;
+    }());
+
+    function createCollectionConstructor(db) {
+        return makeClassConstructor(Collection.prototype, function Collection$$1(whereClause, keyRangeGenerator) {
+            this.db = db;
+            var keyRange = AnyRange, error = null;
+            if (keyRangeGenerator)
+                try {
+                    keyRange = keyRangeGenerator();
+                }
+                catch (ex) {
+                    error = ex;
+                }
+            var whereCtx = whereClause._ctx;
+            var table = whereCtx.table;
+            var readingHook = table.hook.reading.fire;
+            this._ctx = {
+                table: table,
+                index: whereCtx.index,
+                isPrimKey: (!whereCtx.index || (table.schema.primKey.keyPath && whereCtx.index === table.schema.primKey.name)),
+                range: keyRange,
+                keysOnly: false,
+                dir: "next",
+                unique: "",
+                algorithm: null,
+                filter: null,
+                replayFilter: null,
+                justLimit: true,
+                isMatch: null,
+                offset: 0,
+                limit: Infinity,
+                error: error,
+                or: whereCtx.or,
+                valueMapper: readingHook !== mirror ? readingHook : null
+            };
+        });
+    }
+
+    function simpleCompare(a, b) {
+        return a < b ? -1 : a === b ? 0 : 1;
+    }
+    function simpleCompareReverse(a, b) {
+        return a > b ? -1 : a === b ? 0 : 1;
+    }
+
+    function fail(collectionOrWhereClause, err, T) {
+        var collection = collectionOrWhereClause instanceof WhereClause ?
+            new collectionOrWhereClause.Collection(collectionOrWhereClause) :
+            collectionOrWhereClause;
+        collection._ctx.error = T ? new T(err) : new TypeError(err);
+        return collection;
+    }
+    function emptyCollection(whereClause) {
+        return new whereClause.Collection(whereClause, function () { return rangeEqual(""); }).limit(0);
+    }
+    function upperFactory(dir) {
+        return dir === "next" ?
+            function (s) { return s.toUpperCase(); } :
+            function (s) { return s.toLowerCase(); };
+    }
+    function lowerFactory(dir) {
+        return dir === "next" ?
+            function (s) { return s.toLowerCase(); } :
+            function (s) { return s.toUpperCase(); };
+    }
+    function nextCasing(key, lowerKey, upperNeedle, lowerNeedle, cmp, dir) {
+        var length = Math.min(key.length, lowerNeedle.length);
+        var llp = -1;
+        for (var i = 0; i < length; ++i) {
+            var lwrKeyChar = lowerKey[i];
+            if (lwrKeyChar !== lowerNeedle[i]) {
+                if (cmp(key[i], upperNeedle[i]) < 0)
+                    return key.substr(0, i) + upperNeedle[i] + upperNeedle.substr(i + 1);
+                if (cmp(key[i], lowerNeedle[i]) < 0)
+                    return key.substr(0, i) + lowerNeedle[i] + upperNeedle.substr(i + 1);
+                if (llp >= 0)
+                    return key.substr(0, llp) + lowerKey[llp] + upperNeedle.substr(llp + 1);
+                return null;
+            }
+            if (cmp(key[i], lwrKeyChar) < 0)
+                llp = i;
+        }
+        if (length < lowerNeedle.length && dir === "next")
+            return key + upperNeedle.substr(key.length);
+        if (length < key.length && dir === "prev")
+            return key.substr(0, upperNeedle.length);
+        return (llp < 0 ? null : key.substr(0, llp) + lowerNeedle[llp] + upperNeedle.substr(llp + 1));
+    }
+    function addIgnoreCaseAlgorithm(whereClause, match, needles, suffix) {
+        var upper, lower, compare, upperNeedles, lowerNeedles, direction, nextKeySuffix, needlesLen = needles.length;
+        if (!needles.every(function (s) { return typeof s === 'string'; })) {
+            return fail(whereClause, STRING_EXPECTED);
+        }
+        function initDirection(dir) {
+            upper = upperFactory(dir);
+            lower = lowerFactory(dir);
+            compare = (dir === "next" ? simpleCompare : simpleCompareReverse);
+            var needleBounds = needles.map(function (needle) {
+                return { lower: lower(needle), upper: upper(needle) };
+            }).sort(function (a, b) {
+                return compare(a.lower, b.lower);
+            });
+            upperNeedles = needleBounds.map(function (nb) { return nb.upper; });
+            lowerNeedles = needleBounds.map(function (nb) { return nb.lower; });
+            direction = dir;
+            nextKeySuffix = (dir === "next" ? "" : suffix);
+        }
+        initDirection("next");
+        var c = new whereClause.Collection(whereClause, function () { return createRange(upperNeedles[0], lowerNeedles[needlesLen - 1] + suffix); });
+        c._ondirectionchange = function (direction) {
+            initDirection(direction);
+        };
+        var firstPossibleNeedle = 0;
+        c._addAlgorithm(function (cursor, advance, resolve) {
+            var key = cursor.key;
+            if (typeof key !== 'string')
+                return false;
+            var lowerKey = lower(key);
+            if (match(lowerKey, lowerNeedles, firstPossibleNeedle)) {
+                return true;
+            }
+            else {
+                var lowestPossibleCasing = null;
+                for (var i = firstPossibleNeedle; i < needlesLen; ++i) {
+                    var casing = nextCasing(key, lowerKey, upperNeedles[i], lowerNeedles[i], compare, direction);
+                    if (casing === null && lowestPossibleCasing === null)
+                        firstPossibleNeedle = i + 1;
+                    else if (lowestPossibleCasing === null || compare(lowestPossibleCasing, casing) > 0) {
+                        lowestPossibleCasing = casing;
+                    }
+                }
+                if (lowestPossibleCasing !== null) {
+                    advance(function () { cursor.continue(lowestPossibleCasing + nextKeySuffix); });
+                }
+                else {
+                    advance(resolve);
+                }
+                return false;
+            }
+        });
+        return c;
+    }
+    function createRange(lower, upper, lowerOpen, upperOpen) {
+        return {
+            type: 2            ,
+            lower: lower,
+            upper: upper,
+            lowerOpen: lowerOpen,
+            upperOpen: upperOpen
+        };
+    }
+    function rangeEqual(value) {
+        return {
+            type: 1            ,
+            lower: value,
+            upper: value
+        };
+    }
+
+    var WhereClause =               (function () {
+        function WhereClause() {
+        }
+        Object.defineProperty(WhereClause.prototype, "Collection", {
+            get: function () {
+                return this._ctx.table.db.Collection;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        WhereClause.prototype.between = function (lower, upper, includeLower, includeUpper) {
+            includeLower = includeLower !== false;
+            includeUpper = includeUpper === true;
+            try {
+                if ((this._cmp(lower, upper) > 0) ||
+                    (this._cmp(lower, upper) === 0 && (includeLower || includeUpper) && !(includeLower && includeUpper)))
+                    return emptyCollection(this);
+                return new this.Collection(this, function () { return createRange(lower, upper, !includeLower, !includeUpper); });
+            }
+            catch (e) {
+                return fail(this, INVALID_KEY_ARGUMENT);
+            }
+        };
+        WhereClause.prototype.equals = function (value) {
+            if (value == null)
+                return fail(this, INVALID_KEY_ARGUMENT);
+            return new this.Collection(this, function () { return rangeEqual(value); });
+        };
+        WhereClause.prototype.above = function (value) {
+            if (value == null)
+                return fail(this, INVALID_KEY_ARGUMENT);
+            return new this.Collection(this, function () { return createRange(value, undefined, true); });
+        };
+        WhereClause.prototype.aboveOrEqual = function (value) {
+            if (value == null)
+                return fail(this, INVALID_KEY_ARGUMENT);
+            return new this.Collection(this, function () { return createRange(value, undefined, false); });
+        };
+        WhereClause.prototype.below = function (value) {
+            if (value == null)
+                return fail(this, INVALID_KEY_ARGUMENT);
+            return new this.Collection(this, function () { return createRange(undefined, value, false, true); });
+        };
+        WhereClause.prototype.belowOrEqual = function (value) {
+            if (value == null)
+                return fail(this, INVALID_KEY_ARGUMENT);
+            return new this.Collection(this, function () { return createRange(undefined, value); });
+        };
+        WhereClause.prototype.startsWith = function (str) {
+            if (typeof str !== 'string')
+                return fail(this, STRING_EXPECTED);
+            return this.between(str, str + maxString, true, true);
+        };
+        WhereClause.prototype.startsWithIgnoreCase = function (str) {
+            if (str === "")
+                return this.startsWith(str);
+            return addIgnoreCaseAlgorithm(this, function (x, a) { return x.indexOf(a[0]) === 0; }, [str], maxString);
+        };
+        WhereClause.prototype.equalsIgnoreCase = function (str) {
+            return addIgnoreCaseAlgorithm(this, function (x, a) { return x === a[0]; }, [str], "");
+        };
+        WhereClause.prototype.anyOfIgnoreCase = function () {
+            var set = getArrayOf.apply(NO_CHAR_ARRAY, arguments);
+            if (set.length === 0)
+                return emptyCollection(this);
+            return addIgnoreCaseAlgorithm(this, function (x, a) { return a.indexOf(x) !== -1; }, set, "");
+        };
+        WhereClause.prototype.startsWithAnyOfIgnoreCase = function () {
+            var set = getArrayOf.apply(NO_CHAR_ARRAY, arguments);
+            if (set.length === 0)
+                return emptyCollection(this);
+            return addIgnoreCaseAlgorithm(this, function (x, a) { return a.some(function (n) { return x.indexOf(n) === 0; }); }, set, maxString);
+        };
+        WhereClause.prototype.anyOf = function () {
+            var _this = this;
+            var set = getArrayOf.apply(NO_CHAR_ARRAY, arguments);
+            var compare = this._cmp;
+            try {
+                set.sort(compare);
+            }
+            catch (e) {
+                return fail(this, INVALID_KEY_ARGUMENT);
+            }
+            if (set.length === 0)
+                return emptyCollection(this);
+            var c = new this.Collection(this, function () { return createRange(set[0], set[set.length - 1]); });
+            c._ondirectionchange = function (direction) {
+                compare = (direction === "next" ?
+                    _this._ascending :
+                    _this._descending);
+                set.sort(compare);
+            };
+            var i = 0;
+            c._addAlgorithm(function (cursor, advance, resolve) {
+                var key = cursor.key;
+                while (compare(key, set[i]) > 0) {
+                    ++i;
+                    if (i === set.length) {
+                        advance(resolve);
+                        return false;
+                    }
+                }
+                if (compare(key, set[i]) === 0) {
+                    return true;
+                }
+                else {
+                    advance(function () { cursor.continue(set[i]); });
+                    return false;
+                }
+            });
+            return c;
+        };
+        WhereClause.prototype.notEqual = function (value) {
+            return this.inAnyRange([[minKey, value], [value, this.db._maxKey]], { includeLowers: false, includeUppers: false });
+        };
+        WhereClause.prototype.noneOf = function () {
+            var set = getArrayOf.apply(NO_CHAR_ARRAY, arguments);
+            if (set.length === 0)
+                return new this.Collection(this);
+            try {
+                set.sort(this._ascending);
+            }
+            catch (e) {
+                return fail(this, INVALID_KEY_ARGUMENT);
+            }
+            var ranges = set.reduce(function (res, val) { return res ?
+                res.concat([[res[res.length - 1][1], val]]) :
+                [[minKey, val]]; }, null);
+            ranges.push([set[set.length - 1], this.db._maxKey]);
+            return this.inAnyRange(ranges, { includeLowers: false, includeUppers: false });
+        };
+        WhereClause.prototype.inAnyRange = function (ranges, options) {
+            var _this = this;
+            var cmp = this._cmp, ascending = this._ascending, descending = this._descending, min = this._min, max = this._max;
+            if (ranges.length === 0)
+                return emptyCollection(this);
+            if (!ranges.every(function (range) {
+                return range[0] !== undefined &&
+                    range[1] !== undefined &&
+                    ascending(range[0], range[1]) <= 0;
+            })) {
+                return fail(this, "First argument to inAnyRange() must be an Array of two-value Arrays [lower,upper] where upper must not be lower than lower", exceptions.InvalidArgument);
+            }
+            var includeLowers = !options || options.includeLowers !== false;
+            var includeUppers = options && options.includeUppers === true;
+            function addRange(ranges, newRange) {
+                var i = 0, l = ranges.length;
+                for (; i < l; ++i) {
+                    var range = ranges[i];
+                    if (cmp(newRange[0], range[1]) < 0 && cmp(newRange[1], range[0]) > 0) {
+                        range[0] = min(range[0], newRange[0]);
+                        range[1] = max(range[1], newRange[1]);
+                        break;
+                    }
+                }
+                if (i === l)
+                    ranges.push(newRange);
+                return ranges;
+            }
+            var sortDirection = ascending;
+            function rangeSorter(a, b) { return sortDirection(a[0], b[0]); }
+            var set;
+            try {
+                set = ranges.reduce(addRange, []);
+                set.sort(rangeSorter);
+            }
+            catch (ex) {
+                return fail(this, INVALID_KEY_ARGUMENT);
+            }
+            var rangePos = 0;
+            var keyIsBeyondCurrentEntry = includeUppers ?
+                function (key) { return ascending(key, set[rangePos][1]) > 0; } :
+                function (key) { return ascending(key, set[rangePos][1]) >= 0; };
+            var keyIsBeforeCurrentEntry = includeLowers ?
+                function (key) { return descending(key, set[rangePos][0]) > 0; } :
+                function (key) { return descending(key, set[rangePos][0]) >= 0; };
+            function keyWithinCurrentRange(key) {
+                return !keyIsBeyondCurrentEntry(key) && !keyIsBeforeCurrentEntry(key);
+            }
+            var checkKey = keyIsBeyondCurrentEntry;
+            var c = new this.Collection(this, function () { return createRange(set[0][0], set[set.length - 1][1], !includeLowers, !includeUppers); });
+            c._ondirectionchange = function (direction) {
+                if (direction === "next") {
+                    checkKey = keyIsBeyondCurrentEntry;
+                    sortDirection = ascending;
+                }
+                else {
+                    checkKey = keyIsBeforeCurrentEntry;
+                    sortDirection = descending;
+                }
+                set.sort(rangeSorter);
+            };
+            c._addAlgorithm(function (cursor, advance, resolve) {
+                var key = cursor.key;
+                while (checkKey(key)) {
+                    ++rangePos;
+                    if (rangePos === set.length) {
+                        advance(resolve);
+                        return false;
+                    }
+                }
+                if (keyWithinCurrentRange(key)) {
+                    return true;
+                }
+                else if (_this._cmp(key, set[rangePos][1]) === 0 || _this._cmp(key, set[rangePos][0]) === 0) {
+                    return false;
+                }
+                else {
+                    advance(function () {
+                        if (sortDirection === ascending)
+                            cursor.continue(set[rangePos][0]);
+                        else
+                            cursor.continue(set[rangePos][1]);
+                    });
+                    return false;
+                }
+            });
+            return c;
+        };
+        WhereClause.prototype.startsWithAnyOf = function () {
+            var set = getArrayOf.apply(NO_CHAR_ARRAY, arguments);
+            if (!set.every(function (s) { return typeof s === 'string'; })) {
+                return fail(this, "startsWithAnyOf() only works with strings");
+            }
+            if (set.length === 0)
+                return emptyCollection(this);
+            return this.inAnyRange(set.map(function (str) { return [str, str + maxString]; }));
+        };
+        return WhereClause;
+    }());
+
+    function createWhereClauseConstructor(db) {
+        return makeClassConstructor(WhereClause.prototype, function WhereClause$$1(table, index, orCollection) {
+            this.db = db;
+            this._ctx = {
+                table: table,
+                index: index === ":id" ? null : index,
+                or: orCollection
+            };
+            var indexedDB = db._deps.indexedDB;
+            if (!indexedDB)
+                throw new exceptions.MissingAPI("indexedDB API missing");
+            this._cmp = this._ascending = indexedDB.cmp.bind(indexedDB);
+            this._descending = function (a, b) { return indexedDB.cmp(b, a); };
+            this._max = function (a, b) { return indexedDB.cmp(a, b) > 0 ? a : b; };
+            this._min = function (a, b) { return indexedDB.cmp(a, b) < 0 ? a : b; };
+            this._IDBKeyRange = db._deps.IDBKeyRange;
+        });
+    }
+
+    function safariMultiStoreFix(storeNames) {
+        return storeNames.length === 1 ? storeNames[0] : storeNames;
+    }
+
+    function getMaxKey(IdbKeyRange) {
+        try {
+            IdbKeyRange.only([[]]);
+            return [[]];
+        }
+        catch (e) {
+            return maxString;
+        }
+    }
+
+    function eventRejectHandler(reject) {
+        return wrap(function (event) {
+            preventDefault(event);
+            reject(event.target.error);
+            return false;
+        });
+    }
+
+
+
+    function preventDefault(event) {
+        if (event.stopPropagation)
+            event.stopPropagation();
+        if (event.preventDefault)
+            event.preventDefault();
+    }
+
+    var Transaction =               (function () {
+        function Transaction() {
+        }
+        Transaction.prototype._lock = function () {
+            assert(!PSD.global);
+            ++this._reculock;
+            if (this._reculock === 1 && !PSD.global)
+                PSD.lockOwnerFor = this;
+            return this;
+        };
+        Transaction.prototype._unlock = function () {
+            assert(!PSD.global);
+            if (--this._reculock === 0) {
+                if (!PSD.global)
+                    PSD.lockOwnerFor = null;
+                while (this._blockedFuncs.length > 0 && !this._locked()) {
+                    var fnAndPSD = this._blockedFuncs.shift();
+                    try {
+                        usePSD(fnAndPSD[1], fnAndPSD[0]);
+                    }
+                    catch (e) { }
+                }
+            }
+            return this;
+        };
+        Transaction.prototype._locked = function () {
+            return this._reculock && PSD.lockOwnerFor !== this;
+        };
+        Transaction.prototype.create = function (idbtrans) {
+            var _this = this;
+            if (!this.mode)
+                return this;
+            var idbdb = this.db.idbdb;
+            var dbOpenError = this.db._state.dbOpenError;
+            assert(!this.idbtrans);
+            if (!idbtrans && !idbdb) {
+                switch (dbOpenError && dbOpenError.name) {
+                    case "DatabaseClosedError":
+                        throw new exceptions.DatabaseClosed(dbOpenError);
+                    case "MissingAPIError":
+                        throw new exceptions.MissingAPI(dbOpenError.message, dbOpenError);
+                    default:
+                        throw new exceptions.OpenFailed(dbOpenError);
+                }
+            }
+            if (!this.active)
+                throw new exceptions.TransactionInactive();
+            assert(this._completion._state === null);
+            idbtrans = this.idbtrans = idbtrans || idbdb.transaction(safariMultiStoreFix(this.storeNames), this.mode);
+            idbtrans.onerror = wrap(function (ev) {
+                preventDefault(ev);
+                _this._reject(idbtrans.error);
+            });
+            idbtrans.onabort = wrap(function (ev) {
+                preventDefault(ev);
+                _this.active && _this._reject(new exceptions.Abort(idbtrans.error));
+                _this.active = false;
+                _this.on("abort").fire(ev);
+            });
+            idbtrans.oncomplete = wrap(function () {
+                _this.active = false;
+                _this._resolve();
+            });
+            return this;
+        };
+        Transaction.prototype._promise = function (mode, fn, bWriteLock) {
+            var _this = this;
+            if (mode === 'readwrite' && this.mode !== 'readwrite')
+                return rejection(new exceptions.ReadOnly("Transaction is readonly"));
+            if (!this.active)
+                return rejection(new exceptions.TransactionInactive());
+            if (this._locked()) {
+                return new DexiePromise(function (resolve, reject) {
+                    _this._blockedFuncs.push([function () {
+                            _this._promise(mode, fn, bWriteLock).then(resolve, reject);
+                        }, PSD]);
+                });
+            }
+            else if (bWriteLock) {
+                return newScope(function () {
+                    var p = new DexiePromise(function (resolve, reject) {
+                        _this._lock();
+                        var rv = fn(resolve, reject, _this);
+                        if (rv && rv.then)
+                            rv.then(resolve, reject);
+                    });
+                    p.finally(function () { return _this._unlock(); });
+                    p._lib = true;
+                    return p;
+                });
+            }
+            else {
+                var p = new DexiePromise(function (resolve, reject) {
+                    var rv = fn(resolve, reject, _this);
+                    if (rv && rv.then)
+                        rv.then(resolve, reject);
+                });
+                p._lib = true;
+                return p;
+            }
+        };
+        Transaction.prototype._root = function () {
+            return this.parent ? this.parent._root() : this;
+        };
+        Transaction.prototype.waitFor = function (promiseLike) {
+            var root = this._root();
+            var promise = DexiePromise.resolve(promiseLike);
+            if (root._waitingFor) {
+                root._waitingFor = root._waitingFor.then(function () { return promise; });
+            }
+            else {
+                root._waitingFor = promise;
+                root._waitingQueue = [];
+                var store = root.idbtrans.objectStore(root.storeNames[0]);
+                (function spin() {
+                    ++root._spinCount;
+                    while (root._waitingQueue.length)
+                        (root._waitingQueue.shift())();
+                    if (root._waitingFor)
+                        store.get(-Infinity).onsuccess = spin;
+                }());
+            }
+            var currentWaitPromise = root._waitingFor;
+            return new DexiePromise(function (resolve, reject) {
+                promise.then(function (res) { return root._waitingQueue.push(wrap(resolve.bind(null, res))); }, function (err) { return root._waitingQueue.push(wrap(reject.bind(null, err))); }).finally(function () {
+                    if (root._waitingFor === currentWaitPromise) {
+                        root._waitingFor = null;
+                    }
+                });
+            });
+        };
+        Transaction.prototype.abort = function () {
+            this.active && this._reject(new exceptions.Abort());
+            this.active = false;
+        };
+        Transaction.prototype.table = function (tableName) {
+            var memoizedTables = (this._memoizedTables || (this._memoizedTables = {}));
+            if (hasOwn(memoizedTables, tableName))
+                return memoizedTables[tableName];
+            var tableSchema = this.schema[tableName];
+            if (!tableSchema) {
+                throw new exceptions.NotFound("Table " + tableName + " not part of transaction");
+            }
+            var transactionBoundTable = new this.db.Table(tableName, tableSchema, this);
+            transactionBoundTable.core = this.db.core.table(tableName);
+            memoizedTables[tableName] = transactionBoundTable;
+            return transactionBoundTable;
+        };
+        return Transaction;
+    }());
+
+    function createTransactionConstructor(db) {
+        return makeClassConstructor(Transaction.prototype, function Transaction$$1(mode, storeNames, dbschema, parent) {
+            var _this = this;
+            this.db = db;
+            this.mode = mode;
+            this.storeNames = storeNames;
+            this.schema = dbschema;
+            this.idbtrans = null;
+            this.on = Events(this, "complete", "error", "abort");
+            this.parent = parent || null;
+            this.active = true;
+            this._reculock = 0;
+            this._blockedFuncs = [];
+            this._resolve = null;
+            this._reject = null;
+            this._waitingFor = null;
+            this._waitingQueue = null;
+            this._spinCount = 0;
+            this._completion = new DexiePromise(function (resolve, reject) {
+                _this._resolve = resolve;
+                _this._reject = reject;
+            });
+            this._completion.then(function () {
+                _this.active = false;
+                _this.on.complete.fire();
+            }, function (e) {
+                var wasActive = _this.active;
+                _this.active = false;
+                _this.on.error.fire(e);
+                _this.parent ?
+                    _this.parent._reject(e) :
+                    wasActive && _this.idbtrans && _this.idbtrans.abort();
+                return rejection(e);
+            });
+        });
+    }
+
+    function createIndexSpec(name, keyPath, unique, multi, auto, compound, isPrimKey) {
+        return {
+            name: name,
+            keyPath: keyPath,
+            unique: unique,
+            multi: multi,
+            auto: auto,
+            compound: compound,
+            src: (unique && !isPrimKey ? '&' : '') + (multi ? '*' : '') + (auto ? "++" : "") + nameFromKeyPath(keyPath)
+        };
+    }
+    function nameFromKeyPath(keyPath) {
+        return typeof keyPath === 'string' ?
+            keyPath :
+            keyPath ? ('[' + [].join.call(keyPath, '+') + ']') : "";
+    }
+
+    function createTableSchema(name, primKey, indexes) {
+        return {
+            name: name,
+            primKey: primKey,
+            indexes: indexes,
+            mappedClass: null,
+            idxByName: arrayToObject(indexes, function (index) { return [index.name, index]; })
+        };
+    }
+
+    function getKeyExtractor(keyPath) {
+        if (keyPath == null) {
+            return function () { return undefined; };
+        }
+        else if (typeof keyPath === 'string') {
+            return getSinglePathKeyExtractor(keyPath);
+        }
+        else {
+            return function (obj) { return getByKeyPath(obj, keyPath); };
+        }
+    }
+    function getSinglePathKeyExtractor(keyPath) {
+        var split = keyPath.split('.');
+        if (split.length === 1) {
+            return function (obj) { return obj[keyPath]; };
+        }
+        else {
+            return function (obj) { return getByKeyPath(obj, keyPath); };
+        }
+    }
+
+    function getEffectiveKeys(primaryKey, req) {
+        if (req.type === 'delete')
+            return req.keys;
+        return req.keys || req.values.map(primaryKey.extractKey);
+    }
+    function getExistingValues(table, req, effectiveKeys) {
+        return req.type === 'add' ? Promise.resolve(new Array(req.values.length)) :
+            table.getMany({ trans: req.trans, keys: effectiveKeys });
+    }
+
+    function arrayify(arrayLike) {
+        return [].slice.call(arrayLike);
+    }
+
+    var _id_counter = 0;
+    function getKeyPathAlias(keyPath) {
+        return keyPath == null ?
+            ":id" :
+            typeof keyPath === 'string' ?
+                keyPath :
+                "[" + keyPath.join('+') + "]";
+    }
+    function createDBCore(db, indexedDB, IdbKeyRange, tmpTrans) {
+        var cmp = indexedDB.cmp.bind(indexedDB);
+        function extractSchema(db, trans) {
+            var tables = arrayify(db.objectStoreNames);
+            return {
+                schema: {
+                    name: db.name,
+                    tables: tables.map(function (table) { return trans.objectStore(table); }).map(function (store) {
+                        var keyPath = store.keyPath, autoIncrement = store.autoIncrement;
+                        var compound = isArray(keyPath);
+                        var outbound = keyPath == null;
+                        var indexByKeyPath = {};
+                        var result = {
+                            name: store.name,
+                            primaryKey: {
+                                name: null,
+                                isPrimaryKey: true,
+                                outbound: outbound,
+                                compound: compound,
+                                keyPath: keyPath,
+                                autoIncrement: autoIncrement,
+                                unique: true,
+                                extractKey: getKeyExtractor(keyPath)
+                            },
+                            indexes: arrayify(store.indexNames).map(function (indexName) { return store.index(indexName); })
+                                .map(function (index) {
+                                var name = index.name, unique = index.unique, multiEntry = index.multiEntry, keyPath = index.keyPath;
+                                var compound = isArray(keyPath);
+                                var result = {
+                                    name: name,
+                                    compound: compound,
+                                    keyPath: keyPath,
+                                    unique: unique,
+                                    multiEntry: multiEntry,
+                                    extractKey: getKeyExtractor(keyPath)
+                                };
+                                indexByKeyPath[getKeyPathAlias(keyPath)] = result;
+                                return result;
+                            }),
+                            getIndexByKeyPath: function (keyPath) { return indexByKeyPath[getKeyPathAlias(keyPath)]; }
+                        };
+                        indexByKeyPath[":id"] = result.primaryKey;
+                        if (keyPath != null) {
+                            indexByKeyPath[getKeyPathAlias(keyPath)] = result.primaryKey;
+                        }
+                        return result;
+                    })
+                },
+                hasGetAll: tables.length > 0 && ('getAll' in trans.objectStore(tables[0])) &&
+                    !(typeof navigator !== 'undefined' && /Safari/.test(navigator.userAgent) &&
+                        !/(Chrome\/|Edge\/)/.test(navigator.userAgent) &&
+                        [].concat(navigator.userAgent.match(/Safari\/(\d*)/))[1] < 604)
+            };
+        }
+        function makeIDBKeyRange(range) {
+            if (range.type === 3          )
+                return null;
+            if (range.type === 4            )
+                throw new Error("Cannot convert never type to IDBKeyRange");
+            var lower = range.lower, upper = range.upper, lowerOpen = range.lowerOpen, upperOpen = range.upperOpen;
+            var idbRange = lower === undefined ?
+                upper === undefined ?
+                    null :
+                    IdbKeyRange.upperBound(upper, !!upperOpen) :
+                upper === undefined ?
+                    IdbKeyRange.lowerBound(lower, !!lowerOpen) :
+                    IdbKeyRange.bound(lower, upper, !!lowerOpen, !!upperOpen);
+            return idbRange;
+        }
+        function createDbCoreTable(tableSchema) {
+            var tableName = tableSchema.name;
+            function mutate(_a) {
+                var trans = _a.trans, type = _a.type, keys$$1 = _a.keys, values = _a.values, range = _a.range, wantResults = _a.wantResults;
+                return new Promise(function (resolve, reject) {
+                    resolve = wrap(resolve);
+                    var store = trans.objectStore(tableName);
+                    var outbound = store.keyPath == null;
+                    var isAddOrPut = type === "put" || type === "add";
+                    if (!isAddOrPut && type !== 'delete' && type !== 'deleteRange')
+                        throw new Error("Invalid operation type: " + type);
+                    var length = (keys$$1 || values || { length: 1 }).length;
+                    if (keys$$1 && values && keys$$1.length !== values.length) {
+                        throw new Error("Given keys array must have same length as given values array.");
+                    }
+                    if (length === 0)
+                        return resolve({ numFailures: 0, failures: {}, results: [], lastResult: undefined });
+                    var results = wantResults && __spreadArrays((keys$$1 ?
+                        keys$$1 :
+                        getEffectiveKeys(tableSchema.primaryKey, { type: type, keys: keys$$1, values: values })));
+                    var req;
+                    var failures = [];
+                    var numFailures = 0;
+                    var errorHandler = function (event) {
+                        ++numFailures;
+                        preventDefault(event);
+                        if (results)
+                            results[event.target._reqno] = undefined;
+                        failures[event.target._reqno] = event.target.error;
+                    };
+                    var setResult = function (_a) {
+                        var target = _a.target;
+                        results[target._reqno] = target.result;
+                    };
+                    if (type === 'deleteRange') {
+                        if (range.type === 4            )
+                            return resolve({ numFailures: numFailures, failures: failures, results: results, lastResult: undefined });
+                        if (range.type === 3          )
+                            req = store.clear();
+                        else
+                            req = store.delete(makeIDBKeyRange(range));
+                    }
+                    else {
+                        var _a = isAddOrPut ?
+                            outbound ?
+                                [values, keys$$1] :
+                                [values, null] :
+                            [keys$$1, null], args1 = _a[0], args2 = _a[1];
+                        if (isAddOrPut) {
+                            for (var i = 0; i < length; ++i) {
+                                req = (args2 && args2[i] !== undefined ?
+                                    store[type](args1[i], args2[i]) :
+                                    store[type](args1[i]));
+                                req._reqno = i;
+                                if (results && results[i] === undefined) {
+                                    req.onsuccess = setResult;
+                                }
+                                req.onerror = errorHandler;
+                            }
+                        }
+                        else {
+                            for (var i = 0; i < length; ++i) {
+                                req = store[type](args1[i]);
+                                req._reqno = i;
+                                req.onerror = errorHandler;
+                            }
+                        }
+                    }
+                    var done = function (event) {
+                        var lastResult = event.target.result;
+                        if (results)
+                            results[length - 1] = lastResult;
+                        resolve({
+                            numFailures: numFailures,
+                            failures: failures,
+                            results: results,
+                            lastResult: lastResult
+                        });
+                    };
+                    req.onerror = function (event) {
+                        errorHandler(event);
+                        done(event);
+                    };
+                    req.onsuccess = done;
+                });
+            }
+            function openCursor(_a) {
+                var trans = _a.trans, values = _a.values, query = _a.query, reverse = _a.reverse, unique = _a.unique;
+                return new Promise(function (resolve, reject) {
+                    resolve = wrap(resolve);
+                    var index = query.index, range = query.range;
+                    var store = trans.objectStore(tableName);
+                    var source = index.isPrimaryKey ?
+                        store :
+                        store.index(index.name);
+                    var direction = reverse ?
+                        unique ?
+                            "prevunique" :
+                            "prev" :
+                        unique ?
+                            "nextunique" :
+                            "next";
+                    var req = values || !('openKeyCursor' in source) ?
+                        source.openCursor(makeIDBKeyRange(range), direction) :
+                        source.openKeyCursor(makeIDBKeyRange(range), direction);
+                    req.onerror = eventRejectHandler(reject);
+                    req.onsuccess = wrap(function (ev) {
+                        var cursor = req.result;
+                        if (!cursor) {
+                            resolve(null);
+                            return;
+                        }
+                        cursor.___id = ++_id_counter;
+                        cursor.done = false;
+                        var _cursorContinue = cursor.continue.bind(cursor);
+                        var _cursorContinuePrimaryKey = cursor.continuePrimaryKey;
+                        if (_cursorContinuePrimaryKey)
+                            _cursorContinuePrimaryKey = _cursorContinuePrimaryKey.bind(cursor);
+                        var _cursorAdvance = cursor.advance.bind(cursor);
+                        var doThrowCursorIsNotStarted = function () { throw new Error("Cursor not started"); };
+                        var doThrowCursorIsStopped = function () { throw new Error("Cursor not stopped"); };
+                        cursor.trans = trans;
+                        cursor.stop = cursor.continue = cursor.continuePrimaryKey = cursor.advance = doThrowCursorIsNotStarted;
+                        cursor.fail = wrap(reject);
+                        cursor.next = function () {
+                            var _this = this;
+                            var gotOne = 1;
+                            return this.start(function () { return gotOne-- ? _this.continue() : _this.stop(); }).then(function () { return _this; });
+                        };
+                        cursor.start = function (callback) {
+                            var iterationPromise = new Promise(function (resolveIteration, rejectIteration) {
+                                resolveIteration = wrap(resolveIteration);
+                                req.onerror = eventRejectHandler(rejectIteration);
+                                cursor.fail = rejectIteration;
+                                cursor.stop = function (value) {
+                                    cursor.stop = cursor.continue = cursor.continuePrimaryKey = cursor.advance = doThrowCursorIsStopped;
+                                    resolveIteration(value);
+                                };
+                            });
+                            var guardedCallback = function () {
+                                if (req.result) {
+                                    try {
+                                        callback();
+                                    }
+                                    catch (err) {
+                                        cursor.fail(err);
+                                    }
+                                }
+                                else {
+                                    cursor.done = true;
+                                    cursor.start = function () { throw new Error("Cursor behind last entry"); };
+                                    cursor.stop();
+                                }
+                            };
+                            req.onsuccess = wrap(function (ev) {
+                                req.onsuccess = guardedCallback;
+                                guardedCallback();
+                            });
+                            cursor.continue = _cursorContinue;
+                            cursor.continuePrimaryKey = _cursorContinuePrimaryKey;
+                            cursor.advance = _cursorAdvance;
+                            guardedCallback();
+                            return iterationPromise;
+                        };
+                        resolve(cursor);
+                    }, reject);
+                });
+            }
+            function query(hasGetAll) {
+                return function (request) {
+                    return new Promise(function (resolve, reject) {
+                        resolve = wrap(resolve);
+                        var trans = request.trans, values = request.values, limit = request.limit, query = request.query;
+                        var nonInfinitLimit = limit === Infinity ? undefined : limit;
+                        var index = query.index, range = query.range;
+                        var store = trans.objectStore(tableName);
+                        var source = index.isPrimaryKey ? store : store.index(index.name);
+                        var idbKeyRange = makeIDBKeyRange(range);
+                        if (limit === 0)
+                            return resolve({ result: [] });
+                        if (hasGetAll) {
+                            var req = values ?
+                                source.getAll(idbKeyRange, nonInfinitLimit) :
+                                source.getAllKeys(idbKeyRange, nonInfinitLimit);
+                            req.onsuccess = function (event) { return resolve({ result: event.target.result }); };
+                            req.onerror = eventRejectHandler(reject);
+                        }
+                        else {
+                            var count_1 = 0;
+                            var req_1 = values || !('openKeyCursor' in source) ?
+                                source.openCursor(idbKeyRange) :
+                                source.openKeyCursor(idbKeyRange);
+                            var result_1 = [];
+                            req_1.onsuccess = function (event) {
+                                var cursor = req_1.result;
+                                if (!cursor)
+                                    return resolve({ result: result_1 });
+                                result_1.push(values ? cursor.value : cursor.primaryKey);
+                                if (++count_1 === limit)
+                                    return resolve({ result: result_1 });
+                                cursor.continue();
+                            };
+                            req_1.onerror = eventRejectHandler(reject);
+                        }
+                    });
+                };
+            }
+            return {
+                name: tableName,
+                schema: tableSchema,
+                mutate: mutate,
+                getMany: function (_a) {
+                    var trans = _a.trans, keys$$1 = _a.keys;
+                    return new Promise(function (resolve, reject) {
+                        resolve = wrap(resolve);
+                        var store = trans.objectStore(tableName);
+                        var length = keys$$1.length;
+                        var result = new Array(length);
+                        var keyCount = 0;
+                        var callbackCount = 0;
+                        var req;
+                        var successHandler = function (event) {
+                            var req = event.target;
+                            if ((result[req._pos] = req.result) != null)
+                                ;
+                            if (++callbackCount === keyCount)
+                                resolve(result);
+                        };
+                        var errorHandler = eventRejectHandler(reject);
+                        for (var i = 0; i < length; ++i) {
+                            var key = keys$$1[i];
+                            if (key != null) {
+                                req = store.get(keys$$1[i]);
+                                req._pos = i;
+                                req.onsuccess = successHandler;
+                                req.onerror = errorHandler;
+                                ++keyCount;
+                            }
+                        }
+                        if (keyCount === 0)
+                            resolve(result);
+                    });
+                },
+                get: function (_a) {
+                    var trans = _a.trans, key = _a.key;
+                    return new Promise(function (resolve, reject) {
+                        resolve = wrap(resolve);
+                        var store = trans.objectStore(tableName);
+                        var req = store.get(key);
+                        req.onsuccess = function (event) { return resolve(event.target.result); };
+                        req.onerror = eventRejectHandler(reject);
+                    });
+                },
+                query: query(hasGetAll),
+                openCursor: openCursor,
+                count: function (_a) {
+                    var query = _a.query, trans = _a.trans;
+                    var index = query.index, range = query.range;
+                    return new Promise(function (resolve, reject) {
+                        var store = trans.objectStore(tableName);
+                        var source = index.isPrimaryKey ? store : store.index(index.name);
+                        var idbKeyRange = makeIDBKeyRange(range);
+                        var req = idbKeyRange ? source.count(idbKeyRange) : source.count();
+                        req.onsuccess = wrap(function (ev) { return resolve(ev.target.result); });
+                        req.onerror = eventRejectHandler(reject);
+                    });
+                }
+            };
+        }
+        var _a = extractSchema(db, tmpTrans), schema = _a.schema, hasGetAll = _a.hasGetAll;
+        var tables = schema.tables.map(function (tableSchema) { return createDbCoreTable(tableSchema); });
+        var tableMap = {};
+        tables.forEach(function (table) { return tableMap[table.name] = table; });
+        return {
+            stack: "dbcore",
+            transaction: db.transaction.bind(db),
+            table: function (name) {
+                var result = tableMap[name];
+                if (!result)
+                    throw new Error("Table '" + name + "' not found");
+                return tableMap[name];
+            },
+            cmp: cmp,
+            MIN_KEY: -Infinity,
+            MAX_KEY: getMaxKey(IdbKeyRange),
+            schema: schema
+        };
+    }
+
+    function createMiddlewareStack(stackImpl, middlewares) {
+        return middlewares.reduce(function (down, _a) {
+            var create = _a.create;
+            return (__assign(__assign({}, down), create(down)));
+        }, stackImpl);
+    }
+    function createMiddlewareStacks(middlewares, idbdb, _a, tmpTrans) {
+        var IDBKeyRange = _a.IDBKeyRange, indexedDB = _a.indexedDB;
+        var dbcore = createMiddlewareStack(createDBCore(idbdb, indexedDB, IDBKeyRange, tmpTrans), middlewares.dbcore);
+        return {
+            dbcore: dbcore
+        };
+    }
+    function generateMiddlewareStacks(db, tmpTrans) {
+        var idbdb = tmpTrans.db;
+        var stacks = createMiddlewareStacks(db._middlewares, idbdb, db._deps, tmpTrans);
+        db.core = stacks.dbcore;
+        db.tables.forEach(function (table) {
+            var tableName = table.name;
+            if (db.core.schema.tables.some(function (tbl) { return tbl.name === tableName; })) {
+                table.core = db.core.table(tableName);
+                if (db[tableName] instanceof db.Table) {
+                    db[tableName].core = table.core;
+                }
+            }
+        });
+    }
+
+    function setApiOnPlace(db, objs, tableNames, dbschema) {
+        tableNames.forEach(function (tableName) {
+            var schema = dbschema[tableName];
+            objs.forEach(function (obj) {
+                var propDesc = getPropertyDescriptor(obj, tableName);
+                if (!propDesc || ("value" in propDesc && propDesc.value === undefined)) {
+                    if (obj === db.Transaction.prototype || obj instanceof db.Transaction) {
+                        setProp(obj, tableName, {
+                            get: function () { return this.table(tableName); },
+                            set: function (value) {
+                                defineProperty(this, tableName, { value: value, writable: true, configurable: true, enumerable: true });
+                            }
+                        });
+                    }
+                    else {
+                        obj[tableName] = new db.Table(tableName, schema);
+                    }
+                }
+            });
+        });
+    }
+    function removeTablesApi(db, objs) {
+        objs.forEach(function (obj) {
+            for (var key in obj) {
+                if (obj[key] instanceof db.Table)
+                    delete obj[key];
+            }
+        });
+    }
+    function lowerVersionFirst(a, b) {
+        return a._cfg.version - b._cfg.version;
+    }
+    function runUpgraders(db, oldVersion, idbUpgradeTrans, reject) {
+        var globalSchema = db._dbSchema;
+        var trans = db._createTransaction('readwrite', db._storeNames, globalSchema);
+        trans.create(idbUpgradeTrans);
+        trans._completion.catch(reject);
+        var rejectTransaction = trans._reject.bind(trans);
+        var transless = PSD.transless || PSD;
+        newScope(function () {
+            PSD.trans = trans;
+            PSD.transless = transless;
+            if (oldVersion === 0) {
+                keys(globalSchema).forEach(function (tableName) {
+                    createTable(idbUpgradeTrans, tableName, globalSchema[tableName].primKey, globalSchema[tableName].indexes);
+                });
+                generateMiddlewareStacks(db, idbUpgradeTrans);
+                DexiePromise.follow(function () { return db.on.populate.fire(trans); }).catch(rejectTransaction);
+            }
+            else
+                updateTablesAndIndexes(db, oldVersion, trans, idbUpgradeTrans).catch(rejectTransaction);
+        });
+    }
+    function updateTablesAndIndexes(db, oldVersion, trans, idbUpgradeTrans) {
+        var queue = [];
+        var versions = db._versions;
+        var globalSchema = db._dbSchema = buildGlobalSchema(db, db.idbdb, idbUpgradeTrans);
+        var anyContentUpgraderHasRun = false;
+        var versToRun = versions.filter(function (v) { return v._cfg.version >= oldVersion; });
+        versToRun.forEach(function (version) {
+            queue.push(function () {
+                var oldSchema = globalSchema;
+                var newSchema = version._cfg.dbschema;
+                adjustToExistingIndexNames(db, oldSchema, idbUpgradeTrans);
+                adjustToExistingIndexNames(db, newSchema, idbUpgradeTrans);
+                globalSchema = db._dbSchema = newSchema;
+                var diff = getSchemaDiff(oldSchema, newSchema);
+                diff.add.forEach(function (tuple) {
+                    createTable(idbUpgradeTrans, tuple[0], tuple[1].primKey, tuple[1].indexes);
+                });
+                diff.change.forEach(function (change) {
+                    if (change.recreate) {
+                        throw new exceptions.Upgrade("Not yet support for changing primary key");
+                    }
+                    else {
+                        var store_1 = idbUpgradeTrans.objectStore(change.name);
+                        change.add.forEach(function (idx) { return addIndex(store_1, idx); });
+                        change.change.forEach(function (idx) {
+                            store_1.deleteIndex(idx.name);
+                            addIndex(store_1, idx);
+                        });
+                        change.del.forEach(function (idxName) { return store_1.deleteIndex(idxName); });
+                    }
+                });
+                var contentUpgrade = version._cfg.contentUpgrade;
+                if (contentUpgrade && version._cfg.version > oldVersion) {
+                    generateMiddlewareStacks(db, idbUpgradeTrans);
+                    trans._memoizedTables = {};
+                    anyContentUpgraderHasRun = true;
+                    var upgradeSchema_1 = shallowClone(newSchema);
+                    diff.del.forEach(function (table) {
+                        upgradeSchema_1[table] = oldSchema[table];
+                    });
+                    removeTablesApi(db, [db.Transaction.prototype]);
+                    setApiOnPlace(db, [db.Transaction.prototype], keys(upgradeSchema_1), upgradeSchema_1);
+                    trans.schema = upgradeSchema_1;
+                    var contentUpgradeIsAsync_1 = isAsyncFunction(contentUpgrade);
+                    if (contentUpgradeIsAsync_1) {
+                        incrementExpectedAwaits();
+                    }
+                    var returnValue_1;
+                    var promiseFollowed = DexiePromise.follow(function () {
+                        returnValue_1 = contentUpgrade(trans);
+                        if (returnValue_1) {
+                            if (contentUpgradeIsAsync_1) {
+                                var decrementor = decrementExpectedAwaits.bind(null, null);
+                                returnValue_1.then(decrementor, decrementor);
+                            }
+                        }
+                    });
+                    return (returnValue_1 && typeof returnValue_1.then === 'function' ?
+                        DexiePromise.resolve(returnValue_1) : promiseFollowed.then(function () { return returnValue_1; }));
+                }
+            });
+            queue.push(function (idbtrans) {
+                if (!anyContentUpgraderHasRun || !hasIEDeleteObjectStoreBug) {
+                    var newSchema = version._cfg.dbschema;
+                    deleteRemovedTables(newSchema, idbtrans);
+                }
+                removeTablesApi(db, [db.Transaction.prototype]);
+                setApiOnPlace(db, [db.Transaction.prototype], db._storeNames, db._dbSchema);
+                trans.schema = db._dbSchema;
+            });
+        });
+        function runQueue() {
+            return queue.length ? DexiePromise.resolve(queue.shift()(trans.idbtrans)).then(runQueue) :
+                DexiePromise.resolve();
+        }
+        return runQueue().then(function () {
+            createMissingTables(globalSchema, idbUpgradeTrans);
+        });
+    }
+    function getSchemaDiff(oldSchema, newSchema) {
+        var diff = {
+            del: [],
+            add: [],
+            change: []
+        };
+        var table;
+        for (table in oldSchema) {
+            if (!newSchema[table])
+                diff.del.push(table);
+        }
+        for (table in newSchema) {
+            var oldDef = oldSchema[table], newDef = newSchema[table];
+            if (!oldDef) {
+                diff.add.push([table, newDef]);
+            }
+            else {
+                var change = {
+                    name: table,
+                    def: newDef,
+                    recreate: false,
+                    del: [],
+                    add: [],
+                    change: []
+                };
+                if ((
+                '' + (oldDef.primKey.keyPath || '')) !== ('' + (newDef.primKey.keyPath || '')) ||
+                    (oldDef.primKey.auto !== newDef.primKey.auto && !isIEOrEdge))
+                 {
+                    change.recreate = true;
+                    diff.change.push(change);
+                }
+                else {
+                    var oldIndexes = oldDef.idxByName;
+                    var newIndexes = newDef.idxByName;
+                    var idxName = void 0;
+                    for (idxName in oldIndexes) {
+                        if (!newIndexes[idxName])
+                            change.del.push(idxName);
+                    }
+                    for (idxName in newIndexes) {
+                        var oldIdx = oldIndexes[idxName], newIdx = newIndexes[idxName];
+                        if (!oldIdx)
+                            change.add.push(newIdx);
+                        else if (oldIdx.src !== newIdx.src)
+                            change.change.push(newIdx);
+                    }
+                    if (change.del.length > 0 || change.add.length > 0 || change.change.length > 0) {
+                        diff.change.push(change);
+                    }
+                }
+            }
+        }
+        return diff;
+    }
+    function createTable(idbtrans, tableName, primKey, indexes) {
+        var store = idbtrans.db.createObjectStore(tableName, primKey.keyPath ?
+            { keyPath: primKey.keyPath, autoIncrement: primKey.auto } :
+            { autoIncrement: primKey.auto });
+        indexes.forEach(function (idx) { return addIndex(store, idx); });
+        return store;
+    }
+    function createMissingTables(newSchema, idbtrans) {
+        keys(newSchema).forEach(function (tableName) {
+            if (!idbtrans.db.objectStoreNames.contains(tableName)) {
+                createTable(idbtrans, tableName, newSchema[tableName].primKey, newSchema[tableName].indexes);
+            }
+        });
+    }
+    function deleteRemovedTables(newSchema, idbtrans) {
+        for (var i = 0; i < idbtrans.db.objectStoreNames.length; ++i) {
+            var storeName = idbtrans.db.objectStoreNames[i];
+            if (newSchema[storeName] == null) {
+                idbtrans.db.deleteObjectStore(storeName);
+            }
+        }
+    }
+    function addIndex(store, idx) {
+        store.createIndex(idx.name, idx.keyPath, { unique: idx.unique, multiEntry: idx.multi });
+    }
+    function buildGlobalSchema(db, idbdb, tmpTrans) {
+        var globalSchema = {};
+        var dbStoreNames = slice(idbdb.objectStoreNames, 0);
+        dbStoreNames.forEach(function (storeName) {
+            var store = tmpTrans.objectStore(storeName);
+            var keyPath = store.keyPath;
+            var primKey = createIndexSpec(nameFromKeyPath(keyPath), keyPath || "", false, false, !!store.autoIncrement, keyPath && typeof keyPath !== "string", true);
+            var indexes = [];
+            for (var j = 0; j < store.indexNames.length; ++j) {
+                var idbindex = store.index(store.indexNames[j]);
+                keyPath = idbindex.keyPath;
+                var index = createIndexSpec(idbindex.name, keyPath, !!idbindex.unique, !!idbindex.multiEntry, false, keyPath && typeof keyPath !== "string", false);
+                indexes.push(index);
+            }
+            globalSchema[storeName] = createTableSchema(storeName, primKey, indexes);
+        });
+        return globalSchema;
+    }
+    function readGlobalSchema(db, idbdb, tmpTrans) {
+        db.verno = idbdb.version / 10;
+        var globalSchema = db._dbSchema = buildGlobalSchema(db, idbdb, tmpTrans);
+        db._storeNames = slice(idbdb.objectStoreNames, 0);
+        setApiOnPlace(db, [db._allTables], keys(globalSchema), globalSchema);
+    }
+    function verifyInstalledSchema(db, tmpTrans) {
+        var installedSchema = buildGlobalSchema(db, db.idbdb, tmpTrans);
+        var diff = getSchemaDiff(installedSchema, db._dbSchema);
+        return !(diff.add.length || diff.change.some(function (ch) { return ch.add.length || ch.change.length; }));
+    }
+    function adjustToExistingIndexNames(db, schema, idbtrans) {
+        var storeNames = idbtrans.db.objectStoreNames;
+        for (var i = 0; i < storeNames.length; ++i) {
+            var storeName = storeNames[i];
+            var store = idbtrans.objectStore(storeName);
+            db._hasGetAll = 'getAll' in store;
+            for (var j = 0; j < store.indexNames.length; ++j) {
+                var indexName = store.indexNames[j];
+                var keyPath = store.index(indexName).keyPath;
+                var dexieName = typeof keyPath === 'string' ? keyPath : "[" + slice(keyPath).join('+') + "]";
+                if (schema[storeName]) {
+                    var indexSpec = schema[storeName].idxByName[dexieName];
+                    if (indexSpec) {
+                        indexSpec.name = indexName;
+                        delete schema[storeName].idxByName[dexieName];
+                        schema[storeName].idxByName[indexName] = indexSpec;
+                    }
+                }
+            }
+        }
+        if (typeof navigator !== 'undefined' && /Safari/.test(navigator.userAgent) &&
+            !/(Chrome\/|Edge\/)/.test(navigator.userAgent) &&
+            _global.WorkerGlobalScope && _global instanceof _global.WorkerGlobalScope &&
+            [].concat(navigator.userAgent.match(/Safari\/(\d*)/))[1] < 604) {
+            db._hasGetAll = false;
+        }
+    }
+    function parseIndexSyntax(primKeyAndIndexes) {
+        return primKeyAndIndexes.split(',').map(function (index, indexNum) {
+            index = index.trim();
+            var name = index.replace(/([&*]|\+\+)/g, "");
+            var keyPath = /^\[/.test(name) ? name.match(/^\[(.*)\]$/)[1].split('+') : name;
+            return createIndexSpec(name, keyPath || null, /\&/.test(index), /\*/.test(index), /\+\+/.test(index), isArray(keyPath), indexNum === 0);
+        });
+    }
+
+    var Version =               (function () {
+        function Version() {
+        }
+        Version.prototype._parseStoresSpec = function (stores, outSchema) {
+            keys(stores).forEach(function (tableName) {
+                if (stores[tableName] !== null) {
+                    var indexes = parseIndexSyntax(stores[tableName]);
+                    var primKey = indexes.shift();
+                    if (primKey.multi)
+                        throw new exceptions.Schema("Primary key cannot be multi-valued");
+                    indexes.forEach(function (idx) {
+                        if (idx.auto)
+                            throw new exceptions.Schema("Only primary key can be marked as autoIncrement (++)");
+                        if (!idx.keyPath)
+                            throw new exceptions.Schema("Index must have a name and cannot be an empty string");
+                    });
+                    outSchema[tableName] = createTableSchema(tableName, primKey, indexes);
+                }
+            });
+        };
+        Version.prototype.stores = function (stores) {
+            var db = this.db;
+            this._cfg.storesSource = this._cfg.storesSource ?
+                extend(this._cfg.storesSource, stores) :
+                stores;
+            var versions = db._versions;
+            var storesSpec = {};
+            var dbschema = {};
+            versions.forEach(function (version) {
+                extend(storesSpec, version._cfg.storesSource);
+                dbschema = (version._cfg.dbschema = {});
+                version._parseStoresSpec(storesSpec, dbschema);
+            });
+            db._dbSchema = dbschema;
+            removeTablesApi(db, [db._allTables, db, db.Transaction.prototype]);
+            setApiOnPlace(db, [db._allTables, db, db.Transaction.prototype, this._cfg.tables], keys(dbschema), dbschema);
+            db._storeNames = keys(dbschema);
+            return this;
+        };
+        Version.prototype.upgrade = function (upgradeFunction) {
+            this._cfg.contentUpgrade = upgradeFunction;
+            return this;
+        };
+        return Version;
+    }());
+
+    function createVersionConstructor(db) {
+        return makeClassConstructor(Version.prototype, function Version$$1(versionNumber) {
+            this.db = db;
+            this._cfg = {
+                version: versionNumber,
+                storesSource: null,
+                dbschema: {},
+                tables: {},
+                contentUpgrade: null
+            };
+        });
+    }
+
+    var databaseEnumerator;
+    function DatabaseEnumerator(indexedDB) {
+        var hasDatabasesNative = indexedDB && typeof indexedDB.databases === 'function';
+        var dbNamesTable;
+        if (!hasDatabasesNative) {
+            var db = new Dexie(DBNAMES_DB, { addons: [] });
+            db.version(1).stores({ dbnames: 'name' });
+            dbNamesTable = db.table('dbnames');
+        }
+        return {
+            getDatabaseNames: function () {
+                return hasDatabasesNative
+                    ?
+                        DexiePromise.resolve(indexedDB.databases()).then(function (infos) { return infos
+                            .map(function (info) { return info.name; })
+                            .filter(function (name) { return name !== DBNAMES_DB; }); })
+                    :
+                        dbNamesTable.toCollection().primaryKeys();
+            },
+            add: function (name) {
+                return !hasDatabasesNative && name !== DBNAMES_DB && dbNamesTable.put({ name: name }).catch(nop);
+            },
+            remove: function (name) {
+                return !hasDatabasesNative && name !== DBNAMES_DB && dbNamesTable.delete(name).catch(nop);
+            }
+        };
+    }
+    function initDatabaseEnumerator(indexedDB) {
+        try {
+            databaseEnumerator = DatabaseEnumerator(indexedDB);
+        }
+        catch (e) { }
+    }
+
+    function vip(fn) {
+        return newScope(function () {
+            PSD.letThrough = true;
+            return fn();
+        });
+    }
+
+    function dexieOpen(db) {
+        var state = db._state;
+        var indexedDB = db._deps.indexedDB;
+        if (state.isBeingOpened || db.idbdb)
+            return state.dbReadyPromise.then(function () { return state.dbOpenError ?
+                rejection(state.dbOpenError) :
+                db; });
+        debug && (state.openCanceller._stackHolder = getErrorWithStack());
+        state.isBeingOpened = true;
+        state.dbOpenError = null;
+        state.openComplete = false;
+        var resolveDbReady = state.dbReadyResolve,
+        upgradeTransaction = null;
+        return DexiePromise.race([state.openCanceller, new DexiePromise(function (resolve, reject) {
+                if (!indexedDB)
+                    throw new exceptions.MissingAPI("indexedDB API not found. If using IE10+, make sure to run your code on a server URL " +
+                        "(not locally). If using old Safari versions, make sure to include indexedDB polyfill.");
+                var dbName = db.name;
+                var req = state.autoSchema ?
+                    indexedDB.open(dbName) :
+                    indexedDB.open(dbName, Math.round(db.verno * 10));
+                if (!req)
+                    throw new exceptions.MissingAPI("IndexedDB API not available");
+                req.onerror = eventRejectHandler(reject);
+                req.onblocked = wrap(db._fireOnBlocked);
+                req.onupgradeneeded = wrap(function (e) {
+                    upgradeTransaction = req.transaction;
+                    if (state.autoSchema && !db._options.allowEmptyDB) {
+                        req.onerror = preventDefault;
+                        upgradeTransaction.abort();
+                        req.result.close();
+                        var delreq = indexedDB.deleteDatabase(dbName);
+                        delreq.onsuccess = delreq.onerror = wrap(function () {
+                            reject(new exceptions.NoSuchDatabase("Database " + dbName + " doesnt exist"));
+                        });
+                    }
+                    else {
+                        upgradeTransaction.onerror = eventRejectHandler(reject);
+                        var oldVer = e.oldVersion > Math.pow(2, 62) ? 0 : e.oldVersion;
+                        db.idbdb = req.result;
+                        runUpgraders(db, oldVer / 10, upgradeTransaction, reject);
+                    }
+                }, reject);
+                req.onsuccess = wrap(function () {
+                    upgradeTransaction = null;
+                    var idbdb = db.idbdb = req.result;
+                    var objectStoreNames = slice(idbdb.objectStoreNames);
+                    if (objectStoreNames.length > 0)
+                        try {
+                            var tmpTrans = idbdb.transaction(safariMultiStoreFix(objectStoreNames), 'readonly');
+                            if (state.autoSchema)
+                                readGlobalSchema(db, idbdb, tmpTrans);
+                            else {
+                                adjustToExistingIndexNames(db, db._dbSchema, tmpTrans);
+                                if (!verifyInstalledSchema(db, tmpTrans)) {
+                                    console.warn("Dexie SchemaDiff: Schema was extended without increasing the number passed to db.version(). Some queries may fail.");
+                                }
+                            }
+                            generateMiddlewareStacks(db, tmpTrans);
+                        }
+                        catch (e) {
+                        }
+                    connections.push(db);
+                    idbdb.onversionchange = wrap(function (ev) {
+                        state.vcFired = true;
+                        db.on("versionchange").fire(ev);
+                    });
+                    databaseEnumerator.add(dbName);
+                    resolve();
+                }, reject);
+            })]).then(function () {
+            state.onReadyBeingFired = [];
+            return DexiePromise.resolve(vip(db.on.ready.fire)).then(function fireRemainders() {
+                if (state.onReadyBeingFired.length > 0) {
+                    var remainders = state.onReadyBeingFired.reduce(promisableChain, nop);
+                    state.onReadyBeingFired = [];
+                    return DexiePromise.resolve(vip(remainders)).then(fireRemainders);
+                }
+            });
+        }).finally(function () {
+            state.onReadyBeingFired = null;
+        }).then(function () {
+            state.isBeingOpened = false;
+            return db;
+        }).catch(function (err) {
+            try {
+                upgradeTransaction && upgradeTransaction.abort();
+            }
+            catch (e) { }
+            state.isBeingOpened = false;
+            db.close();
+            state.dbOpenError = err;
+            return rejection(state.dbOpenError);
+        }).finally(function () {
+            state.openComplete = true;
+            resolveDbReady();
+        });
+    }
+
+    function awaitIterator(iterator) {
+        var callNext = function (result) { return iterator.next(result); }, doThrow = function (error) { return iterator.throw(error); }, onSuccess = step(callNext), onError = step(doThrow);
+        function step(getNext) {
+            return function (val) {
+                var next = getNext(val), value = next.value;
+                return next.done ? value :
+                    (!value || typeof value.then !== 'function' ?
+                        isArray(value) ? Promise.all(value).then(onSuccess, onError) : onSuccess(value) :
+                        value.then(onSuccess, onError));
+            };
+        }
+        return step(callNext)();
+    }
+
+    function extractTransactionArgs(mode, _tableArgs_, scopeFunc) {
+        var i = arguments.length;
+        if (i < 2)
+            throw new exceptions.InvalidArgument("Too few arguments");
+        var args = new Array(i - 1);
+        while (--i)
+            args[i - 1] = arguments[i];
+        scopeFunc = args.pop();
+        var tables = flatten(args);
+        return [mode, tables, scopeFunc];
+    }
+    function enterTransactionScope(db, mode, storeNames, parentTransaction, scopeFunc) {
+        return DexiePromise.resolve().then(function () {
+            var transless = PSD.transless || PSD;
+            var trans = db._createTransaction(mode, storeNames, db._dbSchema, parentTransaction);
+            var zoneProps = {
+                trans: trans,
+                transless: transless
+            };
+            if (parentTransaction) {
+                trans.idbtrans = parentTransaction.idbtrans;
+            }
+            else {
+                trans.create();
+            }
+            var scopeFuncIsAsync = isAsyncFunction(scopeFunc);
+            if (scopeFuncIsAsync) {
+                incrementExpectedAwaits();
+            }
+            var returnValue;
+            var promiseFollowed = DexiePromise.follow(function () {
+                returnValue = scopeFunc.call(trans, trans);
+                if (returnValue) {
+                    if (scopeFuncIsAsync) {
+                        var decrementor = decrementExpectedAwaits.bind(null, null);
+                        returnValue.then(decrementor, decrementor);
+                    }
+                    else if (typeof returnValue.next === 'function' && typeof returnValue.throw === 'function') {
+                        returnValue = awaitIterator(returnValue);
+                    }
+                }
+            }, zoneProps);
+            return (returnValue && typeof returnValue.then === 'function' ?
+                DexiePromise.resolve(returnValue).then(function (x) { return trans.active ?
+                    x
+                    : rejection(new exceptions.PrematureCommit("Transaction committed too early. See http://bit.ly/2kdckMn")); })
+                : promiseFollowed.then(function () { return returnValue; })).then(function (x) {
+                if (parentTransaction)
+                    trans._resolve();
+                return trans._completion.then(function () { return x; });
+            }).catch(function (e) {
+                trans._reject(e);
+                return rejection(e);
+            });
+        });
+    }
+
+    function pad(a, value, count) {
+        var result = isArray(a) ? a.slice() : [a];
+        for (var i = 0; i < count; ++i)
+            result.push(value);
+        return result;
+    }
+    function createVirtualIndexMiddleware(down) {
+        return __assign(__assign({}, down), { table: function (tableName) {
+                var table = down.table(tableName);
+                var schema = table.schema;
+                var indexLookup = {};
+                var allVirtualIndexes = [];
+                function addVirtualIndexes(keyPath, keyTail, lowLevelIndex) {
+                    var keyPathAlias = getKeyPathAlias(keyPath);
+                    var indexList = (indexLookup[keyPathAlias] = indexLookup[keyPathAlias] || []);
+                    var keyLength = keyPath == null ? 0 : typeof keyPath === 'string' ? 1 : keyPath.length;
+                    var isVirtual = keyTail > 0;
+                    var virtualIndex = __assign(__assign({}, lowLevelIndex), { isVirtual: isVirtual, isPrimaryKey: !isVirtual && lowLevelIndex.isPrimaryKey, keyTail: keyTail,
+                        keyLength: keyLength, extractKey: getKeyExtractor(keyPath), unique: !isVirtual && lowLevelIndex.unique });
+                    indexList.push(virtualIndex);
+                    if (!virtualIndex.isPrimaryKey) {
+                        allVirtualIndexes.push(virtualIndex);
+                    }
+                    if (keyLength > 1) {
+                        var virtualKeyPath = keyLength === 2 ?
+                            keyPath[0] :
+                            keyPath.slice(0, keyLength - 1);
+                        addVirtualIndexes(virtualKeyPath, keyTail + 1, lowLevelIndex);
+                    }
+                    indexList.sort(function (a, b) { return a.keyTail - b.keyTail; });
+                    return virtualIndex;
+                }
+                var primaryKey = addVirtualIndexes(schema.primaryKey.keyPath, 0, schema.primaryKey);
+                indexLookup[":id"] = [primaryKey];
+                for (var _i = 0, _a = schema.indexes; _i < _a.length; _i++) {
+                    var index = _a[_i];
+                    addVirtualIndexes(index.keyPath, 0, index);
+                }
+                function findBestIndex(keyPath) {
+                    var result = indexLookup[getKeyPathAlias(keyPath)];
+                    return result && result[0];
+                }
+                function translateRange(range, keyTail) {
+                    return {
+                        type: range.type === 1             ?
+                            2             :
+                            range.type,
+                        lower: pad(range.lower, range.lowerOpen ? down.MAX_KEY : down.MIN_KEY, keyTail),
+                        lowerOpen: true,
+                        upper: pad(range.upper, range.upperOpen ? down.MIN_KEY : down.MAX_KEY, keyTail),
+                        upperOpen: true
+                    };
+                }
+                function translateRequest(req) {
+                    var index = req.query.index;
+                    return index.isVirtual ? __assign(__assign({}, req), { query: {
+                            index: index,
+                            range: translateRange(req.query.range, index.keyTail)
+                        } }) : req;
+                }
+                var result = __assign(__assign({}, table), { schema: __assign(__assign({}, schema), { primaryKey: primaryKey, indexes: allVirtualIndexes, getIndexByKeyPath: findBestIndex }), count: function (req) {
+                        return table.count(translateRequest(req));
+                    },
+                    query: function (req) {
+                        return table.query(translateRequest(req));
+                    },
+                    openCursor: function (req) {
+                        var _a = req.query.index, keyTail = _a.keyTail, isVirtual = _a.isVirtual, keyLength = _a.keyLength;
+                        if (!isVirtual)
+                            return table.openCursor(req);
+                        function createVirtualCursor(cursor) {
+                            function _continue(key) {
+                                key != null ?
+                                    cursor.continue(pad(key, req.reverse ? down.MAX_KEY : down.MIN_KEY, keyTail)) :
+                                    req.unique ?
+                                        cursor.continue(pad(cursor.key, req.reverse ? down.MIN_KEY : down.MAX_KEY, keyTail)) :
+                                        cursor.continue();
+                            }
+                            var virtualCursor = Object.create(cursor, {
+                                continue: { value: _continue },
+                                continuePrimaryKey: {
+                                    value: function (key, primaryKey) {
+                                        cursor.continuePrimaryKey(pad(key, down.MAX_KEY, keyTail), primaryKey);
+                                    }
+                                },
+                                key: {
+                                    get: function () {
+                                        var key = cursor.key;
+                                        return keyLength === 1 ?
+                                            key[0] :
+                                            key.slice(0, keyLength);
+                                    }
+                                },
+                                value: {
+                                    get: function () {
+                                        return cursor.value;
+                                    }
+                                }
+                            });
+                            return virtualCursor;
+                        }
+                        return table.openCursor(translateRequest(req))
+                            .then(function (cursor) { return cursor && createVirtualCursor(cursor); });
+                    } });
+                return result;
+            } });
+    }
+    var virtualIndexMiddleware = {
+        stack: "dbcore",
+        name: "VirtualIndexMiddleware",
+        level: 1,
+        create: createVirtualIndexMiddleware
+    };
+
+    var hooksMiddleware = {
+        stack: "dbcore",
+        name: "HooksMiddleware",
+        level: 2,
+        create: function (downCore) { return (__assign(__assign({}, downCore), { table: function (tableName) {
+                var downTable = downCore.table(tableName);
+                var primaryKey = downTable.schema.primaryKey;
+                var tableMiddleware = __assign(__assign({}, downTable), { mutate: function (req) {
+                        var dxTrans = PSD.trans;
+                        var _a = dxTrans.table(tableName).hook, deleting = _a.deleting, creating = _a.creating, updating = _a.updating;
+                        switch (req.type) {
+                            case 'add':
+                                if (creating.fire === nop)
+                                    break;
+                                return dxTrans._promise('readwrite', function () { return addPutOrDelete(req); }, true);
+                            case 'put':
+                                if (creating.fire === nop && updating.fire === nop)
+                                    break;
+                                return dxTrans._promise('readwrite', function () { return addPutOrDelete(req); }, true);
+                            case 'delete':
+                                if (deleting.fire === nop)
+                                    break;
+                                return dxTrans._promise('readwrite', function () { return addPutOrDelete(req); }, true);
+                            case 'deleteRange':
+                                if (deleting.fire === nop)
+                                    break;
+                                return dxTrans._promise('readwrite', function () { return deleteRange(req); }, true);
+                        }
+                        return downTable.mutate(req);
+                        function addPutOrDelete(req) {
+                            var dxTrans = PSD.trans;
+                            var keys$$1 = req.keys || getEffectiveKeys(primaryKey, req);
+                            if (!keys$$1)
+                                throw new Error("Keys missing");
+                            req = req.type === 'add' || req.type === 'put' ? __assign(__assign({}, req), { keys: keys$$1, wantResults: true }) :
+                             __assign({}, req);
+                            if (req.type !== 'delete')
+                                req.values = __spreadArrays(req.values);
+                            if (req.keys)
+                                req.keys = __spreadArrays(req.keys);
+                            return getExistingValues(downTable, req, keys$$1).then(function (existingValues) {
+                                var contexts = keys$$1.map(function (key, i) {
+                                    var existingValue = existingValues[i];
+                                    var ctx = { onerror: null, onsuccess: null };
+                                    if (req.type === 'delete') {
+                                        deleting.fire.call(ctx, key, existingValue, dxTrans);
+                                    }
+                                    else if (req.type === 'add' || existingValue === undefined) {
+                                        var generatedPrimaryKey = creating.fire.call(ctx, key, req.values[i], dxTrans);
+                                        if (key == null && generatedPrimaryKey != null) {
+                                            key = generatedPrimaryKey;
+                                            req.keys[i] = key;
+                                            if (!primaryKey.outbound) {
+                                                setByKeyPath(req.values[i], primaryKey.keyPath, key);
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        var objectDiff = getObjectDiff(existingValue, req.values[i]);
+                                        var additionalChanges_1 = updating.fire.call(ctx, objectDiff, key, existingValue, dxTrans);
+                                        if (additionalChanges_1) {
+                                            var requestedValue_1 = req.values[i];
+                                            Object.keys(additionalChanges_1).forEach(function (keyPath) {
+                                                if (hasOwn(requestedValue_1, keyPath)) {
+                                                    requestedValue_1[keyPath] = additionalChanges_1[keyPath];
+                                                }
+                                                else {
+                                                    setByKeyPath(requestedValue_1, keyPath, additionalChanges_1[keyPath]);
+                                                }
+                                            });
+                                        }
+                                    }
+                                    return ctx;
+                                });
+                                return downTable.mutate(req).then(function (_a) {
+                                    var failures = _a.failures, results = _a.results, numFailures = _a.numFailures, lastResult = _a.lastResult;
+                                    for (var i = 0; i < keys$$1.length; ++i) {
+                                        var primKey = results ? results[i] : keys$$1[i];
+                                        var ctx = contexts[i];
+                                        if (primKey == null) {
+                                            ctx.onerror && ctx.onerror(failures[i]);
+                                        }
+                                        else {
+                                            ctx.onsuccess && ctx.onsuccess(req.type === 'put' && existingValues[i] ?
+                                                req.values[i] :
+                                                primKey
+                                            );
+                                        }
+                                    }
+                                    return { failures: failures, results: results, numFailures: numFailures, lastResult: lastResult };
+                                }).catch(function (error) {
+                                    contexts.forEach(function (ctx) { return ctx.onerror && ctx.onerror(error); });
+                                    return Promise.reject(error);
+                                });
+                            });
+                        }
+                        function deleteRange(req) {
+                            return deleteNextChunk(req.trans, req.range, 10000);
+                        }
+                        function deleteNextChunk(trans, range, limit) {
+                            return downTable.query({ trans: trans, values: false, query: { index: primaryKey, range: range }, limit: limit })
+                                .then(function (_a) {
+                                var result = _a.result;
+                                return addPutOrDelete({ type: 'delete', keys: result, trans: trans }).then(function (res) {
+                                    if (res.numFailures > 0)
+                                        return Promise.reject(res.failures[0]);
+                                    if (result.length < limit) {
+                                        return { failures: [], numFailures: 0, lastResult: undefined };
+                                    }
+                                    else {
+                                        return deleteNextChunk(trans, __assign(__assign({}, range), { lower: result[result.length - 1], lowerOpen: true }), limit);
+                                    }
+                                });
+                            });
+                        }
+                    } });
+                return tableMiddleware;
+            } })); }
+    };
+
+    var Dexie =               (function () {
+        function Dexie(name, options) {
+            var _this = this;
+            this._middlewares = {};
+            this.verno = 0;
+            var deps = Dexie.dependencies;
+            this._options = options = __assign({
+                addons: Dexie.addons, autoOpen: true,
+                indexedDB: deps.indexedDB, IDBKeyRange: deps.IDBKeyRange }, options);
+            this._deps = {
+                indexedDB: options.indexedDB,
+                IDBKeyRange: options.IDBKeyRange
+            };
+            var addons = options.addons;
+            this._dbSchema = {};
+            this._versions = [];
+            this._storeNames = [];
+            this._allTables = {};
+            this.idbdb = null;
+            var state = {
+                dbOpenError: null,
+                isBeingOpened: false,
+                onReadyBeingFired: null,
+                openComplete: false,
+                dbReadyResolve: nop,
+                dbReadyPromise: null,
+                cancelOpen: nop,
+                openCanceller: null,
+                autoSchema: true
+            };
+            state.dbReadyPromise = new DexiePromise(function (resolve) {
+                state.dbReadyResolve = resolve;
+            });
+            state.openCanceller = new DexiePromise(function (_, reject) {
+                state.cancelOpen = reject;
+            });
+            this._state = state;
+            this.name = name;
+            this.on = Events(this, "populate", "blocked", "versionchange", { ready: [promisableChain, nop] });
+            this.on.ready.subscribe = override(this.on.ready.subscribe, function (subscribe) {
+                return function (subscriber, bSticky) {
+                    Dexie.vip(function () {
+                        var state = _this._state;
+                        if (state.openComplete) {
+                            if (!state.dbOpenError)
+                                DexiePromise.resolve().then(subscriber);
+                            if (bSticky)
+                                subscribe(subscriber);
+                        }
+                        else if (state.onReadyBeingFired) {
+                            state.onReadyBeingFired.push(subscriber);
+                            if (bSticky)
+                                subscribe(subscriber);
+                        }
+                        else {
+                            subscribe(subscriber);
+                            var db_1 = _this;
+                            if (!bSticky)
+                                subscribe(function unsubscribe() {
+                                    db_1.on.ready.unsubscribe(subscriber);
+                                    db_1.on.ready.unsubscribe(unsubscribe);
+                                });
+                        }
+                    });
+                };
+            });
+            this.Collection = createCollectionConstructor(this);
+            this.Table = createTableConstructor(this);
+            this.Transaction = createTransactionConstructor(this);
+            this.Version = createVersionConstructor(this);
+            this.WhereClause = createWhereClauseConstructor(this);
+            this.on("versionchange", function (ev) {
+                if (ev.newVersion > 0)
+                    console.warn("Another connection wants to upgrade database '" + _this.name + "'. Closing db now to resume the upgrade.");
+                else
+                    console.warn("Another connection wants to delete database '" + _this.name + "'. Closing db now to resume the delete request.");
+                _this.close();
+            });
+            this.on("blocked", function (ev) {
+                if (!ev.newVersion || ev.newVersion < ev.oldVersion)
+                    console.warn("Dexie.delete('" + _this.name + "') was blocked");
+                else
+                    console.warn("Upgrade '" + _this.name + "' blocked by other connection holding version " + ev.oldVersion / 10);
+            });
+            this._maxKey = getMaxKey(options.IDBKeyRange);
+            this._createTransaction = function (mode, storeNames, dbschema, parentTransaction) { return new _this.Transaction(mode, storeNames, dbschema, parentTransaction); };
+            this._fireOnBlocked = function (ev) {
+                _this.on("blocked").fire(ev);
+                connections
+                    .filter(function (c) { return c.name === _this.name && c !== _this && !c._state.vcFired; })
+                    .map(function (c) { return c.on("versionchange").fire(ev); });
+            };
+            this.use(virtualIndexMiddleware);
+            this.use(hooksMiddleware);
+            addons.forEach(function (addon) { return addon(_this); });
+        }
+        Dexie.prototype.version = function (versionNumber) {
+            if (isNaN(versionNumber) || versionNumber < 0.1)
+                throw new exceptions.Type("Given version is not a positive number");
+            versionNumber = Math.round(versionNumber * 10) / 10;
+            if (this.idbdb || this._state.isBeingOpened)
+                throw new exceptions.Schema("Cannot add version when database is open");
+            this.verno = Math.max(this.verno, versionNumber);
+            var versions = this._versions;
+            var versionInstance = versions.filter(function (v) { return v._cfg.version === versionNumber; })[0];
+            if (versionInstance)
+                return versionInstance;
+            versionInstance = new this.Version(versionNumber);
+            versions.push(versionInstance);
+            versions.sort(lowerVersionFirst);
+            versionInstance.stores({});
+            this._state.autoSchema = false;
+            return versionInstance;
+        };
+        Dexie.prototype._whenReady = function (fn) {
+            var _this = this;
+            return this._state.openComplete || PSD.letThrough ? fn() : new DexiePromise(function (resolve, reject) {
+                if (!_this._state.isBeingOpened) {
+                    if (!_this._options.autoOpen) {
+                        reject(new exceptions.DatabaseClosed());
+                        return;
+                    }
+                    _this.open().catch(nop);
+                }
+                _this._state.dbReadyPromise.then(resolve, reject);
+            }).then(fn);
+        };
+        Dexie.prototype.use = function (_a) {
+            var stack = _a.stack, create = _a.create, level = _a.level, name = _a.name;
+            if (name)
+                this.unuse({ stack: stack, name: name });
+            var middlewares = this._middlewares[stack] || (this._middlewares[stack] = []);
+            middlewares.push({ stack: stack, create: create, level: level == null ? 10 : level, name: name });
+            middlewares.sort(function (a, b) { return a.level - b.level; });
+            return this;
+        };
+        Dexie.prototype.unuse = function (_a) {
+            var stack = _a.stack, name = _a.name, create = _a.create;
+            if (stack && this._middlewares[stack]) {
+                this._middlewares[stack] = this._middlewares[stack].filter(function (mw) {
+                    return create ? mw.create !== create :
+                        name ? mw.name !== name :
+                            false;
+                });
+            }
+            return this;
+        };
+        Dexie.prototype.open = function () {
+            return dexieOpen(this);
+        };
+        Dexie.prototype.close = function () {
+            var idx = connections.indexOf(this), state = this._state;
+            if (idx >= 0)
+                connections.splice(idx, 1);
+            if (this.idbdb) {
+                try {
+                    this.idbdb.close();
+                }
+                catch (e) { }
+                this.idbdb = null;
+            }
+            this._options.autoOpen = false;
+            state.dbOpenError = new exceptions.DatabaseClosed();
+            if (state.isBeingOpened)
+                state.cancelOpen(state.dbOpenError);
+            state.dbReadyPromise = new DexiePromise(function (resolve) {
+                state.dbReadyResolve = resolve;
+            });
+            state.openCanceller = new DexiePromise(function (_, reject) {
+                state.cancelOpen = reject;
+            });
+        };
+        Dexie.prototype.delete = function () {
+            var _this = this;
+            var hasArguments = arguments.length > 0;
+            var state = this._state;
+            return new DexiePromise(function (resolve, reject) {
+                var doDelete = function () {
+                    _this.close();
+                    var req = _this._deps.indexedDB.deleteDatabase(_this.name);
+                    req.onsuccess = wrap(function () {
+                        databaseEnumerator.remove(_this.name);
+                        resolve();
+                    });
+                    req.onerror = eventRejectHandler(reject);
+                    req.onblocked = _this._fireOnBlocked;
+                };
+                if (hasArguments)
+                    throw new exceptions.InvalidArgument("Arguments not allowed in db.delete()");
+                if (state.isBeingOpened) {
+                    state.dbReadyPromise.then(doDelete);
+                }
+                else {
+                    doDelete();
+                }
+            });
+        };
+        Dexie.prototype.backendDB = function () {
+            return this.idbdb;
+        };
+        Dexie.prototype.isOpen = function () {
+            return this.idbdb !== null;
+        };
+        Dexie.prototype.hasBeenClosed = function () {
+            var dbOpenError = this._state.dbOpenError;
+            return dbOpenError && (dbOpenError.name === 'DatabaseClosed');
+        };
+        Dexie.prototype.hasFailed = function () {
+            return this._state.dbOpenError !== null;
+        };
+        Dexie.prototype.dynamicallyOpened = function () {
+            return this._state.autoSchema;
+        };
+        Object.defineProperty(Dexie.prototype, "tables", {
+            get: function () {
+                var _this = this;
+                return keys(this._allTables).map(function (name) { return _this._allTables[name]; });
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Dexie.prototype.transaction = function () {
+            var args = extractTransactionArgs.apply(this, arguments);
+            return this._transaction.apply(this, args);
+        };
+        Dexie.prototype._transaction = function (mode, tables, scopeFunc) {
+            var _this = this;
+            var parentTransaction = PSD.trans;
+            if (!parentTransaction || parentTransaction.db !== this || mode.indexOf('!') !== -1)
+                parentTransaction = null;
+            var onlyIfCompatible = mode.indexOf('?') !== -1;
+            mode = mode.replace('!', '').replace('?', '');
+            var idbMode, storeNames;
+            try {
+                storeNames = tables.map(function (table) {
+                    var storeName = table instanceof _this.Table ? table.name : table;
+                    if (typeof storeName !== 'string')
+                        throw new TypeError("Invalid table argument to Dexie.transaction(). Only Table or String are allowed");
+                    return storeName;
+                });
+                if (mode == "r" || mode === READONLY)
+                    idbMode = READONLY;
+                else if (mode == "rw" || mode == READWRITE)
+                    idbMode = READWRITE;
+                else
+                    throw new exceptions.InvalidArgument("Invalid transaction mode: " + mode);
+                if (parentTransaction) {
+                    if (parentTransaction.mode === READONLY && idbMode === READWRITE) {
+                        if (onlyIfCompatible) {
+                            parentTransaction = null;
+                        }
+                        else
+                            throw new exceptions.SubTransaction("Cannot enter a sub-transaction with READWRITE mode when parent transaction is READONLY");
+                    }
+                    if (parentTransaction) {
+                        storeNames.forEach(function (storeName) {
+                            if (parentTransaction && parentTransaction.storeNames.indexOf(storeName) === -1) {
+                                if (onlyIfCompatible) {
+                                    parentTransaction = null;
+                                }
+                                else
+                                    throw new exceptions.SubTransaction("Table " + storeName +
+                                        " not included in parent transaction.");
+                            }
+                        });
+                    }
+                    if (onlyIfCompatible && parentTransaction && !parentTransaction.active) {
+                        parentTransaction = null;
+                    }
+                }
+            }
+            catch (e) {
+                return parentTransaction ?
+                    parentTransaction._promise(null, function (_, reject) { reject(e); }) :
+                    rejection(e);
+            }
+            var enterTransaction = enterTransactionScope.bind(null, this, idbMode, storeNames, parentTransaction, scopeFunc);
+            return (parentTransaction ?
+                parentTransaction._promise(idbMode, enterTransaction, "lock") :
+                PSD.trans ?
+                    usePSD(PSD.transless, function () { return _this._whenReady(enterTransaction); }) :
+                    this._whenReady(enterTransaction));
+        };
+        Dexie.prototype.table = function (tableName) {
+            if (!hasOwn(this._allTables, tableName)) {
+                throw new exceptions.InvalidTable("Table " + tableName + " does not exist");
+            }
+            return this._allTables[tableName];
+        };
+        return Dexie;
+    }());
+
+    var Dexie$1 = Dexie;
+    props(Dexie$1, __assign(__assign({}, fullNameExceptions), {
+        delete: function (databaseName) {
+            var db = new Dexie$1(databaseName);
+            return db.delete();
+        },
+        exists: function (name) {
+            return new Dexie$1(name, { addons: [] }).open().then(function (db) {
+                db.close();
+                return true;
+            }).catch('NoSuchDatabaseError', function () { return false; });
+        },
+        getDatabaseNames: function (cb) {
+            return databaseEnumerator ?
+                databaseEnumerator.getDatabaseNames().then(cb) :
+                DexiePromise.resolve([]);
+        },
+        defineClass: function () {
+            function Class(content) {
+                extend(this, content);
+            }
+            return Class;
+        },
+        ignoreTransaction: function (scopeFunc) {
+            return PSD.trans ?
+                usePSD(PSD.transless, scopeFunc) :
+                scopeFunc();
+        },
+        vip: vip, async: function (generatorFn) {
+            return function () {
+                try {
+                    var rv = awaitIterator(generatorFn.apply(this, arguments));
+                    if (!rv || typeof rv.then !== 'function')
+                        return DexiePromise.resolve(rv);
+                    return rv;
+                }
+                catch (e) {
+                    return rejection(e);
+                }
+            };
+        }, spawn: function (generatorFn, args, thiz) {
+            try {
+                var rv = awaitIterator(generatorFn.apply(thiz, args || []));
+                if (!rv || typeof rv.then !== 'function')
+                    return DexiePromise.resolve(rv);
+                return rv;
+            }
+            catch (e) {
+                return rejection(e);
+            }
+        },
+        currentTransaction: {
+            get: function () { return PSD.trans || null; }
+        }, waitFor: function (promiseOrFunction, optionalTimeout) {
+            var promise = DexiePromise.resolve(typeof promiseOrFunction === 'function' ?
+                Dexie$1.ignoreTransaction(promiseOrFunction) :
+                promiseOrFunction)
+                .timeout(optionalTimeout || 60000);
+            return PSD.trans ?
+                PSD.trans.waitFor(promise) :
+                promise;
+        },
+        Promise: DexiePromise,
+        debug: {
+            get: function () { return debug; },
+            set: function (value) {
+                setDebug(value, value === 'dexie' ? function () { return true; } : dexieStackFrameFilter);
+            }
+        },
+        derive: derive, extend: extend, props: props, override: override,
+        Events: Events,
+        getByKeyPath: getByKeyPath, setByKeyPath: setByKeyPath, delByKeyPath: delByKeyPath, shallowClone: shallowClone, deepClone: deepClone, getObjectDiff: getObjectDiff, asap: asap,
+        minKey: minKey,
+        addons: [],
+        connections: connections,
+        errnames: errnames,
+        dependencies: (function () {
+            try {
+                return {
+                    indexedDB: _global.indexedDB || _global.mozIndexedDB || _global.webkitIndexedDB || _global.msIndexedDB,
+                    IDBKeyRange: _global.IDBKeyRange || _global.webkitIDBKeyRange
+                };
+            }
+            catch (e) {
+                return { indexedDB: null, IDBKeyRange: null };
+            }
+        })(),
+        semVer: DEXIE_VERSION, version: DEXIE_VERSION.split('.')
+            .map(function (n) { return parseInt(n); })
+            .reduce(function (p, c, i) { return p + (c / Math.pow(10, i * 2)); }),
+        default: Dexie$1,
+        Dexie: Dexie$1 }));
+    Dexie$1.maxKey = getMaxKey(Dexie$1.dependencies.IDBKeyRange);
+
+    initDatabaseEnumerator(Dexie.dependencies.indexedDB);
+    DexiePromise.rejectionMapper = mapError;
+    setDebug(debug, dexieStackFrameFilter);
+
     const skillToSlotLevel = {
       '無し':               0,
 
@@ -915,14 +5332,19 @@ var app = (function () {
 
       db        = null              // WebSQL
       indexeddb = null              // IndexedDB
+      charms    = null
 
-      constructor() {
-        this.db = openDatabase('mhrise-charm-manager', '', 'MHRise charm manager', 5000);
-        this._createTable();
-        this.sql(`alter table charms add column imagename varchar(128)`).catch(() => {}); // for old schema
+      charmTableName = 'charms'
 
-        this.indexeddb = new Dexie('charms');
-        this.indexeddb.version(1).stores({images: 'name'});
+
+      constructor(params = {}) {
+        const {isDemoMode} = params;
+
+        if ( isDemoMode ) {
+          this.charmTableName = 'demoCharms';
+        }
+
+        this._init();
       }
 
 
@@ -940,8 +5362,20 @@ var app = (function () {
       }
 
 
+      async _init() {
+        this.db = openDatabase('mhrise-charm-manager', '', 'MHRise charm manager', 5000);
+        await this._createTable();
+        await this.sql(`alter table ${this.charmTableName} add column imagename varchar(128)`).catch(() => {}); // for old schema
+
+        this.indexeddb = new Dexie(this.charmTableName);
+        this.indexeddb.version(1).stores({images: 'name'});
+
+        this.updateCharmArray();
+      }
+
+
       async reset() {
-        await this.sql('drop table if exists charms');
+        await this.sql(`drop table if exists ${this.charmTableName}`);
         await this._createTable();
       }
 
@@ -952,7 +5386,9 @@ var app = (function () {
           .join(',\n');
 
         console.log(values);
-        await this.sql(`insert or ignore into charms values ${values}`);
+        await this.sql(`insert or ignore into ${this.charmTableName} values ${values}`);
+
+        this.updateCharmArray();
       }
 
 
@@ -963,7 +5399,7 @@ var app = (function () {
 
 
       async _createTable() {
-        await this.sql(`create table if not exists charms(
+        await this.sql(`create table if not exists ${this.charmTableName}(
                skill1      varchar(20),
                skill1Level int,
                skill2      varchar(20),
@@ -974,9 +5410,9 @@ var app = (function () {
                imagename   varchar(128),
                unique (skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3))`);
 
-        await this.sql(`create index if not exists 'charms.skill1' on charms(skill1, skill1Level)`);
-        await this.sql(`create index if not exists 'charms.skill2' on charms(skill2, skill2Level)`);
-        await this.sql(`create index if not exists 'charms.slots' on charms(slot1, slot2, slot3)`);
+        await this.sql(`create index if not exists '${this.charmTableName}.skill1' on ${this.charmTableName}(skill1, skill1Level)`);
+        await this.sql(`create index if not exists '${this.charmTableName}.skill2' on ${this.charmTableName}(skill2, skill2Level)`);
+        await this.sql(`create index if not exists '${this.charmTableName}.slots'  on ${this.charmTableName}(slot1, slot2, slot3)`);
       }
 
 
@@ -1031,7 +5467,7 @@ var app = (function () {
                   ? '(' + [`(${skillConstraints})`, `(${skillConstraintsRev})`].filter(i => i).join(' or ') + ') and '
                   : '';
 
-            const query =`select rowid,* from charms where ${sc} slot1 >= ${requiredSlots[0] || 0} and slot2 >= ${requiredSlots[1] || 0} and slot3 >= ${requiredSlots[2] || 0}`;
+            const query =`select rowid,* from ${this.charmTableName} where ${sc} slot1 >= ${requiredSlots[0] || 0} and slot2 >= ${requiredSlots[1] || 0} and slot3 >= ${requiredSlots[2] || 0}`;
             // console.log(query)
             const {result} = await this.sql(query);
             // console.log(result.rows)
@@ -1045,6 +5481,61 @@ var app = (function () {
 
         return substitutableCharms.sort((a, b) => (a.rowid < b.rowid) ? -1 : (a.rowid > b.rowid) ? 1 : 0)
       }
+
+
+      async updateCharmArray() {
+        this.charms = [
+          ...(await this.searchCharms(`select rowid,* from ${this.charmTableName}`))
+        ].map(row => {
+          row.evaluation = skillToSlotLevel[row.skill1] * row.skill1Level
+                         + skillToSlotLevel[row.skill2] * row.skill2Level
+                         + row.slot1
+                         + row.slot2
+                         + row.slot3;
+          return row
+        });
+
+        this.searchSubstitutableCharms();
+      }
+
+
+      async searchSubstitutableCharms() {
+        while ( typeof Module.getSubstitutesAll !== 'function' ) {
+          await new Promise(r => setTimeout(r, 100));
+        }
+
+        const res = Module.getSubstitutesAll( JSON.stringify(this.charms) ); // use wasm module
+        const substitutes = JSON.parse(res);
+
+        for (const i in this.charms) {
+          const [baseId, upperIds] = substitutes[0] || [Number.MAX_SAFE_INTEGER, []];
+
+          if ( this.charms[i].rowid > baseId ) {
+            console.log('internal error');
+          }
+          else if ( this.charms[i].rowid < baseId ) {
+            this.charms[i].substitutableCharms = [];
+          }
+          else {
+            this.charms[i].substitutableCharms = upperIds.map(u => this.charms[u - 1]);
+            substitutes.shift();
+          }
+        }
+
+        // for (const [baseId, upperIds] of substitutes) {
+        //   charms[baseId - 1].substitutableCharms = upperIds.map(i => charms[i - 1])
+        // }
+      }
+
+      // async exportIdx() {
+      //   const blob = await exportDB(this.indexeddb, {
+      //     filter: (table) => table === 'images'
+      //   })
+      // }
+
+      // async importIdx() {
+      // }
+
 
       // TODO: charm class 作ってコンストラクタでやる
       _row2obj(row) {
@@ -1153,8 +5644,6 @@ var app = (function () {
         }, {})
       })
     }
-
-    // import moment from 'moment'
 
     class MHRiseCharmScanner {
       MAX_PAGE = 34
@@ -1522,9 +6011,9 @@ for (const input of inputs) {
 
     /* src/Hamburger.svelte generated by Svelte v3.38.2 */
 
-    const file$g = "src/Hamburger.svelte";
+    const file$h = "src/Hamburger.svelte";
 
-    function create_fragment$i(ctx) {
+    function create_fragment$j(ctx) {
     	let div;
     	let label;
     	let input;
@@ -1550,28 +6039,28 @@ for (const input of inputs) {
     			path2 = svg_element("path");
     			attr_dev(input, "type", "checkbox");
     			attr_dev(input, "class", "svelte-vpaeku");
-    			add_location(input, file$g, 7, 4, 95);
+    			add_location(input, file$h, 7, 4, 95);
     			attr_dev(circle, "cx", "50");
     			attr_dev(circle, "cy", "50");
     			attr_dev(circle, "r", "30");
     			attr_dev(circle, "class", "svelte-vpaeku");
-    			add_location(circle, file$g, 9, 6, 214);
+    			add_location(circle, file$h, 9, 6, 214);
     			attr_dev(path0, "class", "line--1 svelte-vpaeku");
     			attr_dev(path0, "d", "M0 55l14-10c4.7-3.3 9-5 13-5h72");
-    			add_location(path0, file$g, 10, 6, 254);
+    			add_location(path0, file$h, 10, 6, 254);
     			attr_dev(path1, "class", "line--2 svelte-vpaeku");
     			attr_dev(path1, "d", "M0 50h99");
-    			add_location(path1, file$g, 11, 6, 321);
+    			add_location(path1, file$h, 11, 6, 321);
     			attr_dev(path2, "class", "line--3 svelte-vpaeku");
     			attr_dev(path2, "d", "M0 45l14 10c4.7 3.3 9 5 13 5h72");
-    			add_location(path2, file$g, 12, 6, 365);
+    			add_location(path2, file$h, 12, 6, 365);
     			attr_dev(svg, "viewBox", "0 0 100 100");
     			attr_dev(svg, "xmlns", "http://www.w3.org/2000/svg");
-    			add_location(svg, file$g, 8, 4, 145);
+    			add_location(svg, file$h, 8, 4, 145);
     			attr_dev(label, "class", "svelte-vpaeku");
-    			add_location(label, file$g, 6, 2, 83);
+    			add_location(label, file$h, 6, 2, 83);
     			attr_dev(div, "class", "menu toggle-back svelte-vpaeku");
-    			add_location(div, file$g, 5, 0, 50);
+    			add_location(div, file$h, 5, 0, 50);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1609,7 +6098,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$i.name,
+    		id: create_fragment$j.name,
     		type: "component",
     		source: "",
     		ctx
@@ -1618,7 +6107,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function instance$i($$self, $$props, $$invalidate) {
+    function instance$j($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("Hamburger", slots, []);
     	let { isOpen = false } = $$props;
@@ -1653,13 +6142,13 @@ for (const input of inputs) {
     class Hamburger extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$i, create_fragment$i, safe_not_equal, { isOpen: 0 });
+    		init(this, options, instance$j, create_fragment$j, safe_not_equal, { isOpen: 0 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Hamburger",
     			options,
-    			id: create_fragment$i.name
+    			id: create_fragment$j.name
     		});
     	}
 
@@ -1673,9 +6162,9 @@ for (const input of inputs) {
     }
 
     /* node_modules/svelte-lightbox/src/LightboxThumbnail.svelte generated by Svelte v3.38.2 */
-    const file$f = "node_modules/svelte-lightbox/src/LightboxThumbnail.svelte";
+    const file$g = "node_modules/svelte-lightbox/src/LightboxThumbnail.svelte";
 
-    function create_fragment$h(ctx) {
+    function create_fragment$i(ctx) {
     	let div1;
     	let div0;
     	let div0_class_value;
@@ -1693,9 +6182,9 @@ for (const input of inputs) {
     			attr_dev(div0, "class", div0_class_value = "" + (null_to_empty(/*thumbnailClasses*/ ctx[0]) + " svelte-1u332e1"));
     			attr_dev(div0, "style", /*thumbnailStyle*/ ctx[1]);
     			toggle_class(div0, "svelte-lightbox-unselectable", /*protect*/ ctx[2]);
-    			add_location(div0, file$f, 10, 4, 290);
+    			add_location(div0, file$g, 10, 4, 290);
     			attr_dev(div1, "class", "clickable svelte-1u332e1");
-    			add_location(div1, file$f, 9, 0, 225);
+    			add_location(div1, file$g, 9, 0, 225);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1753,7 +6242,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$h.name,
+    		id: create_fragment$i.name,
     		type: "component",
     		source: "",
     		ctx
@@ -1762,7 +6251,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function instance$h($$self, $$props, $$invalidate) {
+    function instance$i($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("LightboxThumbnail", slots, ['default']);
     	const dispatch = createEventDispatcher();
@@ -1817,7 +6306,7 @@ for (const input of inputs) {
     	constructor(options) {
     		super(options);
 
-    		init(this, options, instance$h, create_fragment$h, safe_not_equal, {
+    		init(this, options, instance$i, create_fragment$i, safe_not_equal, {
     			thumbnailClasses: 0,
     			thumbnailStyle: 1,
     			protect: 2
@@ -1827,7 +6316,7 @@ for (const input of inputs) {
     			component: this,
     			tagName: "LightboxThumbnail",
     			options,
-    			id: create_fragment$h.name
+    			id: create_fragment$i.name
     		});
     	}
 
@@ -1897,9 +6386,9 @@ for (const input of inputs) {
     }
 
     /* node_modules/svelte-lightbox/src/Modal/LightboxHeader.svelte generated by Svelte v3.38.2 */
-    const file$e = "node_modules/svelte-lightbox/src/Modal/LightboxHeader.svelte";
+    const file$f = "node_modules/svelte-lightbox/src/Modal/LightboxHeader.svelte";
 
-    function create_fragment$g(ctx) {
+    function create_fragment$h(ctx) {
     	let div;
     	let button;
     	let t;
@@ -1916,9 +6405,9 @@ for (const input of inputs) {
     			attr_dev(button, "size", /*size*/ ctx[0]);
     			attr_dev(button, "style", /*style*/ ctx[1]);
     			attr_dev(button, "class", button_class_value = "" + (null_to_empty(/*buttonClasses*/ ctx[3]) + " svelte-12yipzn"));
-    			add_location(button, file$e, 11, 4, 304);
+    			add_location(button, file$f, 11, 4, 304);
     			attr_dev(div, "class", div_class_value = "" + (null_to_empty("svelte-lightbox-header " + /*headerClasses*/ ctx[2]) + " svelte-12yipzn"));
-    			add_location(div, file$e, 10, 0, 244);
+    			add_location(div, file$f, 10, 0, 244);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1961,7 +6450,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$g.name,
+    		id: create_fragment$h.name,
     		type: "component",
     		source: "",
     		ctx
@@ -1970,7 +6459,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function instance$g($$self, $$props, $$invalidate) {
+    function instance$h($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("LightboxHeader", slots, []);
     	const dispatch = createEventDispatcher();
@@ -2020,7 +6509,7 @@ for (const input of inputs) {
     	constructor(options) {
     		super(options);
 
-    		init(this, options, instance$g, create_fragment$g, safe_not_equal, {
+    		init(this, options, instance$h, create_fragment$h, safe_not_equal, {
     			size: 0,
     			style: 1,
     			headerClasses: 2,
@@ -2031,7 +6520,7 @@ for (const input of inputs) {
     			component: this,
     			tagName: "LightboxHeader",
     			options,
-    			id: create_fragment$g.name
+    			id: create_fragment$h.name
     		});
     	}
 
@@ -2070,10 +6559,10 @@ for (const input of inputs) {
 
     /* node_modules/svelte-lightbox/src/Modal/LightboxBody.svelte generated by Svelte v3.38.2 */
 
-    const file$d = "node_modules/svelte-lightbox/src/Modal/LightboxBody.svelte";
+    const file$e = "node_modules/svelte-lightbox/src/Modal/LightboxBody.svelte";
 
     // (10:4) {:else}
-    function create_else_block$5(ctx) {
+    function create_else_block$7(ctx) {
     	let div;
     	let current;
     	const default_slot_template = /*#slots*/ ctx[4].default;
@@ -2085,7 +6574,7 @@ for (const input of inputs) {
     			if (default_slot) default_slot.c();
     			attr_dev(div, "class", "svelte-x9zrc7");
     			toggle_class(div, "svelte-lightbox-image-portrait", /*portrait*/ ctx[2]);
-    			add_location(div, file$d, 10, 8, 318);
+    			add_location(div, file$e, 10, 8, 318);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -2124,7 +6613,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block$5.name,
+    		id: create_else_block$7.name,
     		type: "else",
     		source: "(10:4) {:else}",
     		ctx
@@ -2134,7 +6623,7 @@ for (const input of inputs) {
     }
 
     // (8:4) {#if image.src}
-    function create_if_block$6(ctx) {
+    function create_if_block$8(ctx) {
     	let img;
     	let img_src_value;
     	let img_alt_value;
@@ -2148,7 +6637,7 @@ for (const input of inputs) {
     			attr_dev(img, "alt", img_alt_value = /*image*/ ctx[0].alt);
     			attr_dev(img, "style", img_style_value = /*image*/ ctx[0].style);
     			attr_dev(img, "class", img_class_value = /*image*/ ctx[0].class);
-    			add_location(img, file$d, 8, 8, 220);
+    			add_location(img, file$e, 8, 8, 220);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, img, anchor);
@@ -2179,7 +6668,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$6.name,
+    		id: create_if_block$8.name,
     		type: "if",
     		source: "(8:4) {#if image.src}",
     		ctx
@@ -2188,12 +6677,12 @@ for (const input of inputs) {
     	return block;
     }
 
-    function create_fragment$f(ctx) {
+    function create_fragment$g(ctx) {
     	let div;
     	let current_block_type_index;
     	let if_block;
     	let current;
-    	const if_block_creators = [create_if_block$6, create_else_block$5];
+    	const if_block_creators = [create_if_block$8, create_else_block$7];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
@@ -2210,7 +6699,7 @@ for (const input of inputs) {
     			if_block.c();
     			attr_dev(div, "class", "svelte-lightbox-body svelte-x9zrc7");
     			toggle_class(div, "svelte-lightbox-unselectable", /*protect*/ ctx[1]);
-    			add_location(div, file$d, 6, 0, 112);
+    			add_location(div, file$e, 6, 0, 112);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2268,7 +6757,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$f.name,
+    		id: create_fragment$g.name,
     		type: "component",
     		source: "",
     		ctx
@@ -2277,7 +6766,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function instance$f($$self, $$props, $$invalidate) {
+    function instance$g($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("LightboxBody", slots, ['default']);
     	let { image = {} } = $$props;
@@ -2314,13 +6803,13 @@ for (const input of inputs) {
     class LightboxBody extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$f, create_fragment$f, safe_not_equal, { image: 0, protect: 1, portrait: 2 });
+    		init(this, options, instance$g, create_fragment$g, safe_not_equal, { image: 0, protect: 1, portrait: 2 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "LightboxBody",
     			options,
-    			id: create_fragment$f.name
+    			id: create_fragment$g.name
     		});
     	}
 
@@ -2351,10 +6840,10 @@ for (const input of inputs) {
 
     /* node_modules/svelte-lightbox/src/Modal/LightboxFooter.svelte generated by Svelte v3.38.2 */
 
-    const file$c = "node_modules/svelte-lightbox/src/Modal/LightboxFooter.svelte";
+    const file$d = "node_modules/svelte-lightbox/src/Modal/LightboxFooter.svelte";
 
     // (18:4) {#if galleryLength}
-    function create_if_block$5(ctx) {
+    function create_if_block$7(ctx) {
     	let p;
     	let t0;
     	let t1_value = /*activeImage*/ ctx[3] + 1 + "";
@@ -2369,7 +6858,7 @@ for (const input of inputs) {
     			t1 = text(t1_value);
     			t2 = text(" of ");
     			t3 = text(/*galleryLength*/ ctx[2]);
-    			add_location(p, file$c, 18, 8, 373);
+    			add_location(p, file$d, 18, 8, 373);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -2389,7 +6878,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$5.name,
+    		id: create_if_block$7.name,
     		type: "if",
     		source: "(18:4) {#if galleryLength}",
     		ctx
@@ -2398,14 +6887,14 @@ for (const input of inputs) {
     	return block;
     }
 
-    function create_fragment$e(ctx) {
+    function create_fragment$f(ctx) {
     	let div;
     	let h2;
     	let t0;
     	let h5;
     	let t1;
     	let div_class_value;
-    	let if_block = /*galleryLength*/ ctx[2] && create_if_block$5(ctx);
+    	let if_block = /*galleryLength*/ ctx[2] && create_if_block$7(ctx);
 
     	const block = {
     		c: function create() {
@@ -2415,11 +6904,11 @@ for (const input of inputs) {
     			h5 = element("h5");
     			t1 = space();
     			if (if_block) if_block.c();
-    			add_location(h2, file$c, 11, 4, 257);
-    			add_location(h5, file$c, 14, 4, 298);
+    			add_location(h2, file$d, 11, 4, 257);
+    			add_location(h5, file$d, 14, 4, 298);
     			attr_dev(div, "class", div_class_value = "" + (null_to_empty("svelte-lightbox-footer " + /*classes*/ ctx[4]) + " svelte-1u8lh7d"));
     			attr_dev(div, "style", /*style*/ ctx[5]);
-    			add_location(div, file$c, 10, 0, 195);
+    			add_location(div, file$d, 10, 0, 195);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2440,7 +6929,7 @@ for (const input of inputs) {
     				if (if_block) {
     					if_block.p(ctx, dirty);
     				} else {
-    					if_block = create_if_block$5(ctx);
+    					if_block = create_if_block$7(ctx);
     					if_block.c();
     					if_block.m(div, null);
     				}
@@ -2467,7 +6956,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$e.name,
+    		id: create_fragment$f.name,
     		type: "component",
     		source: "",
     		ctx
@@ -2476,7 +6965,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function instance$e($$self, $$props, $$invalidate) {
+    function instance$f($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("LightboxFooter", slots, []);
     	let { title = "" } = $$props;
@@ -2529,7 +7018,7 @@ for (const input of inputs) {
     	constructor(options) {
     		super(options);
 
-    		init(this, options, instance$e, create_fragment$e, safe_not_equal, {
+    		init(this, options, instance$f, create_fragment$f, safe_not_equal, {
     			title: 0,
     			description: 1,
     			galleryLength: 2,
@@ -2542,7 +7031,7 @@ for (const input of inputs) {
     			component: this,
     			tagName: "LightboxFooter",
     			options,
-    			id: create_fragment$e.name
+    			id: create_fragment$f.name
     		});
 
     		const { ctx } = this.$$;
@@ -2607,7 +7096,7 @@ for (const input of inputs) {
     }
 
     /* node_modules/svelte-lightbox/src/Modal/Index.svelte generated by Svelte v3.38.2 */
-    const file$b = "node_modules/svelte-lightbox/src/Modal/Index.svelte";
+    const file$c = "node_modules/svelte-lightbox/src/Modal/Index.svelte";
 
     // (43:12) <Body bind:image={image} bind:protect={protect} bind:portrait={portrait}>
     function create_default_slot$2(ctx) {
@@ -2658,7 +7147,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function create_fragment$d(ctx) {
+    function create_fragment$e(ctx) {
     	let div2;
     	let div1;
     	let div0;
@@ -2767,12 +7256,12 @@ for (const input of inputs) {
     			t1 = space();
     			create_component(footer.$$.fragment);
     			attr_dev(div0, "class", "svelte-lightbox svelte-tpon2m");
-    			add_location(div0, file$b, 38, 8, 1218);
+    			add_location(div0, file$c, 38, 8, 1218);
     			attr_dev(div1, "class", div1_class_value = "" + (null_to_empty(/*allModalClasses*/ ctx[9]) + " svelte-tpon2m"));
     			attr_dev(div1, "style", /*modalStyle*/ ctx[5]);
-    			add_location(div1, file$b, 36, 4, 1067);
+    			add_location(div1, file$c, 36, 4, 1067);
     			attr_dev(div2, "class", "cover clearfix svelte-tpon2m");
-    			add_location(div2, file$b, 34, 0, 1033);
+    			add_location(div2, file$c, 34, 0, 1033);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2894,7 +7383,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$d.name,
+    		id: create_fragment$e.name,
     		type: "component",
     		source: "",
     		ctx
@@ -2903,7 +7392,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function instance$d($$self, $$props, $$invalidate) {
+    function instance$e($$self, $$props, $$invalidate) {
     	let allModalClasses;
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("Index", slots, ['default']);
@@ -3092,7 +7581,7 @@ for (const input of inputs) {
     	constructor(options) {
     		super(options);
 
-    		init(this, options, instance$d, create_fragment$d, safe_not_equal, {
+    		init(this, options, instance$e, create_fragment$e, safe_not_equal, {
     			modalClasses: 11,
     			modalStyle: 5,
     			transitionDuration: 6,
@@ -3109,7 +7598,7 @@ for (const input of inputs) {
     			component: this,
     			tagName: "Index",
     			options,
-    			id: create_fragment$d.name
+    			id: create_fragment$e.name
     		});
 
     		const { ctx } = this.$$;
@@ -3208,9 +7697,9 @@ for (const input of inputs) {
     /* node_modules/svelte-lightbox/src/Gallery/InternalGallery.svelte generated by Svelte v3.38.2 */
 
     const { Object: Object_1$3, console: console_1$4 } = globals;
-    const file$a = "node_modules/svelte-lightbox/src/Gallery/InternalGallery.svelte";
+    const file$b = "node_modules/svelte-lightbox/src/Gallery/InternalGallery.svelte";
 
-    function create_fragment$c(ctx) {
+    function create_fragment$d(ctx) {
     	let div1;
     	let button0;
     	let svg0;
@@ -3248,30 +7737,30 @@ for (const input of inputs) {
     			path1 = svg_element("path");
     			attr_dev(path0, "class", "arrow svelte-wwe8hv");
     			attr_dev(path0, "d", "M8.7,7.22,4.59,11.33a1,1,0,0,0,0,1.41l4,4");
-    			add_location(path0, file$a, 33, 16, 909);
-    			add_location(g0, file$a, 32, 12, 889);
+    			add_location(path0, file$b, 33, 16, 909);
+    			add_location(g0, file$b, 32, 12, 889);
     			attr_dev(svg0, "viewBox", "0 0 24 24");
     			attr_dev(svg0, "xmlns", "http://www.w3.org/2000/svg");
     			attr_dev(svg0, "class", "svelte-wwe8hv");
-    			add_location(svg0, file$a, 31, 8, 816);
+    			add_location(svg0, file$b, 31, 8, 816);
     			button0.disabled = button0_disabled_value = /*activeImage*/ ctx[0] === 0;
     			attr_dev(button0, "class", "previous-button svelte-wwe8hv");
-    			add_location(button0, file$a, 30, 4, 721);
+    			add_location(button0, file$b, 30, 4, 721);
     			attr_dev(div0, "class", "slot svelte-wwe8hv");
-    			add_location(div0, file$a, 38, 4, 1028);
+    			add_location(div0, file$b, 38, 4, 1028);
     			attr_dev(path1, "class", "arrow svelte-wwe8hv");
     			attr_dev(path1, "d", "M15.3,16.78l4.11-4.11a1,1,0,0,0,0-1.41l-4-4");
-    			add_location(path1, file$a, 46, 16, 1313);
-    			add_location(g1, file$a, 45, 12, 1293);
+    			add_location(path1, file$b, 46, 16, 1313);
+    			add_location(g1, file$b, 45, 12, 1293);
     			attr_dev(svg1, "viewBox", "0 0 24 24");
     			attr_dev(svg1, "xmlns", "http://www.w3.org/2000/svg");
     			attr_dev(svg1, "class", "svelte-wwe8hv");
-    			add_location(svg1, file$a, 44, 8, 1220);
+    			add_location(svg1, file$b, 44, 8, 1220);
     			button1.disabled = button1_disabled_value = /*activeImage*/ ctx[0] === /*images*/ ctx[2]?.length - 1;
     			attr_dev(button1, "class", "next-button svelte-wwe8hv");
-    			add_location(button1, file$a, 43, 4, 1118);
+    			add_location(button1, file$b, 43, 4, 1118);
     			attr_dev(div1, "class", "wrapper svelte-wwe8hv");
-    			add_location(div1, file$a, 29, 0, 695);
+    			add_location(div1, file$b, 29, 0, 695);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3341,7 +7830,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$c.name,
+    		id: create_fragment$d.name,
     		type: "component",
     		source: "",
     		ctx
@@ -3350,7 +7839,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function instance$c($$self, $$props, $$invalidate) {
+    function instance$d($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("InternalGallery", slots, ['default']);
     	let { activeImage = 0 } = $$props;
@@ -3439,13 +7928,13 @@ for (const input of inputs) {
     class InternalGallery extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$c, create_fragment$c, safe_not_equal, { activeImage: 0 });
+    		init(this, options, instance$d, create_fragment$d, safe_not_equal, { activeImage: 0 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "InternalGallery",
     			options,
-    			id: create_fragment$c.name
+    			id: create_fragment$d.name
     		});
     	}
 
@@ -3512,7 +8001,7 @@ for (const input of inputs) {
 
     /* node_modules/svelte-lightbox/src/Gallery/ExternalGallery.svelte generated by Svelte v3.38.2 */
 
-    function create_fragment$b(ctx) {
+    function create_fragment$c(ctx) {
     	let current;
     	const default_slot_template = /*#slots*/ ctx[1].default;
     	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[0], null);
@@ -3554,7 +8043,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$b.name,
+    		id: create_fragment$c.name,
     		type: "component",
     		source: "",
     		ctx
@@ -3563,7 +8052,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function instance$b($$self, $$props, $$invalidate) {
+    function instance$c($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("ExternalGallery", slots, ['default']);
     	const writable_props = [];
@@ -3582,13 +8071,13 @@ for (const input of inputs) {
     class ExternalGallery extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$b, create_fragment$b, safe_not_equal, {});
+    		init(this, options, instance$c, create_fragment$c, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "ExternalGallery",
     			options,
-    			id: create_fragment$b.name
+    			id: create_fragment$c.name
     		});
     	}
     }
@@ -3780,7 +8269,7 @@ for (const input of inputs) {
     }
 
     // (70:0) {#if visible}
-    function create_if_block$4(ctx) {
+    function create_if_block$6(ctx) {
     	let modal;
     	let updating_modalClasses;
     	let updating_modalStyle;
@@ -3987,7 +8476,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$4.name,
+    		id: create_if_block$6.name,
     		type: "if",
     		source: "(70:0) {#if visible}",
     		ctx
@@ -3997,7 +8486,7 @@ for (const input of inputs) {
     }
 
     // (82:8) {:else}
-    function create_else_block$4(ctx) {
+    function create_else_block$6(ctx) {
     	let current;
     	const default_slot_template = /*#slots*/ ctx[17].default;
     	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[32], null);
@@ -4036,7 +8525,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block$4.name,
+    		id: create_else_block$6.name,
     		type: "else",
     		source: "(82:8) {:else}",
     		ctx
@@ -4046,7 +8535,7 @@ for (const input of inputs) {
     }
 
     // (76:26) 
-    function create_if_block_2$4(ctx) {
+    function create_if_block_2$5(ctx) {
     	let internalgallery;
     	let updating_activeImage;
     	let current;
@@ -4110,7 +8599,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_2$4.name,
+    		id: create_if_block_2$5.name,
     		type: "if",
     		source: "(76:26) ",
     		ctx
@@ -4120,7 +8609,7 @@ for (const input of inputs) {
     }
 
     // (74:8) {#if thumbnail}
-    function create_if_block_1$4(ctx) {
+    function create_if_block_1$5(ctx) {
     	let current;
     	const image_slot_template = /*#slots*/ ctx[17].image;
     	const image_slot = create_slot(image_slot_template, ctx, /*$$scope*/ ctx[32], get_image_slot_context);
@@ -4159,7 +8648,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$4.name,
+    		id: create_if_block_1$5.name,
     		type: "if",
     		source: "(74:8) {#if thumbnail}",
     		ctx
@@ -4244,7 +8733,7 @@ for (const input of inputs) {
     	let if_block;
     	let if_block_anchor;
     	let current;
-    	const if_block_creators = [create_if_block_1$4, create_if_block_2$4, create_else_block$4];
+    	const if_block_creators = [create_if_block_1$5, create_if_block_2$5, create_else_block$6];
     	const if_blocks = [];
 
     	function select_block_type_1(ctx, dirty) {
@@ -4319,7 +8808,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function create_fragment$a(ctx) {
+    function create_fragment$b(ctx) {
     	let thumbnail_1;
     	let updating_thumbnailClasses;
     	let updating_thumbnailStyle;
@@ -4364,7 +8853,7 @@ for (const input of inputs) {
     	binding_callbacks.push(() => bind(thumbnail_1, "thumbnailStyle", thumbnail_1_thumbnailStyle_binding));
     	binding_callbacks.push(() => bind(thumbnail_1, "protect", thumbnail_1_protect_binding));
     	thumbnail_1.$on("click", /*toggle*/ ctx[14]);
-    	let if_block = /*visible*/ ctx[13] && create_if_block$4(ctx);
+    	let if_block = /*visible*/ ctx[13] && create_if_block$6(ctx);
 
     	const block = {
     		c: function create() {
@@ -4423,7 +8912,7 @@ for (const input of inputs) {
     						transition_in(if_block, 1);
     					}
     				} else {
-    					if_block = create_if_block$4(ctx);
+    					if_block = create_if_block$6(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
     					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -4461,7 +8950,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$a.name,
+    		id: create_fragment$b.name,
     		type: "component",
     		source: "",
     		ctx
@@ -4470,7 +8959,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function instance$a($$self, $$props, $$invalidate) {
+    function instance$b($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("Lightbox", slots, ['thumbnail','default','image']);
     	let { thumbnailClasses = "" } = $$props;
@@ -4722,8 +9211,8 @@ for (const input of inputs) {
     		init(
     			this,
     			options,
-    			instance$a,
-    			create_fragment$a,
+    			instance$b,
+    			create_fragment$b,
     			safe_not_equal,
     			{
     				thumbnailClasses: 0,
@@ -4748,7 +9237,7 @@ for (const input of inputs) {
     			component: this,
     			tagName: "Lightbox",
     			options,
-    			id: create_fragment$a.name
+    			id: create_fragment$b.name
     		});
     	}
 
@@ -4866,7 +9355,7 @@ for (const input of inputs) {
     }
 
     /* src/Description.svelte generated by Svelte v3.38.2 */
-    const file$9 = "src/Description.svelte";
+    const file$a = "src/Description.svelte";
 
     // (33:8) <Lightbox thumbnailStyle="width: 24rem; max-width: 90%; border: solid 1px #eee">
     function create_default_slot_2(ctx) {
@@ -4878,7 +9367,7 @@ for (const input of inputs) {
     			img = element("img");
     			if (img.src !== (img_src_value = "img/screenshots/charm-scanning.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "charm scanning");
-    			add_location(img, file$9, 33, 10, 1086);
+    			add_location(img, file$a, 33, 10, 1086);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, img, anchor);
@@ -4909,7 +9398,7 @@ for (const input of inputs) {
     			img = element("img");
     			if (img.src !== (img_src_value = "img/screenshots/charm-img.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "charm image");
-    			add_location(img, file$9, 62, 10, 2105);
+    			add_location(img, file$a, 62, 10, 2114);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, img, anchor);
@@ -4940,7 +9429,7 @@ for (const input of inputs) {
     			img = element("img");
     			if (img.src !== (img_src_value = "img/screenshots/charm-substitutes.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "charm substitutes");
-    			add_location(img, file$9, 65, 10, 2284);
+    			add_location(img, file$a, 65, 10, 2293);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, img, anchor);
@@ -4961,8 +9450,8 @@ for (const input of inputs) {
     	return block;
     }
 
-    function create_fragment$9(ctx) {
-    	let div10;
+    function create_fragment$a(ctx) {
+    	let div14;
     	let div1;
     	let div0;
     	let h20;
@@ -5040,23 +9529,31 @@ for (const input of inputs) {
     	let t40;
     	let br23;
     	let t41;
-    	let span3;
-    	let t42;
-    	let br24;
-    	let t43;
     	let div5;
     	let lightbox1;
-    	let t44;
+    	let t42;
     	let lightbox2;
-    	let t45;
+    	let t43;
     	let div9;
     	let div8;
     	let h23;
-    	let t47;
+    	let t45;
     	let p3;
-    	let t48;
+    	let t47;
+    	let div11;
+    	let div10;
+    	let h24;
+    	let t49;
+    	let p4;
+    	let t51;
+    	let div13;
+    	let div12;
+    	let h25;
+    	let t53;
+    	let p5;
+    	let t54;
     	let a2;
-    	let t50;
+    	let t56;
     	let current;
 
     	lightbox0 = new Lightbox({
@@ -5088,7 +9585,7 @@ for (const input of inputs) {
 
     	const block = {
     		c: function create() {
-    			div10 = element("div");
+    			div14 = element("div");
     			div1 = element("div");
     			div0 = element("div");
     			h20 = element("h2");
@@ -5174,110 +9671,135 @@ for (const input of inputs) {
     			t40 = space();
     			br23 = element("br");
     			t41 = space();
-    			span3 = element("span");
-    			t42 = text("輪廻錬金の際は充分に確認し、自己責任にて行ってください。");
-    			br24 = element("br");
-    			t43 = space();
     			div5 = element("div");
     			create_component(lightbox1.$$.fragment);
-    			t44 = space();
+    			t42 = space();
     			create_component(lightbox2.$$.fragment);
-    			t45 = space();
+    			t43 = space();
     			div9 = element("div");
     			div8 = element("div");
     			h23 = element("h2");
-    			h23.textContent = "■ お問い合わせ";
-    			t47 = space();
+    			h23.textContent = "■ 護石スペック検索";
+    			t45 = space();
     			p3 = element("p");
-    			t48 = text("不具合報告や要望は ");
+    			p3.textContent = "スキャンした護石を検索することができます。\n        装飾品でスキルが実現できる場合も検索対象に含まれます。";
+    			t47 = space();
+    			div11 = element("div");
+    			div10 = element("div");
+    			h24 = element("h2");
+    			h24.textContent = "■ 護石エクスポート";
+    			t49 = space();
+    			p4 = element("p");
+    			p4.textContent = "スキャンした護石全てをエクスポートします。\n        出力形式は、護石スキャン時と同様です。";
+    			t51 = space();
+    			div13 = element("div");
+    			div12 = element("div");
+    			h25 = element("h2");
+    			h25.textContent = "■ お問い合わせ";
+    			t53 = space();
+    			p5 = element("p");
+    			t54 = text("不具合報告や要望は ");
     			a2 = element("a");
     			a2.textContent = "GitHub issue";
-    			t50 = text(" にてお願いします。");
+    			t56 = text(" にてお願いします。");
     			attr_dev(h20, "class", "svelte-1l76kga");
-    			add_location(h20, file$9, 7, 6, 171);
-    			add_location(br0, file$9, 9, 30, 225);
-    			add_location(br1, file$9, 10, 28, 258);
+    			add_location(h20, file$a, 7, 6, 171);
+    			add_location(br0, file$a, 9, 30, 225);
+    			add_location(br1, file$a, 10, 28, 258);
     			attr_dev(p0, "class", "svelte-1l76kga");
-    			add_location(p0, file$9, 8, 6, 191);
+    			add_location(p0, file$a, 8, 6, 191);
     			attr_dev(div0, "class", "card-body");
-    			add_location(div0, file$9, 6, 4, 141);
+    			add_location(div0, file$a, 6, 4, 141);
     			attr_dev(div1, "class", "card border border-light shadow-sm svelte-1l76kga");
-    			add_location(div1, file$9, 5, 2, 88);
+    			add_location(div1, file$a, 5, 2, 88);
     			attr_dev(h21, "class", "svelte-1l76kga");
-    			add_location(h21, file$9, 17, 6, 380);
-    			add_location(br2, file$9, 19, 30, 438);
+    			add_location(h21, file$a, 17, 6, 380);
+    			add_location(br2, file$a, 19, 30, 438);
     			attr_dev(a0, "href", "sample/input.mp4");
-    			add_location(a0, file$9, 21, 9, 511);
-    			add_location(br3, file$9, 21, 44, 546);
-    			add_location(br4, file$9, 22, 8, 559);
-    			add_location(br5, file$9, 23, 121, 685);
+    			add_location(a0, file$a, 21, 9, 511);
+    			add_location(br3, file$a, 21, 44, 546);
+    			add_location(br4, file$a, 22, 8, 559);
+    			add_location(br5, file$a, 23, 121, 685);
     			attr_dev(a1, "href", "https://mhrise.wiki-db.com/sim/");
-    			add_location(a1, file$9, 24, 8, 698);
-    			add_location(br6, file$9, 24, 77, 767);
-    			add_location(br7, file$9, 25, 8, 780);
-    			add_location(br8, file$9, 26, 12, 797);
+    			add_location(a1, file$a, 24, 8, 698);
+    			add_location(br6, file$a, 24, 77, 767);
+    			add_location(br7, file$a, 25, 8, 780);
+    			add_location(br8, file$a, 26, 12, 797);
     			set_style(span0, "color", "red");
-    			add_location(span0, file$9, 27, 10, 812);
-    			add_location(br9, file$9, 27, 87, 889);
-    			add_location(br10, file$9, 28, 45, 939);
+    			add_location(span0, file$a, 27, 10, 812);
+    			add_location(br9, file$a, 27, 87, 889);
+    			add_location(br10, file$a, 28, 45, 939);
     			attr_dev(p1, "class", "svelte-1l76kga");
-    			add_location(p1, file$9, 18, 6, 404);
+    			add_location(p1, file$a, 18, 6, 404);
     			attr_dev(div2, "class", "lightboxes svelte-1l76kga");
-    			add_location(div2, file$9, 31, 6, 962);
+    			add_location(div2, file$a, 31, 6, 962);
     			attr_dev(div3, "class", "card-body");
-    			add_location(div3, file$9, 16, 4, 350);
+    			add_location(div3, file$a, 16, 4, 350);
     			attr_dev(div4, "class", "card border border-light shadow-sm svelte-1l76kga");
-    			add_location(div4, file$9, 15, 2, 297);
+    			add_location(div4, file$a, 15, 2, 297);
     			attr_dev(h22, "class", "svelte-1l76kga");
-    			add_location(h22, file$9, 41, 6, 1293);
-    			add_location(br11, file$9, 43, 30, 1349);
-    			add_location(br12, file$9, 44, 42, 1396);
-    			add_location(br13, file$9, 45, 8, 1409);
-    			add_location(br14, file$9, 46, 25, 1439);
+    			add_location(h22, file$a, 41, 6, 1293);
+    			add_location(br11, file$a, 43, 30, 1349);
+    			add_location(br12, file$a, 44, 42, 1396);
+    			add_location(br13, file$a, 45, 8, 1409);
+    			add_location(br14, file$a, 46, 25, 1439);
     			attr_dev(span1, "class", "px-3 font-weight-bold");
-    			add_location(span1, file$9, 47, 8, 1452);
-    			add_location(br15, file$9, 47, 94, 1538);
-    			add_location(br16, file$9, 48, 19, 1562);
-    			add_location(br17, file$9, 49, 8, 1575);
-    			add_location(br18, file$9, 50, 39, 1619);
+    			add_location(span1, file$a, 47, 8, 1452);
+    			add_location(br15, file$a, 47, 94, 1538);
+    			add_location(br16, file$a, 48, 19, 1562);
+    			add_location(br17, file$a, 49, 8, 1575);
+    			add_location(br18, file$a, 50, 39, 1619);
     			attr_dev(span2, "class", "px-3");
-    			add_location(span2, file$9, 51, 8, 1632);
-    			add_location(br19, file$9, 51, 63, 1687);
-    			add_location(br20, file$9, 52, 8, 1700);
-    			add_location(br21, file$9, 53, 46, 1751);
-    			add_location(br22, file$9, 54, 58, 1814);
-    			add_location(br23, file$9, 55, 8, 1827);
-    			add_location(br24, file$9, 56, 61, 1893);
-    			set_style(span3, "color", "red");
-    			add_location(span3, file$9, 56, 8, 1840);
+    			add_location(span2, file$a, 51, 8, 1632);
+    			add_location(br19, file$a, 51, 63, 1687);
+    			add_location(br20, file$a, 52, 8, 1700);
+    			add_location(br21, file$a, 53, 46, 1751);
+    			add_location(br22, file$a, 54, 58, 1814);
+    			add_location(br23, file$a, 55, 8, 1827);
     			attr_dev(p2, "class", "svelte-1l76kga");
-    			add_location(p2, file$9, 42, 6, 1315);
+    			add_location(p2, file$a, 42, 6, 1315);
     			attr_dev(div5, "class", "lightboxes svelte-1l76kga");
-    			add_location(div5, file$9, 60, 6, 1981);
+    			add_location(div5, file$a, 60, 6, 1990);
     			attr_dev(div6, "class", "card-body");
-    			add_location(div6, file$9, 40, 4, 1263);
+    			add_location(div6, file$a, 40, 4, 1263);
     			attr_dev(div7, "class", "card border border-light shadow-sm svelte-1l76kga");
-    			add_location(div7, file$9, 39, 2, 1210);
+    			add_location(div7, file$a, 39, 2, 1210);
     			attr_dev(h23, "class", "svelte-1l76kga");
-    			add_location(h23, file$9, 73, 6, 2497);
-    			attr_dev(a2, "href", "https://github.com/ks-yuzu/mhrise-charm-scanner-web/issues");
-    			add_location(a2, file$9, 75, 18, 2543);
+    			add_location(h23, file$a, 73, 6, 2506);
     			attr_dev(p3, "class", "svelte-1l76kga");
-    			add_location(p3, file$9, 74, 6, 2521);
+    			add_location(p3, file$a, 74, 6, 2532);
     			attr_dev(div8, "class", "card-body");
-    			add_location(div8, file$9, 72, 4, 2467);
+    			add_location(div8, file$a, 72, 4, 2476);
     			attr_dev(div9, "class", "card border border-light shadow-sm svelte-1l76kga");
-    			add_location(div9, file$9, 71, 2, 2414);
-    			attr_dev(div10, "id", "description");
-    			attr_dev(div10, "class", "svelte-1l76kga");
-    			add_location(div10, file$9, 4, 0, 63);
+    			add_location(div9, file$a, 71, 2, 2423);
+    			attr_dev(h24, "class", "svelte-1l76kga");
+    			add_location(h24, file$a, 83, 6, 2719);
+    			attr_dev(p4, "class", "svelte-1l76kga");
+    			add_location(p4, file$a, 84, 6, 2745);
+    			attr_dev(div10, "class", "card-body");
+    			add_location(div10, file$a, 82, 4, 2689);
+    			attr_dev(div11, "class", "card border border-light shadow-sm svelte-1l76kga");
+    			add_location(div11, file$a, 81, 2, 2636);
+    			attr_dev(h25, "class", "svelte-1l76kga");
+    			add_location(h25, file$a, 93, 6, 2924);
+    			attr_dev(a2, "href", "https://github.com/ks-yuzu/mhrise-charm-scanner-web/issues");
+    			add_location(a2, file$a, 95, 18, 2970);
+    			attr_dev(p5, "class", "svelte-1l76kga");
+    			add_location(p5, file$a, 94, 6, 2948);
+    			attr_dev(div12, "class", "card-body");
+    			add_location(div12, file$a, 92, 4, 2894);
+    			attr_dev(div13, "class", "card border border-light shadow-sm svelte-1l76kga");
+    			add_location(div13, file$a, 91, 2, 2841);
+    			attr_dev(div14, "id", "description");
+    			attr_dev(div14, "class", "svelte-1l76kga");
+    			add_location(div14, file$a, 4, 0, 63);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div10, anchor);
-    			append_dev(div10, div1);
+    			insert_dev(target, div14, anchor);
+    			append_dev(div14, div1);
     			append_dev(div1, div0);
     			append_dev(div0, h20);
     			append_dev(div0, t1);
@@ -5286,8 +9808,8 @@ for (const input of inputs) {
     			append_dev(p0, br0);
     			append_dev(p0, t3);
     			append_dev(p0, br1);
-    			append_dev(div10, t4);
-    			append_dev(div10, div4);
+    			append_dev(div14, t4);
+    			append_dev(div14, div4);
     			append_dev(div4, div3);
     			append_dev(div3, h21);
     			append_dev(div3, t6);
@@ -5319,8 +9841,8 @@ for (const input of inputs) {
     			append_dev(div3, t22);
     			append_dev(div3, div2);
     			mount_component(lightbox0, div2, null);
-    			append_dev(div10, t23);
-    			append_dev(div10, div7);
+    			append_dev(div14, t23);
+    			append_dev(div14, div7);
     			append_dev(div7, div6);
     			append_dev(div6, h22);
     			append_dev(div6, t25);
@@ -5353,24 +9875,32 @@ for (const input of inputs) {
     			append_dev(p2, br22);
     			append_dev(p2, t40);
     			append_dev(p2, br23);
-    			append_dev(p2, t41);
-    			append_dev(p2, span3);
-    			append_dev(span3, t42);
-    			append_dev(span3, br24);
-    			append_dev(div6, t43);
+    			append_dev(div6, t41);
     			append_dev(div6, div5);
     			mount_component(lightbox1, div5, null);
-    			append_dev(div5, t44);
+    			append_dev(div5, t42);
     			mount_component(lightbox2, div5, null);
-    			append_dev(div10, t45);
-    			append_dev(div10, div9);
+    			append_dev(div14, t43);
+    			append_dev(div14, div9);
     			append_dev(div9, div8);
     			append_dev(div8, h23);
-    			append_dev(div8, t47);
+    			append_dev(div8, t45);
     			append_dev(div8, p3);
-    			append_dev(p3, t48);
-    			append_dev(p3, a2);
-    			append_dev(p3, t50);
+    			append_dev(div14, t47);
+    			append_dev(div14, div11);
+    			append_dev(div11, div10);
+    			append_dev(div10, h24);
+    			append_dev(div10, t49);
+    			append_dev(div10, p4);
+    			append_dev(div14, t51);
+    			append_dev(div14, div13);
+    			append_dev(div13, div12);
+    			append_dev(div12, h25);
+    			append_dev(div12, t53);
+    			append_dev(div12, p5);
+    			append_dev(p5, t54);
+    			append_dev(p5, a2);
+    			append_dev(p5, t56);
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
@@ -5410,7 +9940,7 @@ for (const input of inputs) {
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div10);
+    			if (detaching) detach_dev(div14);
     			destroy_component(lightbox0);
     			destroy_component(lightbox1);
     			destroy_component(lightbox2);
@@ -5419,7 +9949,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$9.name,
+    		id: create_fragment$a.name,
     		type: "component",
     		source: "",
     		ctx
@@ -5428,7 +9958,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function instance$9($$self, $$props, $$invalidate) {
+    function instance$a($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("Description", slots, []);
     	const writable_props = [];
@@ -5444,23 +9974,25 @@ for (const input of inputs) {
     class Description extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$9, create_fragment$9, safe_not_equal, {});
+    		init(this, options, instance$a, create_fragment$a, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Description",
     			options,
-    			id: create_fragment$9.name
+    			id: create_fragment$a.name
     		});
     	}
     }
 
+    const charmManager = writable(null);
+
     /* src/CharmIxporter.svelte generated by Svelte v3.38.2 */
 
     const { console: console_1$3 } = globals;
-    const file$8 = "src/CharmIxporter.svelte";
+    const file$9 = "src/CharmIxporter.svelte";
 
-    function create_fragment$8(ctx) {
+    function create_fragment$9(ctx) {
     	let div2;
     	let div1;
     	let textarea;
@@ -5483,15 +10015,15 @@ for (const input of inputs) {
     			t1 = text("export");
     			attr_dev(textarea, "id", "input");
     			attr_dev(textarea, "class", "svelte-1m5otor");
-    			add_location(textarea, file$8, 25, 4, 590);
-    			attr_dev(button, "class", button_class_value = "btn btn-primary shadow-0 " + (/*charmManager*/ ctx[0] ? "" : "disabled"));
-    			add_location(button, file$8, 29, 6, 845);
-    			add_location(div0, file$8, 27, 4, 655);
+    			add_location(textarea, file$9, 26, 4, 614);
+    			attr_dev(button, "class", button_class_value = "btn btn-primary shadow-0 " + (/*$charmManager*/ ctx[1] ? "" : "disabled"));
+    			add_location(button, file$9, 30, 6, 869);
+    			add_location(div0, file$9, 28, 4, 679);
     			attr_dev(div1, "id", "charm-ixporter");
     			attr_dev(div1, "class", "svelte-1m5otor");
-    			add_location(div1, file$8, 24, 2, 560);
+    			add_location(div1, file$9, 25, 2, 584);
     			attr_dev(div2, "class", "tab-content svelte-1m5otor");
-    			add_location(div2, file$8, 23, 0, 532);
+    			add_location(div2, file$9, 24, 0, 556);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -5500,7 +10032,7 @@ for (const input of inputs) {
     			insert_dev(target, div2, anchor);
     			append_dev(div2, div1);
     			append_dev(div1, textarea);
-    			set_input_value(textarea, /*textareaValue*/ ctx[1]);
+    			set_input_value(textarea, /*textareaValue*/ ctx[0]);
     			append_dev(div1, t0);
     			append_dev(div1, div0);
     			append_dev(div0, button);
@@ -5516,11 +10048,11 @@ for (const input of inputs) {
     			}
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*textareaValue*/ 2) {
-    				set_input_value(textarea, /*textareaValue*/ ctx[1]);
+    			if (dirty & /*textareaValue*/ 1) {
+    				set_input_value(textarea, /*textareaValue*/ ctx[0]);
     			}
 
-    			if (dirty & /*charmManager*/ 1 && button_class_value !== (button_class_value = "btn btn-primary shadow-0 " + (/*charmManager*/ ctx[0] ? "" : "disabled"))) {
+    			if (dirty & /*$charmManager*/ 2 && button_class_value !== (button_class_value = "btn btn-primary shadow-0 " + (/*$charmManager*/ ctx[1] ? "" : "disabled"))) {
     				attr_dev(button, "class", button_class_value);
     			}
     		},
@@ -5535,7 +10067,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$8.name,
+    		id: create_fragment$9.name,
     		type: "component",
     		source: "",
     		ctx
@@ -5544,10 +10076,12 @@ for (const input of inputs) {
     	return block;
     }
 
-    function instance$8($$self, $$props, $$invalidate) {
+    function instance$9($$self, $$props, $$invalidate) {
+    	let $charmManager;
+    	validate_store(charmManager, "charmManager");
+    	component_subscribe($$self, charmManager, $$value => $$invalidate(1, $charmManager = $$value));
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("CharmIxporter", slots, []);
-    	let { charmManager } = $$props;
     	let textareaValue = "";
 
     	async function importCharms() {
@@ -5557,13 +10091,17 @@ for (const input of inputs) {
     	}
 
     	async function exportCharms() {
-    		$$invalidate(1, textareaValue = [...(await charmManager.sql("select * from charms")).result.rows].map(row => {
+    		console.log($charmManager.charmTableName);
+
+    		$$invalidate(0, textareaValue = $charmManager.charms.map(row => {
     			const { skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3 } = row;
     			return [skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3].join(",");
     		}).join("\n"));
+
+    		$charmManager.exportIdx();
     	}
 
-    	const writable_props = ["charmManager"];
+    	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1$3.warn(`<CharmIxporter> was created with unknown prop '${key}'`);
@@ -5571,65 +10109,46 @@ for (const input of inputs) {
 
     	function textarea_input_handler() {
     		textareaValue = this.value;
-    		$$invalidate(1, textareaValue);
+    		$$invalidate(0, textareaValue);
     	}
-
-    	$$self.$$set = $$props => {
-    		if ("charmManager" in $$props) $$invalidate(0, charmManager = $$props.charmManager);
-    	};
 
     	$$self.$capture_state = () => ({
     		charmManager,
     		textareaValue,
     		importCharms,
-    		exportCharms
+    		exportCharms,
+    		$charmManager
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ("charmManager" in $$props) $$invalidate(0, charmManager = $$props.charmManager);
-    		if ("textareaValue" in $$props) $$invalidate(1, textareaValue = $$props.textareaValue);
+    		if ("textareaValue" in $$props) $$invalidate(0, textareaValue = $$props.textareaValue);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [charmManager, textareaValue, exportCharms, textarea_input_handler];
+    	return [textareaValue, $charmManager, exportCharms, textarea_input_handler];
     }
 
     class CharmIxporter extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$8, create_fragment$8, safe_not_equal, { charmManager: 0 });
+    		init(this, options, instance$9, create_fragment$9, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "CharmIxporter",
     			options,
-    			id: create_fragment$8.name
+    			id: create_fragment$9.name
     		});
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-
-    		if (/*charmManager*/ ctx[0] === undefined && !("charmManager" in props)) {
-    			console_1$3.warn("<CharmIxporter> was created without expected prop 'charmManager'");
-    		}
-    	}
-
-    	get charmManager() {
-    		throw new Error("<CharmIxporter>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set charmManager(value) {
-    		throw new Error("<CharmIxporter>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
     /* node_modules/simple-svelte-autocomplete/src/SimpleAutocomplete.svelte generated by Svelte v3.38.2 */
 
     const { Object: Object_1$2, console: console_1$2 } = globals;
-    const file$7 = "node_modules/simple-svelte-autocomplete/src/SimpleAutocomplete.svelte";
+    const file$8 = "node_modules/simple-svelte-autocomplete/src/SimpleAutocomplete.svelte";
 
     const get_no_results_slot_changes = dirty => ({
     	noResultsText: dirty[0] & /*noResultsText*/ 2
@@ -5667,7 +10186,7 @@ for (const input of inputs) {
     			span = element("span");
     			span.textContent = "✖";
     			attr_dev(span, "class", "autocomplete-clear-button svelte-77usy");
-    			add_location(span, file$7, 775, 4, 17914);
+    			add_location(span, file$8, 775, 4, 17914);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -5697,7 +10216,7 @@ for (const input of inputs) {
     }
 
     // (812:28) 
-    function create_if_block_5$2(ctx) {
+    function create_if_block_5$1(ctx) {
     	let div;
     	let current;
     	const no_results_slot_template = /*#slots*/ ctx[50]["no-results"];
@@ -5709,7 +10228,7 @@ for (const input of inputs) {
     			div = element("div");
     			if (no_results_slot_or_fallback) no_results_slot_or_fallback.c();
     			attr_dev(div, "class", "autocomplete-list-item-no-results svelte-77usy");
-    			add_location(div, file$7, 812, 6, 19343);
+    			add_location(div, file$8, 812, 6, 19343);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -5748,7 +10267,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_5$2.name,
+    		id: create_if_block_5$1.name,
     		type: "if",
     		source: "(812:28) ",
     		ctx
@@ -5758,7 +10277,7 @@ for (const input of inputs) {
     }
 
     // (782:4) {#if filteredListItems && filteredListItems.length > 0}
-    function create_if_block$3(ctx) {
+    function create_if_block$5(ctx) {
     	let t;
     	let if_block_anchor;
     	let current;
@@ -5774,7 +10293,7 @@ for (const input of inputs) {
     		each_blocks[i] = null;
     	});
 
-    	let if_block = /*maxItemsToShowInList*/ ctx[0] > 0 && /*filteredListItems*/ ctx[17].length > /*maxItemsToShowInList*/ ctx[0] && create_if_block_1$3(ctx);
+    	let if_block = /*maxItemsToShowInList*/ ctx[0] > 0 && /*filteredListItems*/ ctx[17].length > /*maxItemsToShowInList*/ ctx[0] && create_if_block_1$4(ctx);
 
     	const block = {
     		c: function create() {
@@ -5829,7 +10348,7 @@ for (const input of inputs) {
     				if (if_block) {
     					if_block.p(ctx, dirty);
     				} else {
-    					if_block = create_if_block_1$3(ctx);
+    					if_block = create_if_block_1$4(ctx);
     					if_block.c();
     					if_block.m(if_block_anchor.parentNode, if_block_anchor);
     				}
@@ -5866,7 +10385,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$3.name,
+    		id: create_if_block$5.name,
     		type: "if",
     		source: "(782:4) {#if filteredListItems && filteredListItems.length > 0}",
     		ctx
@@ -5906,7 +10425,7 @@ for (const input of inputs) {
     }
 
     // (784:8) {#if listItem && (maxItemsToShowInList <= 0 || i < maxItemsToShowInList)}
-    function create_if_block_2$3(ctx) {
+    function create_if_block_2$4(ctx) {
     	let if_block_anchor;
     	let current;
     	let if_block = /*listItem*/ ctx[79] && create_if_block_3$2(ctx);
@@ -5962,7 +10481,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_2$3.name,
+    		id: create_if_block_2$4.name,
     		type: "if",
     		source: "(784:8) {#if listItem && (maxItemsToShowInList <= 0 || i < maxItemsToShowInList)}",
     		ctx
@@ -5999,7 +10518,7 @@ for (const input of inputs) {
     			? "selected"
     			: "") + " svelte-77usy");
 
-    			add_location(div, file$7, 785, 12, 18369);
+    			add_location(div, file$8, 785, 12, 18369);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -6067,7 +10586,7 @@ for (const input of inputs) {
     }
 
     // (798:16) {:else}
-    function create_else_block$3(ctx) {
+    function create_else_block$5(ctx) {
     	let html_tag;
     	let raw_value = /*listItem*/ ctx[79].label + "";
     	let html_anchor;
@@ -6092,7 +10611,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block$3.name,
+    		id: create_else_block$5.name,
     		type: "else",
     		source: "(798:16) {:else}",
     		ctx
@@ -6142,7 +10661,7 @@ for (const input of inputs) {
 
     	function select_block_type_1(ctx, dirty) {
     		if (/*listItem*/ ctx[79].highlighted) return create_if_block_4$2;
-    		return create_else_block$3;
+    		return create_else_block$5;
     	}
 
     	let current_block_type = select_block_type_1(ctx);
@@ -6191,7 +10710,7 @@ for (const input of inputs) {
     function create_each_block$5(ctx) {
     	let if_block_anchor;
     	let current;
-    	let if_block = /*listItem*/ ctx[79] && (/*maxItemsToShowInList*/ ctx[0] <= 0 || /*i*/ ctx[81] < /*maxItemsToShowInList*/ ctx[0]) && create_if_block_2$3(ctx);
+    	let if_block = /*listItem*/ ctx[79] && (/*maxItemsToShowInList*/ ctx[0] <= 0 || /*i*/ ctx[81] < /*maxItemsToShowInList*/ ctx[0]) && create_if_block_2$4(ctx);
 
     	const block = {
     		c: function create() {
@@ -6212,7 +10731,7 @@ for (const input of inputs) {
     						transition_in(if_block, 1);
     					}
     				} else {
-    					if_block = create_if_block_2$3(ctx);
+    					if_block = create_if_block_2$4(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
     					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -6254,7 +10773,7 @@ for (const input of inputs) {
     }
 
     // (807:6) {#if maxItemsToShowInList > 0 && filteredListItems.length > maxItemsToShowInList}
-    function create_if_block_1$3(ctx) {
+    function create_if_block_1$4(ctx) {
     	let div;
     	let t0;
     	let t1_value = /*filteredListItems*/ ctx[17].length - /*maxItemsToShowInList*/ ctx[0] + "";
@@ -6268,7 +10787,7 @@ for (const input of inputs) {
     			t1 = text(t1_value);
     			t2 = text(" results not shown");
     			attr_dev(div, "class", "autocomplete-list-item-no-results svelte-77usy");
-    			add_location(div, file$7, 807, 8, 19152);
+    			add_location(div, file$8, 807, 8, 19152);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -6286,7 +10805,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$3.name,
+    		id: create_if_block_1$4.name,
     		type: "if",
     		source: "(807:6) {#if maxItemsToShowInList > 0 && filteredListItems.length > maxItemsToShowInList}",
     		ctx
@@ -6295,7 +10814,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    function create_fragment$7(ctx) {
+    function create_fragment$8(ctx) {
     	let div1;
     	let input_1;
     	let input_1_class_value;
@@ -6312,7 +10831,7 @@ for (const input of inputs) {
     	let mounted;
     	let dispose;
     	let if_block0 = /*showClear*/ ctx[11] && create_if_block_6$1(ctx);
-    	const if_block_creators = [create_if_block$3, create_if_block_5$2];
+    	const if_block_creators = [create_if_block$5, create_if_block_5$1];
     	const if_blocks = [];
 
     	function select_block_type(ctx, dirty) {
@@ -6346,15 +10865,15 @@ for (const input of inputs) {
     			attr_dev(input_1, "name", /*name*/ ctx[6]);
     			input_1.disabled = /*disabled*/ ctx[12];
     			attr_dev(input_1, "title", /*title*/ ctx[7]);
-    			add_location(input_1, file$7, 758, 2, 17476);
+    			add_location(input_1, file$8, 758, 2, 17476);
 
     			attr_dev(div0, "class", div0_class_value = "" + ((/*dropdownClassName*/ ctx[9]
     			? /*dropdownClassName*/ ctx[9]
     			: "") + " autocomplete-list " + (/*showList*/ ctx[18] ? "" : "hidden") + "\n    is-fullwidth" + " svelte-77usy"));
 
-    			add_location(div0, file$7, 777, 2, 17997);
+    			add_location(div0, file$8, 777, 2, 17997);
     			attr_dev(div1, "class", div1_class_value = "" + ((/*className*/ ctx[3] ? /*className*/ ctx[3] : "") + "\n  " + (/*hideArrow*/ ctx[10] ? "hide-arrow is-multiple" : "") + "\n  " + (/*showClear*/ ctx[11] ? "show-clear" : "") + " autocomplete select is-fullwidth " + /*uniqueId*/ ctx[19] + " svelte-77usy"));
-    			add_location(div1, file$7, 754, 0, 17305);
+    			add_location(div1, file$8, 754, 0, 17305);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -6509,7 +11028,7 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$7.name,
+    		id: create_fragment$8.name,
     		type: "component",
     		source: "",
     		ctx
@@ -6544,7 +11063,7 @@ for (const input of inputs) {
     	return result;
     }
 
-    function instance$7($$self, $$props, $$invalidate) {
+    function instance$8($$self, $$props, $$invalidate) {
     	let showList;
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("SimpleAutocomplete", slots, ['item','no-results']);
@@ -7438,8 +11957,8 @@ for (const input of inputs) {
     		init(
     			this,
     			options,
-    			instance$7,
-    			create_fragment$7,
+    			instance$8,
+    			create_fragment$8,
     			safe_not_equal,
     			{
     				items: 28,
@@ -7482,7 +12001,7 @@ for (const input of inputs) {
     			component: this,
     			tagName: "SimpleAutocomplete",
     			options,
-    			id: create_fragment$7.name
+    			id: create_fragment$8.name
     		});
     	}
 
@@ -7743,127 +12262,1910 @@ for (const input of inputs) {
     	}
     }
 
-    const allSkills = [
-      // 'あ行のスキル',
-      'アイテム使用強化',
-      '泡沫の舞',
-      '炎鱗の恩恵',
-      '鬼火纏',
-      // 'か行のスキル',
-      'ガード強化',
-      'ガード性能',
-      '会心撃【属性】',
-      '回避距離UP',
-      '回避性能',
-      '回復速度',
-      '翔蟲使い',
-      '火事場力',
-      '滑走強化',
-      '霞皮の恩恵',
-      '雷属性攻撃強化',
-      '雷耐性',
-      '貫通弾・貫通矢強化',
-      '気絶耐性',
-      'キノコ大好き',
-      '逆襲',
-      '強化持続',
-      'KO術',
-      '広域化',
-      '幸運',
-      '鋼殻の恩恵',
-      '攻撃',
-      '剛刃研磨',
-      '高速変形',
-      '氷属性攻撃強化',
-      '氷耐性',
-      '渾身',
-      // 'さ行のスキル',
-      '逆恨み',
-      '散弾・拡散矢強化',
-      '死中に活',
-      '弱点特効',
-      'ジャンプ鉄人',
-      '集中',
-      '植生学',
-      '心眼',
-      '睡眠属性強化',
-      '睡眠耐性',
-      'スタミナ急速回復',
-      'スタミナ奪取',
-      '精霊の加護',
-      '攻めの守勢',
-      '装填拡張',
-      '装填速度',
-      '速射強化',
-      '属性やられ耐性',
-      // 'た行のスキル',
-      '体術',
-      '耐震',
-      '体力回復量UP',
-      '匠',
-      '達人芸',
-      '弾丸節約',
-      '弾導強化',
-      '力の解放',
-      '地質学',
-      '超会心',
-      '挑戦者',
-      '通常弾・連射矢強化',
-      '泥雪耐性',
-      '砥石使用高速化',
-      '特殊射撃強化',
-      '毒属性強化',
-      '毒耐性',
-      '飛び込み',
-      '鈍器使い',
-      // 'な行のスキル',
-      '納刀術',
-      '乗り名人',
-      // 'は行のスキル',
-      '破壊王',
-      '剥ぎ取り鉄人',
-      '剥ぎ取り名人',
-      '爆破属性強化',
-      '爆破やられ耐性',
-      '抜刀術【力】',
-      '抜刀術【技】',
-      '早食い',
-      '腹減り耐性',
-      '反動軽減',
-      '火属性攻撃強化',
-      '火耐性',
-      'ひるみ軽減',
-      '風圧耐性',
-      '風紋の一致',
-      '笛吹き名人',
-      '不屈',
-      'フルチャージ',
-      'ブレ抑制',
-      '壁面移動',
-      '防御',
-      '砲術',
-      '砲弾装填',
-      '捕獲名人',
-      'ボマー',
-      // 'ま行のスキル',
-      '麻痺属性強化',
-      '麻痺耐性',
-      '満足感',
-      '見切り',
-      '水属性攻撃強化',
-      '水耐性',
-      '耳栓',
-      // 'や行のスキル',
-      '弓溜め段階解放',
-      '陽動',
-      // 'ら行のスキル',
-      '雷紋の一致',
-      'ランナー',
-      '龍属性攻撃強化',
-      '龍耐性',
-      // 'わ行のスキル',
-      '業物',
-    ];
+    /* src/SvelteTable.svelte generated by Svelte v3.38.2 */
+
+    const { Object: Object_1$1 } = globals;
+    const file$7 = "src/SvelteTable.svelte";
+
+    function get_each_context$4(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[36] = list[i];
+    	child_ctx[38] = i;
+    	return child_ctx;
+    }
+
+    const get_after_row_slot_changes = dirty => ({ row: dirty[0] & /*c_rows*/ 8192 });
+    const get_after_row_slot_context = ctx => ({ row: /*row*/ ctx[36], n: /*n*/ ctx[38] });
+
+    function get_each_context_1$3(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[39] = list[i];
+    	return child_ctx;
+    }
+
+    const get_row_slot_changes = dirty => ({ row: dirty[0] & /*c_rows*/ 8192 });
+    const get_row_slot_context = ctx => ({ row: /*row*/ ctx[36], n: /*n*/ ctx[38] });
+
+    function get_each_context_2$2(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[39] = list[i];
+    	return child_ctx;
+    }
+
+    const get_header_slot_changes = dirty => ({
+    	sortOrder: dirty[0] & /*sortOrder*/ 2,
+    	sortBy: dirty[0] & /*sortBy*/ 1
+    });
+
+    const get_header_slot_context = ctx => ({
+    	sortOrder: /*sortOrder*/ ctx[1],
+    	sortBy: /*sortBy*/ ctx[0]
+    });
+
+    function get_each_context_3(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[39] = list[i];
+    	child_ctx[44] = list;
+    	child_ctx[45] = i;
+    	return child_ctx;
+    }
+
+    function get_each_context_4(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[46] = list[i];
+    	return child_ctx;
+    }
+
+    // (123:4) {#if showFilterHeader}
+    function create_if_block_4$1(ctx) {
+    	let tr;
+    	let each_value_3 = /*columns*/ ctx[3];
+    	validate_each_argument(each_value_3);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_3.length; i += 1) {
+    		each_blocks[i] = create_each_block_3(get_each_context_3(ctx, each_value_3, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			tr = element("tr");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			attr_dev(tr, "class", "row-filter-header svelte-uczycn");
+    			add_location(tr, file$7, 123, 6, 3788);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, tr, anchor);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(tr, null);
+    			}
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty[0] & /*filterSelections, columns, asStringArray, classNameSelect, filterValues*/ 37388) {
+    				each_value_3 = /*columns*/ ctx[3];
+    				validate_each_argument(each_value_3);
+    				let i;
+
+    				for (i = 0; i < each_value_3.length; i += 1) {
+    					const child_ctx = get_each_context_3(ctx, each_value_3, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_3(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(tr, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_3.length;
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(tr);
+    			destroy_each(each_blocks, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_4$1.name,
+    		type: "if",
+    		source: "(123:4) {#if showFilterHeader}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (129:58) 
+    function create_if_block_6(ctx) {
+    	let select;
+    	let option;
+    	let select_class_value;
+    	let mounted;
+    	let dispose;
+    	let each_value_4 = /*filterValues*/ ctx[12][/*col*/ ctx[39].key];
+    	validate_each_argument(each_value_4);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_4.length; i += 1) {
+    		each_blocks[i] = create_each_block_4(get_each_context_4(ctx, each_value_4, i));
+    	}
+
+    	function select_change_handler() {
+    		/*select_change_handler*/ ctx[28].call(select, /*col*/ ctx[39]);
+    	}
+
+    	const block = {
+    		c: function create() {
+    			select = element("select");
+    			option = element("option");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			option.__value = undefined;
+    			option.value = option.__value;
+    			add_location(option, file$7, 130, 16, 4150);
+    			attr_dev(select, "class", select_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameSelect*/ ctx[9])) + " svelte-uczycn"));
+    			if (/*filterSelections*/ ctx[2][/*col*/ ctx[39].key] === void 0) add_render_callback(select_change_handler);
+    			add_location(select, file$7, 129, 14, 4047);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(select, null);
+    			}
+
+    			select_option(select, /*filterSelections*/ ctx[2][/*col*/ ctx[39].key]);
+
+    			if (!mounted) {
+    				dispose = listen_dev(select, "change", select_change_handler);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+
+    			if (dirty[0] & /*filterValues, columns*/ 4104) {
+    				each_value_4 = /*filterValues*/ ctx[12][/*col*/ ctx[39].key];
+    				validate_each_argument(each_value_4);
+    				let i;
+
+    				for (i = 0; i < each_value_4.length; i += 1) {
+    					const child_ctx = get_each_context_4(ctx, each_value_4, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_4(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(select, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_4.length;
+    			}
+
+    			if (dirty[0] & /*classNameSelect*/ 512 && select_class_value !== (select_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameSelect*/ ctx[9])) + " svelte-uczycn"))) {
+    				attr_dev(select, "class", select_class_value);
+    			}
+
+    			if (dirty[0] & /*filterSelections, columns, filterValues*/ 4108) {
+    				select_option(select, /*filterSelections*/ ctx[2][/*col*/ ctx[39].key]);
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(select);
+    			destroy_each(each_blocks, detaching);
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_6.name,
+    		type: "if",
+    		source: "(129:58) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (127:12) {#if col.searchValue !== undefined}
+    function create_if_block_5(ctx) {
+    	let input;
+    	let mounted;
+    	let dispose;
+
+    	function input_input_handler() {
+    		/*input_input_handler*/ ctx[27].call(input, /*col*/ ctx[39]);
+    	}
+
+    	const block = {
+    		c: function create() {
+    			input = element("input");
+    			add_location(input, file$7, 127, 14, 3927);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, input, anchor);
+    			set_input_value(input, /*filterSelections*/ ctx[2][/*col*/ ctx[39].key]);
+
+    			if (!mounted) {
+    				dispose = listen_dev(input, "input", input_input_handler);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+
+    			if (dirty[0] & /*filterSelections, columns, filterValues*/ 4108 && input.value !== /*filterSelections*/ ctx[2][/*col*/ ctx[39].key]) {
+    				set_input_value(input, /*filterSelections*/ ctx[2][/*col*/ ctx[39].key]);
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(input);
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_5.name,
+    		type: "if",
+    		source: "(127:12) {#if col.searchValue !== undefined}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (132:16) {#each filterValues[col.key] as option}
+    function create_each_block_4(ctx) {
+    	let option;
+    	let t_value = /*option*/ ctx[46].name + "";
+    	let t;
+    	let option_value_value;
+
+    	const block = {
+    		c: function create() {
+    			option = element("option");
+    			t = text(t_value);
+    			option.__value = option_value_value = /*option*/ ctx[46].value;
+    			option.value = option.__value;
+    			add_location(option, file$7, 132, 18, 4260);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, option, anchor);
+    			append_dev(option, t);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty[0] & /*filterValues, columns*/ 4104 && t_value !== (t_value = /*option*/ ctx[46].name + "")) set_data_dev(t, t_value);
+
+    			if (dirty[0] & /*filterValues, columns*/ 4104 && option_value_value !== (option_value_value = /*option*/ ctx[46].value)) {
+    				prop_dev(option, "__value", option_value_value);
+    				option.value = option.__value;
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(option);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_4.name,
+    		type: "each",
+    		source: "(132:16) {#each filterValues[col.key] as option}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (125:8) {#each columns as col}
+    function create_each_block_3(ctx) {
+    	let th;
+    	let t;
+
+    	function select_block_type(ctx, dirty) {
+    		if (/*col*/ ctx[39].searchValue !== undefined) return create_if_block_5;
+    		if (/*filterValues*/ ctx[12][/*col*/ ctx[39].key] !== undefined) return create_if_block_6;
+    	}
+
+    	let current_block_type = select_block_type(ctx);
+    	let if_block = current_block_type && current_block_type(ctx);
+
+    	const block = {
+    		c: function create() {
+    			th = element("th");
+    			if (if_block) if_block.c();
+    			t = space();
+    			add_location(th, file$7, 125, 10, 3860);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, th, anchor);
+    			if (if_block) if_block.m(th, null);
+    			append_dev(th, t);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+    				if_block.p(ctx, dirty);
+    			} else {
+    				if (if_block) if_block.d(1);
+    				if_block = current_block_type && current_block_type(ctx);
+
+    				if (if_block) {
+    					if_block.c();
+    					if_block.m(th, t);
+    				}
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(th);
+
+    			if (if_block) {
+    				if_block.d();
+    			}
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_3.name,
+    		type: "each",
+    		source: "(125:8) {#each columns as col}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (154:10) {:else}
+    function create_else_block_1$1(ctx) {
+    	let th;
+    	let t0_value = /*col*/ ctx[39].title + "";
+    	let t0;
+    	let t1;
+    	let t2;
+    	let th_class_value;
+    	let if_block = /*sortBy*/ ctx[0] === /*col*/ ctx[39].key && create_if_block_3$1(ctx);
+
+    	const block = {
+    		c: function create() {
+    			th = element("th");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			if (if_block) if_block.c();
+    			t2 = space();
+    			attr_dev(th, "class", th_class_value = "" + (null_to_empty(/*col*/ ctx[39].headerClass) + " svelte-uczycn"));
+    			add_location(th, file$7, 154, 12, 4934);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, th, anchor);
+    			append_dev(th, t0);
+    			append_dev(th, t1);
+    			if (if_block) if_block.m(th, null);
+    			append_dev(th, t2);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty[0] & /*columns*/ 8 && t0_value !== (t0_value = /*col*/ ctx[39].title + "")) set_data_dev(t0, t0_value);
+
+    			if (/*sortBy*/ ctx[0] === /*col*/ ctx[39].key) {
+    				if (if_block) {
+    					if_block.p(ctx, dirty);
+    				} else {
+    					if_block = create_if_block_3$1(ctx);
+    					if_block.c();
+    					if_block.m(th, t2);
+    				}
+    			} else if (if_block) {
+    				if_block.d(1);
+    				if_block = null;
+    			}
+
+    			if (dirty[0] & /*columns, filterValues*/ 4104 && th_class_value !== (th_class_value = "" + (null_to_empty(/*col*/ ctx[39].headerClass) + " svelte-uczycn"))) {
+    				attr_dev(th, "class", th_class_value);
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(th);
+    			if (if_block) if_block.d();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block_1$1.name,
+    		type: "else",
+    		source: "(154:10) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (144:10) {#if col.sortable}
+    function create_if_block_1$3(ctx) {
+    	let th;
+    	let t0_value = /*col*/ ctx[39].title + "";
+    	let t0;
+    	let t1;
+    	let t2;
+    	let th_class_value;
+    	let mounted;
+    	let dispose;
+    	let if_block = /*sortBy*/ ctx[0] === /*col*/ ctx[39].key && create_if_block_2$3(ctx);
+
+    	function click_handler(...args) {
+    		return /*click_handler*/ ctx[29](/*col*/ ctx[39], ...args);
+    	}
+
+    	const block = {
+    		c: function create() {
+    			th = element("th");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			if (if_block) if_block.c();
+    			t2 = space();
+    			attr_dev(th, "class", th_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](["isSortable", /*col*/ ctx[39].headerClass])) + " svelte-uczycn"));
+    			add_location(th, file$7, 144, 12, 4603);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, th, anchor);
+    			append_dev(th, t0);
+    			append_dev(th, t1);
+    			if (if_block) if_block.m(th, null);
+    			append_dev(th, t2);
+
+    			if (!mounted) {
+    				dispose = listen_dev(th, "click", click_handler, false, false, false);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+    			if (dirty[0] & /*columns*/ 8 && t0_value !== (t0_value = /*col*/ ctx[39].title + "")) set_data_dev(t0, t0_value);
+
+    			if (/*sortBy*/ ctx[0] === /*col*/ ctx[39].key) {
+    				if (if_block) {
+    					if_block.p(ctx, dirty);
+    				} else {
+    					if_block = create_if_block_2$3(ctx);
+    					if_block.c();
+    					if_block.m(th, t2);
+    				}
+    			} else if (if_block) {
+    				if_block.d(1);
+    				if_block = null;
+    			}
+
+    			if (dirty[0] & /*columns, filterValues*/ 4104 && th_class_value !== (th_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](["isSortable", /*col*/ ctx[39].headerClass])) + " svelte-uczycn"))) {
+    				attr_dev(th, "class", th_class_value);
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(th);
+    			if (if_block) if_block.d();
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_1$3.name,
+    		type: "if",
+    		source: "(144:10) {#if col.sortable}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (159:14) {#if sortBy === col.key}
+    function create_if_block_3$1(ctx) {
+    	let t_value = (/*sortOrder*/ ctx[1] === 1
+    	? /*iconAsc*/ ctx[4]
+    	: /*iconDesc*/ ctx[5]) + "";
+
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text(t_value);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty[0] & /*sortOrder, iconAsc, iconDesc*/ 50 && t_value !== (t_value = (/*sortOrder*/ ctx[1] === 1
+    			? /*iconAsc*/ ctx[4]
+    			: /*iconDesc*/ ctx[5]) + "")) set_data_dev(t, t_value);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_3$1.name,
+    		type: "if",
+    		source: "(159:14) {#if sortBy === col.key}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (150:14) {#if sortBy === col.key}
+    function create_if_block_2$3(ctx) {
+    	let t_value = (/*sortOrder*/ ctx[1] === 1
+    	? /*iconAsc*/ ctx[4]
+    	: /*iconDesc*/ ctx[5]) + "";
+
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text(t_value);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty[0] & /*sortOrder, iconAsc, iconDesc*/ 50 && t_value !== (t_value = (/*sortOrder*/ ctx[1] === 1
+    			? /*iconAsc*/ ctx[4]
+    			: /*iconDesc*/ ctx[5]) + "")) set_data_dev(t, t_value);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_2$3.name,
+    		type: "if",
+    		source: "(150:14) {#if sortBy === col.key}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (143:8) {#each columns as col}
+    function create_each_block_2$2(ctx) {
+    	let if_block_anchor;
+
+    	function select_block_type_1(ctx, dirty) {
+    		if (/*col*/ ctx[39].sortable) return create_if_block_1$3;
+    		return create_else_block_1$1;
+    	}
+
+    	let current_block_type = select_block_type_1(ctx);
+    	let if_block = current_block_type(ctx);
+
+    	const block = {
+    		c: function create() {
+    			if_block.c();
+    			if_block_anchor = empty();
+    		},
+    		m: function mount(target, anchor) {
+    			if_block.m(target, anchor);
+    			insert_dev(target, if_block_anchor, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (current_block_type === (current_block_type = select_block_type_1(ctx)) && if_block) {
+    				if_block.p(ctx, dirty);
+    			} else {
+    				if_block.d(1);
+    				if_block = current_block_type(ctx);
+
+    				if (if_block) {
+    					if_block.c();
+    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
+    				}
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if_block.d(detaching);
+    			if (detaching) detach_dev(if_block_anchor);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_2$2.name,
+    		type: "each",
+    		source: "(143:8) {#each columns as col}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (141:62)        
+    function fallback_block_2(ctx) {
+    	let tr;
+    	let each_value_2 = /*columns*/ ctx[3];
+    	validate_each_argument(each_value_2);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_2.length; i += 1) {
+    		each_blocks[i] = create_each_block_2$2(get_each_context_2$2(ctx, each_value_2, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			tr = element("tr");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			attr_dev(tr, "class", "row-title-header");
+    			add_location(tr, file$7, 141, 6, 4501);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, tr, anchor);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(tr, null);
+    			}
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty[0] & /*asStringArray, columns, handleClickCol, sortOrder, iconAsc, iconDesc, sortBy*/ 98363) {
+    				each_value_2 = /*columns*/ ctx[3];
+    				validate_each_argument(each_value_2);
+    				let i;
+
+    				for (i = 0; i < each_value_2.length; i += 1) {
+    					const child_ctx = get_each_context_2$2(ctx, each_value_2, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block_2$2(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(tr, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value_2.length;
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(tr);
+    			destroy_each(each_blocks, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: fallback_block_2.name,
+    		type: "fallback",
+    		source: "(141:62)        ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (183:14) {:else}
+    function create_else_block$4(ctx) {
+    	let html_tag;
+
+    	let raw_value = (/*col*/ ctx[39].renderValue
+    	? /*col*/ ctx[39].renderValue(/*row*/ ctx[36])
+    	: /*col*/ ctx[39].value(/*row*/ ctx[36])) + "";
+
+    	let html_anchor;
+
+    	const block = {
+    		c: function create() {
+    			html_anchor = empty();
+    			html_tag = new HtmlTag(html_anchor);
+    		},
+    		m: function mount(target, anchor) {
+    			html_tag.m(raw_value, target, anchor);
+    			insert_dev(target, html_anchor, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty[0] & /*columns, c_rows*/ 8200 && raw_value !== (raw_value = (/*col*/ ctx[39].renderValue
+    			? /*col*/ ctx[39].renderValue(/*row*/ ctx[36])
+    			: /*col*/ ctx[39].value(/*row*/ ctx[36])) + "")) html_tag.p(raw_value);
+    		},
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(html_anchor);
+    			if (detaching) html_tag.d();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block$4.name,
+    		type: "else",
+    		source: "(183:14) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (177:14) {#if col.renderComponent}
+    function create_if_block$4(ctx) {
+    	let switch_instance;
+    	let switch_instance_anchor;
+    	let current;
+
+    	const switch_instance_spread_levels = [
+    		/*col*/ ctx[39].renderComponent.props || {},
+    		{ row: /*row*/ ctx[36] },
+    		{ col: /*col*/ ctx[39] }
+    	];
+
+    	var switch_value = /*col*/ ctx[39].renderComponent.component || /*col*/ ctx[39].renderComponent;
+
+    	function switch_props(ctx) {
+    		let switch_instance_props = {};
+
+    		for (let i = 0; i < switch_instance_spread_levels.length; i += 1) {
+    			switch_instance_props = assign(switch_instance_props, switch_instance_spread_levels[i]);
+    		}
+
+    		return {
+    			props: switch_instance_props,
+    			$$inline: true
+    		};
+    	}
+
+    	if (switch_value) {
+    		switch_instance = new switch_value(switch_props());
+    	}
+
+    	const block = {
+    		c: function create() {
+    			if (switch_instance) create_component(switch_instance.$$.fragment);
+    			switch_instance_anchor = empty();
+    		},
+    		m: function mount(target, anchor) {
+    			if (switch_instance) {
+    				mount_component(switch_instance, target, anchor);
+    			}
+
+    			insert_dev(target, switch_instance_anchor, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const switch_instance_changes = (dirty[0] & /*columns, c_rows*/ 8200)
+    			? get_spread_update(switch_instance_spread_levels, [
+    					dirty[0] & /*columns*/ 8 && get_spread_object(/*col*/ ctx[39].renderComponent.props || {}),
+    					dirty[0] & /*c_rows*/ 8192 && { row: /*row*/ ctx[36] },
+    					dirty[0] & /*columns*/ 8 && { col: /*col*/ ctx[39] }
+    				])
+    			: {};
+
+    			if (switch_value !== (switch_value = /*col*/ ctx[39].renderComponent.component || /*col*/ ctx[39].renderComponent)) {
+    				if (switch_instance) {
+    					group_outros();
+    					const old_component = switch_instance;
+
+    					transition_out(old_component.$$.fragment, 1, 0, () => {
+    						destroy_component(old_component, 1);
+    					});
+
+    					check_outros();
+    				}
+
+    				if (switch_value) {
+    					switch_instance = new switch_value(switch_props());
+    					create_component(switch_instance.$$.fragment);
+    					transition_in(switch_instance.$$.fragment, 1);
+    					mount_component(switch_instance, switch_instance_anchor.parentNode, switch_instance_anchor);
+    				} else {
+    					switch_instance = null;
+    				}
+    			} else if (switch_value) {
+    				switch_instance.$set(switch_instance_changes);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			if (switch_instance) transition_in(switch_instance.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			if (switch_instance) transition_out(switch_instance.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(switch_instance_anchor);
+    			if (switch_instance) destroy_component(switch_instance, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$4.name,
+    		type: "if",
+    		source: "(177:14) {#if col.renderComponent}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (172:10) {#each columns as col}
+    function create_each_block_1$3(ctx) {
+    	let td;
+    	let current_block_type_index;
+    	let if_block;
+    	let t;
+    	let td_class_value;
+    	let current;
+    	let mounted;
+    	let dispose;
+    	const if_block_creators = [create_if_block$4, create_else_block$4];
+    	const if_blocks = [];
+
+    	function select_block_type_2(ctx, dirty) {
+    		if (/*col*/ ctx[39].renderComponent) return 0;
+    		return 1;
+    	}
+
+    	current_block_type_index = select_block_type_2(ctx);
+    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+
+    	function click_handler_1(...args) {
+    		return /*click_handler_1*/ ctx[30](/*row*/ ctx[36], /*col*/ ctx[39], ...args);
+    	}
+
+    	const block = {
+    		c: function create() {
+    			td = element("td");
+    			if_block.c();
+    			t = space();
+    			attr_dev(td, "class", td_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15]([/*col*/ ctx[39].class, /*classNameCell*/ ctx[11]])) + " svelte-uczycn"));
+    			add_location(td, file$7, 172, 12, 5469);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, td, anchor);
+    			if_blocks[current_block_type_index].m(td, null);
+    			append_dev(td, t);
+    			current = true;
+
+    			if (!mounted) {
+    				dispose = listen_dev(td, "click", click_handler_1, false, false, false);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+    			let previous_block_index = current_block_type_index;
+    			current_block_type_index = select_block_type_2(ctx);
+
+    			if (current_block_type_index === previous_block_index) {
+    				if_blocks[current_block_type_index].p(ctx, dirty);
+    			} else {
+    				group_outros();
+
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    					if_blocks[previous_block_index] = null;
+    				});
+
+    				check_outros();
+    				if_block = if_blocks[current_block_type_index];
+
+    				if (!if_block) {
+    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    					if_block.c();
+    				} else {
+    					if_block.p(ctx, dirty);
+    				}
+
+    				transition_in(if_block, 1);
+    				if_block.m(td, t);
+    			}
+
+    			if (!current || dirty[0] & /*columns, classNameCell, filterValues*/ 6152 && td_class_value !== (td_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15]([/*col*/ ctx[39].class, /*classNameCell*/ ctx[11]])) + " svelte-uczycn"))) {
+    				attr_dev(td, "class", td_class_value);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(td);
+    			if_blocks[current_block_type_index].d();
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_1$3.name,
+    		type: "each",
+    		source: "(172:10) {#each columns as col}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (170:40)          
+    function fallback_block_1(ctx) {
+    	let tr;
+    	let tr_class_value;
+    	let current;
+    	let mounted;
+    	let dispose;
+    	let each_value_1 = /*columns*/ ctx[3];
+    	validate_each_argument(each_value_1);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks[i] = create_each_block_1$3(get_each_context_1$3(ctx, each_value_1, i));
+    	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	function click_handler_2(...args) {
+    		return /*click_handler_2*/ ctx[31](/*row*/ ctx[36], ...args);
+    	}
+
+    	const block = {
+    		c: function create() {
+    			tr = element("tr");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			attr_dev(tr, "class", tr_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameRow*/ ctx[10])) + " svelte-uczycn"));
+    			add_location(tr, file$7, 170, 8, 5342);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, tr, anchor);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(tr, null);
+    			}
+
+    			current = true;
+
+    			if (!mounted) {
+    				dispose = listen_dev(tr, "click", click_handler_2, false, false, false);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+
+    			if (dirty[0] & /*asStringArray, columns, classNameCell, handleClickCell, c_rows*/ 305160) {
+    				each_value_1 = /*columns*/ ctx[3];
+    				validate_each_argument(each_value_1);
+    				let i;
+
+    				for (i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1$3(ctx, each_value_1, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block_1$3(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(tr, null);
+    					}
+    				}
+
+    				group_outros();
+
+    				for (i = each_value_1.length; i < each_blocks.length; i += 1) {
+    					out(i);
+    				}
+
+    				check_outros();
+    			}
+
+    			if (!current || dirty[0] & /*classNameRow*/ 1024 && tr_class_value !== (tr_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameRow*/ ctx[10])) + " svelte-uczycn"))) {
+    				attr_dev(tr, "class", tr_class_value);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			for (let i = 0; i < each_value_1.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			each_blocks = each_blocks.filter(Boolean);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
+
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(tr);
+    			destroy_each(each_blocks, detaching);
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: fallback_block_1.name,
+    		type: "fallback",
+    		source: "(170:40)          ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (169:4) {#each c_rows as row, n}
+    function create_each_block$4(ctx) {
+    	let t;
+    	let current;
+    	const row_slot_template = /*#slots*/ ctx[26].row;
+    	const row_slot = create_slot(row_slot_template, ctx, /*$$scope*/ ctx[25], get_row_slot_context);
+    	const row_slot_or_fallback = row_slot || fallback_block_1(ctx);
+    	const after_row_slot_template = /*#slots*/ ctx[26]["after-row"];
+    	const after_row_slot = create_slot(after_row_slot_template, ctx, /*$$scope*/ ctx[25], get_after_row_slot_context);
+
+    	const block = {
+    		c: function create() {
+    			if (row_slot_or_fallback) row_slot_or_fallback.c();
+    			t = space();
+    			if (after_row_slot) after_row_slot.c();
+    		},
+    		m: function mount(target, anchor) {
+    			if (row_slot_or_fallback) {
+    				row_slot_or_fallback.m(target, anchor);
+    			}
+
+    			insert_dev(target, t, anchor);
+
+    			if (after_row_slot) {
+    				after_row_slot.m(target, anchor);
+    			}
+
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if (row_slot) {
+    				if (row_slot.p && (!current || dirty[0] & /*$$scope, c_rows*/ 33562624)) {
+    					update_slot(row_slot, row_slot_template, ctx, /*$$scope*/ ctx[25], dirty, get_row_slot_changes, get_row_slot_context);
+    				}
+    			} else {
+    				if (row_slot_or_fallback && row_slot_or_fallback.p && dirty[0] & /*classNameRow, c_rows, columns, classNameCell*/ 11272) {
+    					row_slot_or_fallback.p(ctx, dirty);
+    				}
+    			}
+
+    			if (after_row_slot) {
+    				if (after_row_slot.p && (!current || dirty[0] & /*$$scope, c_rows*/ 33562624)) {
+    					update_slot(after_row_slot, after_row_slot_template, ctx, /*$$scope*/ ctx[25], dirty, get_after_row_slot_changes, get_after_row_slot_context);
+    				}
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(row_slot_or_fallback, local);
+    			transition_in(after_row_slot, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(row_slot_or_fallback, local);
+    			transition_out(after_row_slot, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (row_slot_or_fallback) row_slot_or_fallback.d(detaching);
+    			if (detaching) detach_dev(t);
+    			if (after_row_slot) after_row_slot.d(detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block$4.name,
+    		type: "each",
+    		source: "(169:4) {#each c_rows as row, n}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$7(ctx) {
+    	let table;
+    	let thead;
+    	let t0;
+    	let thead_class_value;
+    	let t1;
+    	let tbody;
+    	let tbody_class_value;
+    	let table_class_value;
+    	let current;
+    	let if_block = /*showFilterHeader*/ ctx[14] && create_if_block_4$1(ctx);
+    	const header_slot_template = /*#slots*/ ctx[26].header;
+    	const header_slot = create_slot(header_slot_template, ctx, /*$$scope*/ ctx[25], get_header_slot_context);
+    	const header_slot_or_fallback = header_slot || fallback_block_2(ctx);
+    	let each_value = /*c_rows*/ ctx[13];
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
+    	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	const block = {
+    		c: function create() {
+    			table = element("table");
+    			thead = element("thead");
+    			if (if_block) if_block.c();
+    			t0 = space();
+    			if (header_slot_or_fallback) header_slot_or_fallback.c();
+    			t1 = space();
+    			tbody = element("tbody");
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			attr_dev(thead, "class", thead_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameThead*/ ctx[7])) + " svelte-uczycn"));
+    			add_location(thead, file$7, 121, 2, 3709);
+    			attr_dev(tbody, "class", tbody_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTbody*/ ctx[8])) + " svelte-uczycn"));
+    			add_location(tbody, file$7, 167, 2, 5218);
+    			attr_dev(table, "class", table_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTable*/ ctx[6])) + " svelte-uczycn"));
+    			add_location(table, file$7, 120, 0, 3661);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, table, anchor);
+    			append_dev(table, thead);
+    			if (if_block) if_block.m(thead, null);
+    			append_dev(thead, t0);
+
+    			if (header_slot_or_fallback) {
+    				header_slot_or_fallback.m(thead, null);
+    			}
+
+    			append_dev(table, t1);
+    			append_dev(table, tbody);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(tbody, null);
+    			}
+
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if (/*showFilterHeader*/ ctx[14]) if_block.p(ctx, dirty);
+
+    			if (header_slot) {
+    				if (header_slot.p && (!current || dirty[0] & /*$$scope, sortOrder, sortBy*/ 33554435)) {
+    					update_slot(header_slot, header_slot_template, ctx, /*$$scope*/ ctx[25], dirty, get_header_slot_changes, get_header_slot_context);
+    				}
+    			} else {
+    				if (header_slot_or_fallback && header_slot_or_fallback.p && dirty[0] & /*columns, sortOrder, iconAsc, iconDesc, sortBy*/ 59) {
+    					header_slot_or_fallback.p(ctx, dirty);
+    				}
+    			}
+
+    			if (!current || dirty[0] & /*classNameThead*/ 128 && thead_class_value !== (thead_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameThead*/ ctx[7])) + " svelte-uczycn"))) {
+    				attr_dev(thead, "class", thead_class_value);
+    			}
+
+    			if (dirty[0] & /*$$scope, c_rows, asStringArray, classNameRow, handleClickRow, columns, classNameCell, handleClickCell*/ 33991688) {
+    				each_value = /*c_rows*/ ctx[13];
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$4(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block$4(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(tbody, null);
+    					}
+    				}
+
+    				group_outros();
+
+    				for (i = each_value.length; i < each_blocks.length; i += 1) {
+    					out(i);
+    				}
+
+    				check_outros();
+    			}
+
+    			if (!current || dirty[0] & /*classNameTbody*/ 256 && tbody_class_value !== (tbody_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTbody*/ ctx[8])) + " svelte-uczycn"))) {
+    				attr_dev(tbody, "class", tbody_class_value);
+    			}
+
+    			if (!current || dirty[0] & /*classNameTable*/ 64 && table_class_value !== (table_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTable*/ ctx[6])) + " svelte-uczycn"))) {
+    				attr_dev(table, "class", table_class_value);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(header_slot_or_fallback, local);
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(header_slot_or_fallback, local);
+    			each_blocks = each_blocks.filter(Boolean);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
+
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(table);
+    			if (if_block) if_block.d();
+    			if (header_slot_or_fallback) header_slot_or_fallback.d(detaching);
+    			destroy_each(each_blocks, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$7.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$7($$self, $$props, $$invalidate) {
+    	let c_rows;
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("SvelteTable", slots, ['header','row','after-row']);
+    	const dispatch = createEventDispatcher();
+    	let { columns } = $$props;
+    	let { rows } = $$props;
+    	let { sortBy = "" } = $$props;
+    	let { sortOrder = 1 } = $$props;
+    	let { iconAsc = "▲" } = $$props;
+    	let { iconDesc = "▼" } = $$props;
+    	let { classNameTable = "" } = $$props;
+    	let { classNameThead = "" } = $$props;
+    	let { classNameTbody = "" } = $$props;
+    	let { classNameSelect = "" } = $$props;
+    	let { classNameRow = "" } = $$props;
+    	let { classNameCell = "" } = $$props;
+    	let { filterSelections = {} } = $$props;
+    	let { sliceBegin = null } = $$props;
+    	let { sliceEnd = null } = $$props;
+    	let { disableFilterHeader = false } = $$props;
+    	let sortFunction = () => "";
+
+    	let showFilterHeader = !disableFilterHeader && columns.some(c => {
+    		// check if there are any filter or search headers
+    		return c.filterOptions !== undefined || c.searchValue !== undefined;
+    	});
+
+    	let filterValues = {};
+    	let searchValues = {};
+    	let columnByKey = {};
+
+    	columns.forEach(col => {
+    		$$invalidate(24, columnByKey[col.key] = col, columnByKey);
+    	});
+
+    	const asStringArray = v => [].concat(v).filter(v => typeof v === "string" && v !== "").join(" ");
+
+    	const calculateFilterValues = () => {
+    		$$invalidate(12, filterValues = {});
+
+    		columns.forEach(c => {
+    			if (typeof c.filterOptions === "function") {
+    				$$invalidate(12, filterValues[c.key] = c.filterOptions(rows), filterValues);
+    			} else if (Array.isArray(c.filterOptions)) {
+    				// if array of strings is provided, use it for name and value
+    				$$invalidate(12, filterValues[c.key] = c.filterOptions.map(val => ({ name: val, value: val })), filterValues);
+    			}
+    		});
+    	};
+
+    	
+    	
+
+    	const updateSortOrder = colKey => {
+    		if (colKey === sortBy) {
+    			$$invalidate(1, sortOrder = sortOrder === 1 ? -1 : 1);
+    		} else {
+    			$$invalidate(1, sortOrder = 1);
+    		}
+    	};
+
+    	const handleClickCol = (event, col) => {
+    		updateSortOrder(col.key);
+    		$$invalidate(0, sortBy = col.key);
+    		dispatch("clickCol", { event, col, key: col.key });
+    	};
+
+    	const handleClickRow = (event, row) => {
+    		dispatch("clickRow", { event, row });
+    	};
+
+    	const handleClickCell = (event, row, key) => {
+    		dispatch("clickCell", { event, row, key });
+    	};
+
+    	const writable_props = [
+    		"columns",
+    		"rows",
+    		"sortBy",
+    		"sortOrder",
+    		"iconAsc",
+    		"iconDesc",
+    		"classNameTable",
+    		"classNameThead",
+    		"classNameTbody",
+    		"classNameSelect",
+    		"classNameRow",
+    		"classNameCell",
+    		"filterSelections",
+    		"sliceBegin",
+    		"sliceEnd",
+    		"disableFilterHeader"
+    	];
+
+    	Object_1$1.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<SvelteTable> was created with unknown prop '${key}'`);
+    	});
+
+    	function input_input_handler(col) {
+    		filterSelections[col.key] = this.value;
+    		$$invalidate(2, filterSelections);
+    		$$invalidate(3, columns);
+    		$$invalidate(12, filterValues);
+    	}
+
+    	function select_change_handler(col) {
+    		filterSelections[col.key] = select_value(this);
+    		$$invalidate(2, filterSelections);
+    		$$invalidate(3, columns);
+    		$$invalidate(12, filterValues);
+    	}
+
+    	const click_handler = (col, e) => handleClickCol(e, col);
+
+    	const click_handler_1 = (row, col, e) => {
+    		handleClickCell(e, row, col.key);
+    	};
+
+    	const click_handler_2 = (row, e) => {
+    		handleClickRow(e, row);
+    	};
+
+    	$$self.$$set = $$props => {
+    		if ("columns" in $$props) $$invalidate(3, columns = $$props.columns);
+    		if ("rows" in $$props) $$invalidate(19, rows = $$props.rows);
+    		if ("sortBy" in $$props) $$invalidate(0, sortBy = $$props.sortBy);
+    		if ("sortOrder" in $$props) $$invalidate(1, sortOrder = $$props.sortOrder);
+    		if ("iconAsc" in $$props) $$invalidate(4, iconAsc = $$props.iconAsc);
+    		if ("iconDesc" in $$props) $$invalidate(5, iconDesc = $$props.iconDesc);
+    		if ("classNameTable" in $$props) $$invalidate(6, classNameTable = $$props.classNameTable);
+    		if ("classNameThead" in $$props) $$invalidate(7, classNameThead = $$props.classNameThead);
+    		if ("classNameTbody" in $$props) $$invalidate(8, classNameTbody = $$props.classNameTbody);
+    		if ("classNameSelect" in $$props) $$invalidate(9, classNameSelect = $$props.classNameSelect);
+    		if ("classNameRow" in $$props) $$invalidate(10, classNameRow = $$props.classNameRow);
+    		if ("classNameCell" in $$props) $$invalidate(11, classNameCell = $$props.classNameCell);
+    		if ("filterSelections" in $$props) $$invalidate(2, filterSelections = $$props.filterSelections);
+    		if ("sliceBegin" in $$props) $$invalidate(20, sliceBegin = $$props.sliceBegin);
+    		if ("sliceEnd" in $$props) $$invalidate(21, sliceEnd = $$props.sliceEnd);
+    		if ("disableFilterHeader" in $$props) $$invalidate(22, disableFilterHeader = $$props.disableFilterHeader);
+    		if ("$$scope" in $$props) $$invalidate(25, $$scope = $$props.$$scope);
+    	};
+
+    	$$self.$capture_state = () => ({
+    		createEventDispatcher,
+    		dispatch,
+    		columns,
+    		rows,
+    		sortBy,
+    		sortOrder,
+    		iconAsc,
+    		iconDesc,
+    		classNameTable,
+    		classNameThead,
+    		classNameTbody,
+    		classNameSelect,
+    		classNameRow,
+    		classNameCell,
+    		filterSelections,
+    		sliceBegin,
+    		sliceEnd,
+    		disableFilterHeader,
+    		sortFunction,
+    		showFilterHeader,
+    		filterValues,
+    		searchValues,
+    		columnByKey,
+    		asStringArray,
+    		calculateFilterValues,
+    		updateSortOrder,
+    		handleClickCol,
+    		handleClickRow,
+    		handleClickCell,
+    		c_rows
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("columns" in $$props) $$invalidate(3, columns = $$props.columns);
+    		if ("rows" in $$props) $$invalidate(19, rows = $$props.rows);
+    		if ("sortBy" in $$props) $$invalidate(0, sortBy = $$props.sortBy);
+    		if ("sortOrder" in $$props) $$invalidate(1, sortOrder = $$props.sortOrder);
+    		if ("iconAsc" in $$props) $$invalidate(4, iconAsc = $$props.iconAsc);
+    		if ("iconDesc" in $$props) $$invalidate(5, iconDesc = $$props.iconDesc);
+    		if ("classNameTable" in $$props) $$invalidate(6, classNameTable = $$props.classNameTable);
+    		if ("classNameThead" in $$props) $$invalidate(7, classNameThead = $$props.classNameThead);
+    		if ("classNameTbody" in $$props) $$invalidate(8, classNameTbody = $$props.classNameTbody);
+    		if ("classNameSelect" in $$props) $$invalidate(9, classNameSelect = $$props.classNameSelect);
+    		if ("classNameRow" in $$props) $$invalidate(10, classNameRow = $$props.classNameRow);
+    		if ("classNameCell" in $$props) $$invalidate(11, classNameCell = $$props.classNameCell);
+    		if ("filterSelections" in $$props) $$invalidate(2, filterSelections = $$props.filterSelections);
+    		if ("sliceBegin" in $$props) $$invalidate(20, sliceBegin = $$props.sliceBegin);
+    		if ("sliceEnd" in $$props) $$invalidate(21, sliceEnd = $$props.sliceEnd);
+    		if ("disableFilterHeader" in $$props) $$invalidate(22, disableFilterHeader = $$props.disableFilterHeader);
+    		if ("sortFunction" in $$props) $$invalidate(23, sortFunction = $$props.sortFunction);
+    		if ("showFilterHeader" in $$props) $$invalidate(14, showFilterHeader = $$props.showFilterHeader);
+    		if ("filterValues" in $$props) $$invalidate(12, filterValues = $$props.filterValues);
+    		if ("searchValues" in $$props) searchValues = $$props.searchValues;
+    		if ("columnByKey" in $$props) $$invalidate(24, columnByKey = $$props.columnByKey);
+    		if ("c_rows" in $$props) $$invalidate(13, c_rows = $$props.c_rows);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty[0] & /*columnByKey, sortBy*/ 16777217) {
+    			{
+    				let col = columnByKey[sortBy];
+
+    				if (col !== undefined && col.sortable === true && typeof col.value === "function") {
+    					$$invalidate(23, sortFunction = r => col.value(r));
+    				}
+    			}
+    		}
+
+    		if ($$self.$$.dirty[0] & /*rows, filterSelections, columnByKey, sortFunction, sortOrder, sliceBegin, sliceEnd*/ 28835846) {
+    			$$invalidate(13, c_rows = rows.filter(r => {
+    				// get search and filter results/matches
+    				return Object.keys(filterSelections).every(f => {
+    					// check search (text input) matches
+    					let resSearch = filterSelections[f] === "" || columnByKey[f].searchValue && (columnByKey[f].searchValue(r) + "").toLocaleLowerCase().indexOf((filterSelections[f] + "").toLocaleLowerCase()) >= 0;
+
+    					// check filter (dropdown) matches
+    					let resFilter = resSearch || filterSelections[f] === undefined || // default to value() if filterValue() not provided in col
+    					filterSelections[f] === (typeof columnByKey[f].filterValue === "function"
+    					? columnByKey[f].filterValue(r)
+    					: columnByKey[f].value(r));
+
+    					return resFilter;
+    				});
+    			}).map(r => Object.assign({}, r, { $sortOn: sortFunction(r) })).sort((a, b) => {
+    				if (a.$sortOn > b.$sortOn) return sortOrder; else if (a.$sortOn < b.$sortOn) return -sortOrder;
+    				return 0;
+    			}).slice(sliceBegin || 0, sliceEnd || undefined));
+    		}
+
+    		if ($$self.$$.dirty[0] & /*columns, rows*/ 524296) {
+    			{
+    				// if filters are enabled, watch rows and columns
+    				if (showFilterHeader && columns && rows) {
+    					calculateFilterValues();
+    				}
+    			}
+    		}
+    	};
+
+    	return [
+    		sortBy,
+    		sortOrder,
+    		filterSelections,
+    		columns,
+    		iconAsc,
+    		iconDesc,
+    		classNameTable,
+    		classNameThead,
+    		classNameTbody,
+    		classNameSelect,
+    		classNameRow,
+    		classNameCell,
+    		filterValues,
+    		c_rows,
+    		showFilterHeader,
+    		asStringArray,
+    		handleClickCol,
+    		handleClickRow,
+    		handleClickCell,
+    		rows,
+    		sliceBegin,
+    		sliceEnd,
+    		disableFilterHeader,
+    		sortFunction,
+    		columnByKey,
+    		$$scope,
+    		slots,
+    		input_input_handler,
+    		select_change_handler,
+    		click_handler,
+    		click_handler_1,
+    		click_handler_2
+    	];
+    }
+
+    class SvelteTable extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+
+    		init(
+    			this,
+    			options,
+    			instance$7,
+    			create_fragment$7,
+    			safe_not_equal,
+    			{
+    				columns: 3,
+    				rows: 19,
+    				sortBy: 0,
+    				sortOrder: 1,
+    				iconAsc: 4,
+    				iconDesc: 5,
+    				classNameTable: 6,
+    				classNameThead: 7,
+    				classNameTbody: 8,
+    				classNameSelect: 9,
+    				classNameRow: 10,
+    				classNameCell: 11,
+    				filterSelections: 2,
+    				sliceBegin: 20,
+    				sliceEnd: 21,
+    				disableFilterHeader: 22
+    			},
+    			[-1, -1]
+    		);
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "SvelteTable",
+    			options,
+    			id: create_fragment$7.name
+    		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*columns*/ ctx[3] === undefined && !("columns" in props)) {
+    			console.warn("<SvelteTable> was created without expected prop 'columns'");
+    		}
+
+    		if (/*rows*/ ctx[19] === undefined && !("rows" in props)) {
+    			console.warn("<SvelteTable> was created without expected prop 'rows'");
+    		}
+    	}
+
+    	get columns() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set columns(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get rows() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set rows(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get sortBy() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set sortBy(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get sortOrder() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set sortOrder(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get iconAsc() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set iconAsc(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get iconDesc() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set iconDesc(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get classNameTable() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set classNameTable(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get classNameThead() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set classNameThead(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get classNameTbody() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set classNameTbody(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get classNameSelect() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set classNameSelect(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get classNameRow() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set classNameRow(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get classNameCell() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set classNameCell(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get filterSelections() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set filterSelections(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get sliceBegin() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set sliceBegin(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get sliceEnd() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set sliceEnd(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get disableFilterHeader() {
+    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set disableFilterHeader(value) {
+    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    // export const allSkills = [
+    //   // 'あ行のスキル',
+    //   'アイテム使用強化',
+    //   '泡沫の舞',
+    //   '炎鱗の恩恵',
+    //   '鬼火纏',
+    //   // 'か行のスキル',
+    //   'ガード強化',
+    //   'ガード性能',
+    //   '会心撃【属性】',
+    //   '回避距離UP',
+    //   '回避性能',
+    //   '回復速度',
+    //   '翔蟲使い',
+    //   '火事場力',
+    //   '滑走強化',
+    //   '霞皮の恩恵',
+    //   '雷属性攻撃強化',
+    //   '雷耐性',
+    //   '貫通弾・貫通矢強化',
+    //   '気絶耐性',
+    //   'キノコ大好き',
+    //   '逆襲',
+    //   '強化持続',
+    //   'KO術',
+    //   '広域化',
+    //   '幸運',
+    //   '鋼殻の恩恵',
+    //   '攻撃',
+    //   '剛刃研磨',
+    //   '高速変形',
+    //   '氷属性攻撃強化',
+    //   '氷耐性',
+    //   '渾身',
+    //   // 'さ行のスキル',
+    //   '逆恨み',
+    //   '散弾・拡散矢強化',
+    //   '死中に活',
+    //   '弱点特効',
+    //   'ジャンプ鉄人',
+    //   '集中',
+    //   '植生学',
+    //   '心眼',
+    //   '睡眠属性強化',
+    //   '睡眠耐性',
+    //   'スタミナ急速回復',
+    //   'スタミナ奪取',
+    //   '精霊の加護',
+    //   '攻めの守勢',
+    //   '装填拡張',
+    //   '装填速度',
+    //   '速射強化',
+    //   '属性やられ耐性',
+    //   // 'た行のスキル',
+    //   '体術',
+    //   '耐震',
+    //   '体力回復量UP',
+    //   '匠',
+    //   '達人芸',
+    //   '弾丸節約',
+    //   '弾導強化',
+    //   '力の解放',
+    //   '地質学',
+    //   '超会心',
+    //   '挑戦者',
+    //   '通常弾・連射矢強化',
+    //   '泥雪耐性',
+    //   '砥石使用高速化',
+    //   '特殊射撃強化',
+    //   '毒属性強化',
+    //   '毒耐性',
+    //   '飛び込み',
+    //   '鈍器使い',
+    //   // 'な行のスキル',
+    //   '納刀術',
+    //   '乗り名人',
+    //   // 'は行のスキル',
+    //   '破壊王',
+    //   '剥ぎ取り鉄人',
+    //   '剥ぎ取り名人',
+    //   '爆破属性強化',
+    //   '爆破やられ耐性',
+    //   '抜刀術【力】',
+    //   '抜刀術【技】',
+    //   '早食い',
+    //   '腹減り耐性',
+    //   '反動軽減',
+    //   '火属性攻撃強化',
+    //   '火耐性',
+    //   'ひるみ軽減',
+    //   '風圧耐性',
+    //   '風紋の一致',
+    //   '笛吹き名人',
+    //   '不屈',
+    //   'フルチャージ',
+    //   'ブレ抑制',
+    //   '壁面移動',
+    //   '防御',
+    //   '砲術',
+    //   '砲弾装填',
+    //   '捕獲名人',
+    //   'ボマー',
+    //   // 'ま行のスキル',
+    //   '麻痺属性強化',
+    //   '麻痺耐性',
+    //   '満足感',
+    //   '見切り',
+    //   '水属性攻撃強化',
+    //   '水耐性',
+    //   '耳栓',
+    //   // 'や行のスキル',
+    //   '弓溜め段階解放',
+    //   '陽動',
+    //   // 'ら行のスキル',
+    //   '雷紋の一致',
+    //   'ランナー',
+    //   '龍属性攻撃強化',
+    //   '龍耐性',
+    //   // 'わ行のスキル',
+    //   '業物',
+    // ]
 
 
     const allSkillDetails = [
@@ -7988,1293 +14290,34 @@ for (const input of inputs) {
       { name: '業物',               hiragana: 'わざもの',                         englishCharacters: 'wazamono'                     },
     ];
 
-    /* src/CharmSearcher.svelte generated by Svelte v3.38.2 */
-    const file$6 = "src/CharmSearcher.svelte";
 
-    function get_each_context$4(ctx, list, i) {
-    	const child_ctx = ctx.slice();
-    	child_ctx[7] = list[i];
-    	child_ctx[8] = list;
-    	child_ctx[9] = i;
-    	return child_ctx;
-    }
 
-    function get_each_context_1$3(ctx, list, i) {
-    	const child_ctx = ctx.slice();
-    	child_ctx[7] = list[i];
-    	child_ctx[10] = list;
-    	child_ctx[11] = i;
-    	return child_ctx;
-    }
+    const getAllSkillNames = () => allSkillDetails.map(i => i.name);
 
-    // (48:8) {#each [...Array(skillFilters.filter(i => i).length + 1).keys()] as i}
-    function create_each_block_1$3(ctx) {
-    	let div;
-    	let autocomplete0;
-    	let updating_selectedItem;
-    	let t0;
-    	let autocomplete1;
-    	let updating_selectedItem_1;
-    	let t1;
-    	let current;
+    /* src/CharmTable.svelte generated by Svelte v3.38.2 */
 
-    	function autocomplete0_selectedItem_binding(value) {
-    		/*autocomplete0_selectedItem_binding*/ ctx[4](value, /*i*/ ctx[7]);
-    	}
-
-    	let autocomplete0_props = {
-    		items: allSkillDetails,
-    		labelFieldName: "name",
-    		valueFieldName: "name",
-    		keywordsFunction: func_1,
-    		placeholder: "スキル" + (/*i*/ ctx[7] + 1),
-    		showClear: true,
-    		hideArrow: true,
-    		className: "autocomplete-skill"
-    	};
-
-    	if (/*skillFilters*/ ctx[0][/*i*/ ctx[7]] !== void 0) {
-    		autocomplete0_props.selectedItem = /*skillFilters*/ ctx[0][/*i*/ ctx[7]];
-    	}
-
-    	autocomplete0 = new SimpleAutocomplete({
-    			props: autocomplete0_props,
-    			$$inline: true
-    		});
-
-    	binding_callbacks.push(() => bind(autocomplete0, "selectedItem", autocomplete0_selectedItem_binding));
-
-    	function autocomplete1_selectedItem_binding(value) {
-    		/*autocomplete1_selectedItem_binding*/ ctx[5](value, /*i*/ ctx[7]);
-    	}
-
-    	let autocomplete1_props = {
-    		items: [...Array(MAX_SKILL_LEVEL + 1).keys()],
-    		placeholder: "Lv",
-    		hideArrow: true,
-    		className: "autocomplete-skill-level"
-    	};
-
-    	if (/*skillLevelFilters*/ ctx[1][/*i*/ ctx[7]] !== void 0) {
-    		autocomplete1_props.selectedItem = /*skillLevelFilters*/ ctx[1][/*i*/ ctx[7]];
-    	}
-
-    	autocomplete1 = new SimpleAutocomplete({
-    			props: autocomplete1_props,
-    			$$inline: true
-    		});
-
-    	binding_callbacks.push(() => bind(autocomplete1, "selectedItem", autocomplete1_selectedItem_binding));
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			create_component(autocomplete0.$$.fragment);
-    			t0 = space();
-    			create_component(autocomplete1.$$.fragment);
-    			t1 = space();
-    			add_location(div, file$6, 48, 10, 1273);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(autocomplete0, div, null);
-    			append_dev(div, t0);
-    			mount_component(autocomplete1, div, null);
-    			append_dev(div, t1);
-    			current = true;
-    		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
-    			const autocomplete0_changes = {};
-    			if (dirty & /*skillFilters*/ 1) autocomplete0_changes.placeholder = "スキル" + (/*i*/ ctx[7] + 1);
-
-    			if (!updating_selectedItem && dirty & /*skillFilters, Array*/ 1) {
-    				updating_selectedItem = true;
-    				autocomplete0_changes.selectedItem = /*skillFilters*/ ctx[0][/*i*/ ctx[7]];
-    				add_flush_callback(() => updating_selectedItem = false);
-    			}
-
-    			autocomplete0.$set(autocomplete0_changes);
-    			const autocomplete1_changes = {};
-
-    			if (!updating_selectedItem_1 && dirty & /*skillLevelFilters, Array, skillFilters*/ 3) {
-    				updating_selectedItem_1 = true;
-    				autocomplete1_changes.selectedItem = /*skillLevelFilters*/ ctx[1][/*i*/ ctx[7]];
-    				add_flush_callback(() => updating_selectedItem_1 = false);
-    			}
-
-    			autocomplete1.$set(autocomplete1_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(autocomplete0.$$.fragment, local);
-    			transition_in(autocomplete1.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(autocomplete0.$$.fragment, local);
-    			transition_out(autocomplete1.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(autocomplete0);
-    			destroy_component(autocomplete1);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_each_block_1$3.name,
-    		type: "each",
-    		source: "(48:8) {#each [...Array(skillFilters.filter(i => i).length + 1).keys()] as i}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (71:8) {#each [...Array(MAX_SLOTS).keys()] as i}
-    function create_each_block$4(ctx) {
-    	let autocomplete;
-    	let updating_selectedItem;
-    	let current;
-
-    	function autocomplete_selectedItem_binding(value) {
-    		/*autocomplete_selectedItem_binding*/ ctx[6](value, /*i*/ ctx[7]);
-    	}
-
-    	let autocomplete_props = {
-    		items: [...Array(3).keys()].map(func_2),
-    		placeholder: "スロット" + (/*i*/ ctx[7] + 1),
-    		showClear: true,
-    		hideArrow: true,
-    		className: "autocomplete-slot-level"
-    	};
-
-    	if (/*slots*/ ctx[2][/*i*/ ctx[7]] !== void 0) {
-    		autocomplete_props.selectedItem = /*slots*/ ctx[2][/*i*/ ctx[7]];
-    	}
-
-    	autocomplete = new SimpleAutocomplete({
-    			props: autocomplete_props,
-    			$$inline: true
-    		});
-
-    	binding_callbacks.push(() => bind(autocomplete, "selectedItem", autocomplete_selectedItem_binding));
-
-    	const block = {
-    		c: function create() {
-    			create_component(autocomplete.$$.fragment);
-    		},
-    		m: function mount(target, anchor) {
-    			mount_component(autocomplete, target, anchor);
-    			current = true;
-    		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
-    			const autocomplete_changes = {};
-
-    			if (!updating_selectedItem && dirty & /*slots, Array, MAX_SLOTS*/ 4) {
-    				updating_selectedItem = true;
-    				autocomplete_changes.selectedItem = /*slots*/ ctx[2][/*i*/ ctx[7]];
-    				add_flush_callback(() => updating_selectedItem = false);
-    			}
-
-    			autocomplete.$set(autocomplete_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(autocomplete.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(autocomplete.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			destroy_component(autocomplete, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_each_block$4.name,
-    		type: "each",
-    		source: "(71:8) {#each [...Array(MAX_SLOTS).keys()] as i}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function create_fragment$6(ctx) {
-    	let div4;
-    	let div3;
-    	let t0;
-    	let br0;
-    	let t1;
-    	let br1;
-    	let t2;
-    	let div2;
-    	let div0;
-    	let t3;
-    	let t4;
-    	let div1;
-    	let t5;
-    	let br2;
-    	let t6;
-    	let current;
-    	let each_value_1 = [...Array(/*skillFilters*/ ctx[0].filter(func).length + 1).keys()];
-    	validate_each_argument(each_value_1);
-    	let each_blocks_1 = [];
-
-    	for (let i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks_1[i] = create_each_block_1$3(get_each_context_1$3(ctx, each_value_1, i));
-    	}
-
-    	const out = i => transition_out(each_blocks_1[i], 1, 1, () => {
-    		each_blocks_1[i] = null;
-    	});
-
-    	let each_value = [...Array(MAX_SLOTS).keys()];
-    	validate_each_argument(each_value);
-    	let each_blocks = [];
-
-    	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
-    	}
-
-    	const out_1 = i => transition_out(each_blocks[i], 1, 1, () => {
-    		each_blocks[i] = null;
-    	});
-
-    	const block = {
-    		c: function create() {
-    			div4 = element("div");
-    			div3 = element("div");
-    			t0 = text("登録された護石から性能検索を行います。");
-    			br0 = element("br");
-    			t1 = text("\n    スキルを装飾品で付けられる護石も検索対象になります。");
-    			br1 = element("br");
-    			t2 = space();
-    			div2 = element("div");
-    			div0 = element("div");
-    			t3 = text("スキル:\n        ");
-
-    			for (let i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].c();
-    			}
-
-    			t4 = space();
-    			div1 = element("div");
-    			t5 = text("スロット:");
-    			br2 = element("br");
-    			t6 = space();
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			add_location(br0, file$6, 42, 23, 1074);
-    			add_location(br1, file$6, 43, 30, 1109);
-    			attr_dev(div0, "id", "skills");
-    			attr_dev(div0, "class", "svelte-1mbfa6t");
-    			add_location(div0, file$6, 45, 6, 1153);
-    			add_location(br2, file$6, 69, 13, 2186);
-    			attr_dev(div1, "id", "slots");
-    			attr_dev(div1, "class", "svelte-1mbfa6t");
-    			add_location(div1, file$6, 68, 6, 2156);
-    			attr_dev(div2, "id", "charm-search-form");
-    			add_location(div2, file$6, 44, 4, 1118);
-    			attr_dev(div3, "id", "charm-searcher");
-    			attr_dev(div3, "class", "svelte-1mbfa6t");
-    			add_location(div3, file$6, 41, 2, 1025);
-    			attr_dev(div4, "class", "tab-content svelte-1mbfa6t");
-    			add_location(div4, file$6, 40, 0, 997);
-    		},
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div4, anchor);
-    			append_dev(div4, div3);
-    			append_dev(div3, t0);
-    			append_dev(div3, br0);
-    			append_dev(div3, t1);
-    			append_dev(div3, br1);
-    			append_dev(div3, t2);
-    			append_dev(div3, div2);
-    			append_dev(div2, div0);
-    			append_dev(div0, t3);
-
-    			for (let i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].m(div0, null);
-    			}
-
-    			append_dev(div2, t4);
-    			append_dev(div2, div1);
-    			append_dev(div1, t5);
-    			append_dev(div1, br2);
-    			append_dev(div1, t6);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(div1, null);
-    			}
-
-    			current = true;
-    		},
-    		p: function update(ctx, [dirty]) {
-    			if (dirty & /*Array, MAX_SKILL_LEVEL, skillLevelFilters, skillFilters, allSkillDetails*/ 3) {
-    				each_value_1 = [...Array(/*skillFilters*/ ctx[0].filter(func).length + 1).keys()];
-    				validate_each_argument(each_value_1);
-    				let i;
-
-    				for (i = 0; i < each_value_1.length; i += 1) {
-    					const child_ctx = get_each_context_1$3(ctx, each_value_1, i);
-
-    					if (each_blocks_1[i]) {
-    						each_blocks_1[i].p(child_ctx, dirty);
-    						transition_in(each_blocks_1[i], 1);
-    					} else {
-    						each_blocks_1[i] = create_each_block_1$3(child_ctx);
-    						each_blocks_1[i].c();
-    						transition_in(each_blocks_1[i], 1);
-    						each_blocks_1[i].m(div0, null);
-    					}
-    				}
-
-    				group_outros();
-
-    				for (i = each_value_1.length; i < each_blocks_1.length; i += 1) {
-    					out(i);
-    				}
-
-    				check_outros();
-    			}
-
-    			if (dirty & /*Array, MAX_SLOTS, slots*/ 4) {
-    				each_value = [...Array(MAX_SLOTS).keys()];
-    				validate_each_argument(each_value);
-    				let i;
-
-    				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$4(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(child_ctx, dirty);
-    						transition_in(each_blocks[i], 1);
-    					} else {
-    						each_blocks[i] = create_each_block$4(child_ctx);
-    						each_blocks[i].c();
-    						transition_in(each_blocks[i], 1);
-    						each_blocks[i].m(div1, null);
-    					}
-    				}
-
-    				group_outros();
-
-    				for (i = each_value.length; i < each_blocks.length; i += 1) {
-    					out_1(i);
-    				}
-
-    				check_outros();
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-
-    			for (let i = 0; i < each_value_1.length; i += 1) {
-    				transition_in(each_blocks_1[i]);
-    			}
-
-    			for (let i = 0; i < each_value.length; i += 1) {
-    				transition_in(each_blocks[i]);
-    			}
-
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			each_blocks_1 = each_blocks_1.filter(Boolean);
-
-    			for (let i = 0; i < each_blocks_1.length; i += 1) {
-    				transition_out(each_blocks_1[i]);
-    			}
-
-    			each_blocks = each_blocks.filter(Boolean);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				transition_out(each_blocks[i]);
-    			}
-
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div4);
-    			destroy_each(each_blocks_1, detaching);
-    			destroy_each(each_blocks, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_fragment$6.name,
-    		type: "component",
-    		source: "",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    const MAX_SKILL_LEVEL = 7;
-    const MAX_SLOTS = 3;
-    const func = i => i;
-    const func_1 = s => `${s.name} ${s.hiragana} ${s.englishCharacters}`;
-    const func_2 = i => i + 1;
-
-    function instance$6($$self, $$props, $$invalidate) {
-    	let { $$slots: slots$1 = {}, $$scope } = $$props;
-    	validate_slots("CharmSearcher", slots$1, []);
-    	let { charmManager } = $$props;
-    	let skillFilters = [];
-    	let skillLevelFilters = [];
-    	let slots = [];
-    	const writable_props = ["charmManager"];
-
-    	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<CharmSearcher> was created with unknown prop '${key}'`);
-    	});
-
-    	function autocomplete0_selectedItem_binding(value, i) {
-    		if ($$self.$$.not_equal(skillFilters[i], value)) {
-    			skillFilters[i] = value;
-    			$$invalidate(0, skillFilters);
-    		}
-    	}
-
-    	function autocomplete1_selectedItem_binding(value, i) {
-    		if ($$self.$$.not_equal(skillLevelFilters[i], value)) {
-    			skillLevelFilters[i] = value;
-    			($$invalidate(1, skillLevelFilters), $$invalidate(0, skillFilters));
-    		}
-    	}
-
-    	function autocomplete_selectedItem_binding(value, i) {
-    		if ($$self.$$.not_equal(slots[i], value)) {
-    			slots[i] = value;
-    			$$invalidate(2, slots);
-    		}
-    	}
-
-    	$$self.$$set = $$props => {
-    		if ("charmManager" in $$props) $$invalidate(3, charmManager = $$props.charmManager);
-    	};
-
-    	$$self.$capture_state = () => ({
-    		AutoComplete: SimpleAutocomplete,
-    		allSkillDetails,
-    		charmManager,
-    		MAX_SKILL_LEVEL,
-    		MAX_SLOTS,
-    		skillFilters,
-    		skillLevelFilters,
-    		slots
-    	});
-
-    	$$self.$inject_state = $$props => {
-    		if ("charmManager" in $$props) $$invalidate(3, charmManager = $$props.charmManager);
-    		if ("skillFilters" in $$props) $$invalidate(0, skillFilters = $$props.skillFilters);
-    		if ("skillLevelFilters" in $$props) $$invalidate(1, skillLevelFilters = $$props.skillLevelFilters);
-    		if ("slots" in $$props) $$invalidate(2, slots = $$props.slots);
-    	};
-
-    	if ($$props && "$$inject" in $$props) {
-    		$$self.$inject_state($$props.$$inject);
-    	}
-
-    	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*skillFilters, skillLevelFilters*/ 3) {
-    			{
-    				for (const i in skillFilters) {
-    					if (skillFilters[i] && skillLevelFilters[i] == null) {
-    						$$invalidate(1, skillLevelFilters[i] = 1, skillLevelFilters);
-    					}
-
-    					if (skillFilters[i] == null) {
-    						skillFilters.splice(i, 1);
-    						skillLevelFilters.splice(i, 1);
-    					}
-    				}
-    			}
-    		}
-
-    		if ($$self.$$.dirty & /*slots*/ 4) {
-    			$$invalidate(2, slots = slots.sort((a, b) => b - a));
-    		}
-    	};
-
-    	return [
-    		skillFilters,
-    		skillLevelFilters,
-    		slots,
-    		charmManager,
-    		autocomplete0_selectedItem_binding,
-    		autocomplete1_selectedItem_binding,
-    		autocomplete_selectedItem_binding
-    	];
-    }
-
-    class CharmSearcher extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-    		init(this, options, instance$6, create_fragment$6, safe_not_equal, { charmManager: 3 });
-
-    		dispatch_dev("SvelteRegisterComponent", {
-    			component: this,
-    			tagName: "CharmSearcher",
-    			options,
-    			id: create_fragment$6.name
-    		});
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-
-    		if (/*charmManager*/ ctx[3] === undefined && !("charmManager" in props)) {
-    			console.warn("<CharmSearcher> was created without expected prop 'charmManager'");
-    		}
-    	}
-
-    	get charmManager() {
-    		throw new Error("<CharmSearcher>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set charmManager(value) {
-    		throw new Error("<CharmSearcher>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    /* src/SvelteTable.svelte generated by Svelte v3.38.2 */
-
-    const { Object: Object_1$1 } = globals;
-    const file$5 = "src/SvelteTable.svelte";
-
-    function get_each_context$3(ctx, list, i) {
-    	const child_ctx = ctx.slice();
-    	child_ctx[33] = list[i];
-    	child_ctx[35] = i;
-    	return child_ctx;
-    }
-
-    const get_after_row_slot_changes = dirty => ({ row: dirty[0] & /*c_rows*/ 8192 });
-    const get_after_row_slot_context = ctx => ({ row: /*row*/ ctx[33], n: /*n*/ ctx[35] });
+    const { Object: Object_1 } = globals;
+    const file$6 = "src/CharmTable.svelte";
 
     function get_each_context_1$2(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[36] = list[i];
+    	child_ctx[25] = list[i];
     	return child_ctx;
     }
 
-    const get_row_slot_changes = dirty => ({ row: dirty[0] & /*c_rows*/ 8192 });
-    const get_row_slot_context = ctx => ({ row: /*row*/ ctx[33], n: /*n*/ ctx[35] });
-
-    function get_each_context_2$1(ctx, list, i) {
+    function get_each_context$3(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[36] = list[i];
+    	child_ctx[22] = list[i];
     	return child_ctx;
     }
 
-    const get_header_slot_changes = dirty => ({
-    	sortOrder: dirty[0] & /*sortOrder*/ 2,
-    	sortBy: dirty[0] & /*sortBy*/ 1
-    });
-
-    const get_header_slot_context = ctx => ({
-    	sortOrder: /*sortOrder*/ ctx[1],
-    	sortBy: /*sortBy*/ ctx[0]
-    });
-
-    function get_each_context_3(ctx, list, i) {
-    	const child_ctx = ctx.slice();
-    	child_ctx[36] = list[i];
-    	child_ctx[41] = list;
-    	child_ctx[42] = i;
-    	return child_ctx;
-    }
-
-    function get_each_context_4(ctx, list, i) {
-    	const child_ctx = ctx.slice();
-    	child_ctx[43] = list[i];
-    	return child_ctx;
-    }
-
-    // (117:4) {#if showFilterHeader}
-    function create_if_block_4$1(ctx) {
-    	let tr;
-    	let each_value_3 = /*columns*/ ctx[3];
-    	validate_each_argument(each_value_3);
-    	let each_blocks = [];
-
-    	for (let i = 0; i < each_value_3.length; i += 1) {
-    		each_blocks[i] = create_each_block_3(get_each_context_3(ctx, each_value_3, i));
-    	}
-
-    	const block = {
-    		c: function create() {
-    			tr = element("tr");
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			attr_dev(tr, "class", "svelte-uczycn");
-    			add_location(tr, file$5, 117, 6, 3608);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, tr, anchor);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(tr, null);
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty[0] & /*filterSelections, columns, asStringArray, classNameSelect, filterValues*/ 37388) {
-    				each_value_3 = /*columns*/ ctx[3];
-    				validate_each_argument(each_value_3);
-    				let i;
-
-    				for (i = 0; i < each_value_3.length; i += 1) {
-    					const child_ctx = get_each_context_3(ctx, each_value_3, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(child_ctx, dirty);
-    					} else {
-    						each_blocks[i] = create_each_block_3(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(tr, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-
-    				each_blocks.length = each_value_3.length;
-    			}
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(tr);
-    			destroy_each(each_blocks, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_4$1.name,
-    		type: "if",
-    		source: "(117:4) {#if showFilterHeader}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (123:58) 
-    function create_if_block_6(ctx) {
-    	let select;
-    	let option;
-    	let select_class_value;
-    	let mounted;
-    	let dispose;
-    	let each_value_4 = /*filterValues*/ ctx[12][/*col*/ ctx[36].key];
-    	validate_each_argument(each_value_4);
-    	let each_blocks = [];
-
-    	for (let i = 0; i < each_value_4.length; i += 1) {
-    		each_blocks[i] = create_each_block_4(get_each_context_4(ctx, each_value_4, i));
-    	}
-
-    	function select_change_handler() {
-    		/*select_change_handler*/ ctx[25].call(select, /*col*/ ctx[36]);
-    	}
-
-    	const block = {
-    		c: function create() {
-    			select = element("select");
-    			option = element("option");
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			option.__value = undefined;
-    			option.value = option.__value;
-    			add_location(option, file$5, 124, 16, 3944);
-    			attr_dev(select, "class", select_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameSelect*/ ctx[9])) + " svelte-uczycn"));
-    			if (/*filterSelections*/ ctx[2][/*col*/ ctx[36].key] === void 0) add_render_callback(select_change_handler);
-    			add_location(select, file$5, 123, 14, 3841);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, select, anchor);
-    			append_dev(select, option);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(select, null);
-    			}
-
-    			select_option(select, /*filterSelections*/ ctx[2][/*col*/ ctx[36].key]);
-
-    			if (!mounted) {
-    				dispose = listen_dev(select, "change", select_change_handler);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
-
-    			if (dirty[0] & /*filterValues, columns*/ 4104) {
-    				each_value_4 = /*filterValues*/ ctx[12][/*col*/ ctx[36].key];
-    				validate_each_argument(each_value_4);
-    				let i;
-
-    				for (i = 0; i < each_value_4.length; i += 1) {
-    					const child_ctx = get_each_context_4(ctx, each_value_4, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(child_ctx, dirty);
-    					} else {
-    						each_blocks[i] = create_each_block_4(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(select, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-
-    				each_blocks.length = each_value_4.length;
-    			}
-
-    			if (dirty[0] & /*classNameSelect*/ 512 && select_class_value !== (select_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameSelect*/ ctx[9])) + " svelte-uczycn"))) {
-    				attr_dev(select, "class", select_class_value);
-    			}
-
-    			if (dirty[0] & /*filterSelections, columns, filterValues*/ 4108) {
-    				select_option(select, /*filterSelections*/ ctx[2][/*col*/ ctx[36].key]);
-    			}
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(select);
-    			destroy_each(each_blocks, detaching);
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_6.name,
-    		type: "if",
-    		source: "(123:58) ",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (121:12) {#if col.searchValue !== undefined}
-    function create_if_block_5$1(ctx) {
-    	let input;
-    	let mounted;
-    	let dispose;
-
-    	function input_input_handler() {
-    		/*input_input_handler*/ ctx[24].call(input, /*col*/ ctx[36]);
-    	}
-
-    	const block = {
-    		c: function create() {
-    			input = element("input");
-    			add_location(input, file$5, 121, 14, 3721);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, input, anchor);
-    			set_input_value(input, /*filterSelections*/ ctx[2][/*col*/ ctx[36].key]);
-
-    			if (!mounted) {
-    				dispose = listen_dev(input, "input", input_input_handler);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
-
-    			if (dirty[0] & /*filterSelections, columns, filterValues*/ 4108 && input.value !== /*filterSelections*/ ctx[2][/*col*/ ctx[36].key]) {
-    				set_input_value(input, /*filterSelections*/ ctx[2][/*col*/ ctx[36].key]);
-    			}
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(input);
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_5$1.name,
-    		type: "if",
-    		source: "(121:12) {#if col.searchValue !== undefined}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (126:16) {#each filterValues[col.key] as option}
-    function create_each_block_4(ctx) {
-    	let option;
-    	let t_value = /*option*/ ctx[43].name + "";
-    	let t;
-    	let option_value_value;
-
-    	const block = {
-    		c: function create() {
-    			option = element("option");
-    			t = text(t_value);
-    			option.__value = option_value_value = /*option*/ ctx[43].value;
-    			option.value = option.__value;
-    			add_location(option, file$5, 126, 18, 4054);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, option, anchor);
-    			append_dev(option, t);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty[0] & /*filterValues, columns*/ 4104 && t_value !== (t_value = /*option*/ ctx[43].name + "")) set_data_dev(t, t_value);
-
-    			if (dirty[0] & /*filterValues, columns*/ 4104 && option_value_value !== (option_value_value = /*option*/ ctx[43].value)) {
-    				prop_dev(option, "__value", option_value_value);
-    				option.value = option.__value;
-    			}
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(option);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_each_block_4.name,
-    		type: "each",
-    		source: "(126:16) {#each filterValues[col.key] as option}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (119:8) {#each columns as col}
-    function create_each_block_3(ctx) {
-    	let th;
-    	let t;
-
-    	function select_block_type(ctx, dirty) {
-    		if (/*col*/ ctx[36].searchValue !== undefined) return create_if_block_5$1;
-    		if (/*filterValues*/ ctx[12][/*col*/ ctx[36].key] !== undefined) return create_if_block_6;
-    	}
-
-    	let current_block_type = select_block_type(ctx);
-    	let if_block = current_block_type && current_block_type(ctx);
-
-    	const block = {
-    		c: function create() {
-    			th = element("th");
-    			if (if_block) if_block.c();
-    			t = space();
-    			add_location(th, file$5, 119, 10, 3654);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, th, anchor);
-    			if (if_block) if_block.m(th, null);
-    			append_dev(th, t);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
-    				if_block.p(ctx, dirty);
-    			} else {
-    				if (if_block) if_block.d(1);
-    				if_block = current_block_type && current_block_type(ctx);
-
-    				if (if_block) {
-    					if_block.c();
-    					if_block.m(th, t);
-    				}
-    			}
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(th);
-
-    			if (if_block) {
-    				if_block.d();
-    			}
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_each_block_3.name,
-    		type: "each",
-    		source: "(119:8) {#each columns as col}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (148:10) {:else}
-    function create_else_block_1$1(ctx) {
-    	let th;
-    	let t0_value = /*col*/ ctx[36].title + "";
-    	let t0;
-    	let t1;
-    	let t2;
-    	let th_class_value;
-    	let if_block = /*sortBy*/ ctx[0] === /*col*/ ctx[36].key && create_if_block_3$1(ctx);
-
-    	const block = {
-    		c: function create() {
-    			th = element("th");
-    			t0 = text(t0_value);
-    			t1 = space();
-    			if (if_block) if_block.c();
-    			t2 = space();
-    			attr_dev(th, "class", th_class_value = "" + (null_to_empty(/*col*/ ctx[36].headerClass) + " svelte-uczycn"));
-    			add_location(th, file$5, 148, 12, 4703);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, th, anchor);
-    			append_dev(th, t0);
-    			append_dev(th, t1);
-    			if (if_block) if_block.m(th, null);
-    			append_dev(th, t2);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty[0] & /*columns*/ 8 && t0_value !== (t0_value = /*col*/ ctx[36].title + "")) set_data_dev(t0, t0_value);
-
-    			if (/*sortBy*/ ctx[0] === /*col*/ ctx[36].key) {
-    				if (if_block) {
-    					if_block.p(ctx, dirty);
-    				} else {
-    					if_block = create_if_block_3$1(ctx);
-    					if_block.c();
-    					if_block.m(th, t2);
-    				}
-    			} else if (if_block) {
-    				if_block.d(1);
-    				if_block = null;
-    			}
-
-    			if (dirty[0] & /*columns, filterValues*/ 4104 && th_class_value !== (th_class_value = "" + (null_to_empty(/*col*/ ctx[36].headerClass) + " svelte-uczycn"))) {
-    				attr_dev(th, "class", th_class_value);
-    			}
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(th);
-    			if (if_block) if_block.d();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block_1$1.name,
-    		type: "else",
-    		source: "(148:10) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (138:10) {#if col.sortable}
-    function create_if_block_1$2(ctx) {
-    	let th;
-    	let t0_value = /*col*/ ctx[36].title + "";
-    	let t0;
-    	let t1;
-    	let t2;
-    	let th_class_value;
-    	let mounted;
-    	let dispose;
-    	let if_block = /*sortBy*/ ctx[0] === /*col*/ ctx[36].key && create_if_block_2$2(ctx);
-
-    	function click_handler(...args) {
-    		return /*click_handler*/ ctx[26](/*col*/ ctx[36], ...args);
-    	}
-
-    	const block = {
-    		c: function create() {
-    			th = element("th");
-    			t0 = text(t0_value);
-    			t1 = space();
-    			if (if_block) if_block.c();
-    			t2 = space();
-    			attr_dev(th, "class", th_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](["isSortable", /*col*/ ctx[36].headerClass])) + " svelte-uczycn"));
-    			add_location(th, file$5, 138, 12, 4372);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, th, anchor);
-    			append_dev(th, t0);
-    			append_dev(th, t1);
-    			if (if_block) if_block.m(th, null);
-    			append_dev(th, t2);
-
-    			if (!mounted) {
-    				dispose = listen_dev(th, "click", click_handler, false, false, false);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
-    			if (dirty[0] & /*columns*/ 8 && t0_value !== (t0_value = /*col*/ ctx[36].title + "")) set_data_dev(t0, t0_value);
-
-    			if (/*sortBy*/ ctx[0] === /*col*/ ctx[36].key) {
-    				if (if_block) {
-    					if_block.p(ctx, dirty);
-    				} else {
-    					if_block = create_if_block_2$2(ctx);
-    					if_block.c();
-    					if_block.m(th, t2);
-    				}
-    			} else if (if_block) {
-    				if_block.d(1);
-    				if_block = null;
-    			}
-
-    			if (dirty[0] & /*columns, filterValues*/ 4104 && th_class_value !== (th_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](["isSortable", /*col*/ ctx[36].headerClass])) + " svelte-uczycn"))) {
-    				attr_dev(th, "class", th_class_value);
-    			}
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(th);
-    			if (if_block) if_block.d();
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_1$2.name,
-    		type: "if",
-    		source: "(138:10) {#if col.sortable}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (153:14) {#if sortBy === col.key}
-    function create_if_block_3$1(ctx) {
-    	let t_value = (/*sortOrder*/ ctx[1] === 1
-    	? /*iconAsc*/ ctx[4]
-    	: /*iconDesc*/ ctx[5]) + "";
-
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text(t_value);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty[0] & /*sortOrder, iconAsc, iconDesc*/ 50 && t_value !== (t_value = (/*sortOrder*/ ctx[1] === 1
-    			? /*iconAsc*/ ctx[4]
-    			: /*iconDesc*/ ctx[5]) + "")) set_data_dev(t, t_value);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_3$1.name,
-    		type: "if",
-    		source: "(153:14) {#if sortBy === col.key}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (144:14) {#if sortBy === col.key}
-    function create_if_block_2$2(ctx) {
-    	let t_value = (/*sortOrder*/ ctx[1] === 1
-    	? /*iconAsc*/ ctx[4]
-    	: /*iconDesc*/ ctx[5]) + "";
-
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text(t_value);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty[0] & /*sortOrder, iconAsc, iconDesc*/ 50 && t_value !== (t_value = (/*sortOrder*/ ctx[1] === 1
-    			? /*iconAsc*/ ctx[4]
-    			: /*iconDesc*/ ctx[5]) + "")) set_data_dev(t, t_value);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_2$2.name,
-    		type: "if",
-    		source: "(144:14) {#if sortBy === col.key}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (137:8) {#each columns as col}
-    function create_each_block_2$1(ctx) {
-    	let if_block_anchor;
-
-    	function select_block_type_1(ctx, dirty) {
-    		if (/*col*/ ctx[36].sortable) return create_if_block_1$2;
-    		return create_else_block_1$1;
-    	}
-
-    	let current_block_type = select_block_type_1(ctx);
-    	let if_block = current_block_type(ctx);
-
-    	const block = {
-    		c: function create() {
-    			if_block.c();
-    			if_block_anchor = empty();
-    		},
-    		m: function mount(target, anchor) {
-    			if_block.m(target, anchor);
-    			insert_dev(target, if_block_anchor, anchor);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (current_block_type === (current_block_type = select_block_type_1(ctx)) && if_block) {
-    				if_block.p(ctx, dirty);
-    			} else {
-    				if_block.d(1);
-    				if_block = current_block_type(ctx);
-
-    				if (if_block) {
-    					if_block.c();
-    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
-    				}
-    			}
-    		},
-    		d: function destroy(detaching) {
-    			if_block.d(detaching);
-    			if (detaching) detach_dev(if_block_anchor);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_each_block_2$1.name,
-    		type: "each",
-    		source: "(137:8) {#each columns as col}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (135:62)        
-    function fallback_block_2(ctx) {
-    	let tr;
-    	let each_value_2 = /*columns*/ ctx[3];
-    	validate_each_argument(each_value_2);
-    	let each_blocks = [];
-
-    	for (let i = 0; i < each_value_2.length; i += 1) {
-    		each_blocks[i] = create_each_block_2$1(get_each_context_2$1(ctx, each_value_2, i));
-    	}
-
-    	const block = {
-    		c: function create() {
-    			tr = element("tr");
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			add_location(tr, file$5, 135, 6, 4295);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, tr, anchor);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(tr, null);
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty[0] & /*asStringArray, columns, handleClickCol, sortOrder, iconAsc, iconDesc, sortBy*/ 98363) {
-    				each_value_2 = /*columns*/ ctx[3];
-    				validate_each_argument(each_value_2);
-    				let i;
-
-    				for (i = 0; i < each_value_2.length; i += 1) {
-    					const child_ctx = get_each_context_2$1(ctx, each_value_2, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(child_ctx, dirty);
-    					} else {
-    						each_blocks[i] = create_each_block_2$1(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(tr, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-
-    				each_blocks.length = each_value_2.length;
-    			}
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(tr);
-    			destroy_each(each_blocks, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: fallback_block_2.name,
-    		type: "fallback",
-    		source: "(135:62)        ",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (177:14) {:else}
-    function create_else_block$2(ctx) {
+    // (182:10) {:else}
+    function create_else_block_1(ctx) {
     	let html_tag;
 
-    	let raw_value = (/*col*/ ctx[36].renderValue
-    	? /*col*/ ctx[36].renderValue(/*row*/ ctx[33])
-    	: /*col*/ ctx[36].value(/*row*/ ctx[33])) + "";
+    	let raw_value = (/*col*/ ctx[25].renderValue
+    	? /*col*/ ctx[25].renderValue(/*row*/ ctx[21])
+    	: /*col*/ ctx[25].value(/*row*/ ctx[21])) + "";
 
     	let html_anchor;
 
@@ -9288,9 +14331,9 @@ for (const input of inputs) {
     			insert_dev(target, html_anchor, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty[0] & /*columns, c_rows*/ 8200 && raw_value !== (raw_value = (/*col*/ ctx[36].renderValue
-    			? /*col*/ ctx[36].renderValue(/*row*/ ctx[33])
-    			: /*col*/ ctx[36].value(/*row*/ ctx[33])) + "")) html_tag.p(raw_value);
+    			if (dirty & /*row*/ 2097152 && raw_value !== (raw_value = (/*col*/ ctx[25].renderValue
+    			? /*col*/ ctx[25].renderValue(/*row*/ ctx[21])
+    			: /*col*/ ctx[25].value(/*row*/ ctx[21])) + "")) html_tag.p(raw_value);
     		},
     		i: noop,
     		o: noop,
@@ -9302,28 +14345,28 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block$2.name,
+    		id: create_else_block_1.name,
     		type: "else",
-    		source: "(177:14) {:else}",
+    		source: "(182:10) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (171:14) {#if col.renderComponent}
-    function create_if_block$2(ctx) {
+    // (176:10) {#if col.renderComponent}
+    function create_if_block_4(ctx) {
     	let switch_instance;
     	let switch_instance_anchor;
     	let current;
 
     	const switch_instance_spread_levels = [
-    		/*col*/ ctx[36].renderComponent.props || {},
-    		{ row: /*row*/ ctx[33] },
-    		{ col: /*col*/ ctx[36] }
+    		/*col*/ ctx[25].renderComponent.props || {},
+    		{ row: /*row*/ ctx[21] },
+    		{ col: /*col*/ ctx[25] }
     	];
 
-    	var switch_value = /*col*/ ctx[36].renderComponent.component || /*col*/ ctx[36].renderComponent;
+    	var switch_value = /*col*/ ctx[25].renderComponent.component || /*col*/ ctx[25].renderComponent;
 
     	function switch_props(ctx) {
     		let switch_instance_props = {};
@@ -9356,15 +14399,15 @@ for (const input of inputs) {
     			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			const switch_instance_changes = (dirty[0] & /*columns, c_rows*/ 8200)
+    			const switch_instance_changes = (dirty & /*columns, row*/ 2097280)
     			? get_spread_update(switch_instance_spread_levels, [
-    					dirty[0] & /*columns*/ 8 && get_spread_object(/*col*/ ctx[36].renderComponent.props || {}),
-    					dirty[0] & /*c_rows*/ 8192 && { row: /*row*/ ctx[33] },
-    					dirty[0] & /*columns*/ 8 && { col: /*col*/ ctx[36] }
+    					dirty & /*columns*/ 128 && get_spread_object(/*col*/ ctx[25].renderComponent.props || {}),
+    					dirty & /*row*/ 2097152 && { row: /*row*/ ctx[21] },
+    					dirty & /*columns*/ 128 && { col: /*col*/ ctx[25] }
     				])
     			: {};
 
-    			if (switch_value !== (switch_value = /*col*/ ctx[36].renderComponent.component || /*col*/ ctx[36].renderComponent)) {
+    			if (switch_value !== (switch_value = /*col*/ ctx[25].renderComponent.component || /*col*/ ctx[25].renderComponent)) {
     				if (switch_instance) {
     					group_outros();
     					const old_component = switch_instance;
@@ -9405,1191 +14448,37 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$2.name,
+    		id: create_if_block_4.name,
     		type: "if",
-    		source: "(171:14) {#if col.renderComponent}",
+    		source: "(176:10) {#if col.renderComponent}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (166:10) {#each columns as col}
+    // (172:6) {#each columns as col}
     function create_each_block_1$2(ctx) {
     	let td;
     	let current_block_type_index;
     	let if_block;
     	let t;
-    	let td_class_value;
     	let current;
     	let mounted;
     	let dispose;
-    	const if_block_creators = [create_if_block$2, create_else_block$2];
+    	const if_block_creators = [create_if_block_4, create_else_block_1];
     	const if_blocks = [];
 
-    	function select_block_type_2(ctx, dirty) {
-    		if (/*col*/ ctx[36].renderComponent) return 0;
+    	function select_block_type_1(ctx, dirty) {
+    		if (/*col*/ ctx[25].renderComponent) return 0;
     		return 1;
     	}
 
-    	current_block_type_index = select_block_type_2(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-    	function click_handler_1(...args) {
-    		return /*click_handler_1*/ ctx[27](/*row*/ ctx[33], /*col*/ ctx[36], ...args);
-    	}
-
-    	const block = {
-    		c: function create() {
-    			td = element("td");
-    			if_block.c();
-    			t = space();
-    			attr_dev(td, "class", td_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15]([/*col*/ ctx[36].class, /*classNameCell*/ ctx[11]])) + " svelte-uczycn"));
-    			add_location(td, file$5, 166, 12, 5238);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, td, anchor);
-    			if_blocks[current_block_type_index].m(td, null);
-    			append_dev(td, t);
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(td, "click", click_handler_1, false, false, false);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type_2(ctx);
-
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(ctx, dirty);
-    			} else {
-    				group_outros();
-
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
-
-    				check_outros();
-    				if_block = if_blocks[current_block_type_index];
-
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				} else {
-    					if_block.p(ctx, dirty);
-    				}
-
-    				transition_in(if_block, 1);
-    				if_block.m(td, t);
-    			}
-
-    			if (!current || dirty[0] & /*columns, classNameCell, filterValues*/ 6152 && td_class_value !== (td_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15]([/*col*/ ctx[36].class, /*classNameCell*/ ctx[11]])) + " svelte-uczycn"))) {
-    				attr_dev(td, "class", td_class_value);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(td);
-    			if_blocks[current_block_type_index].d();
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_each_block_1$2.name,
-    		type: "each",
-    		source: "(166:10) {#each columns as col}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (164:40)          
-    function fallback_block_1(ctx) {
-    	let tr;
-    	let tr_class_value;
-    	let current;
-    	let mounted;
-    	let dispose;
-    	let each_value_1 = /*columns*/ ctx[3];
-    	validate_each_argument(each_value_1);
-    	let each_blocks = [];
-
-    	for (let i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks[i] = create_each_block_1$2(get_each_context_1$2(ctx, each_value_1, i));
-    	}
-
-    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
-    		each_blocks[i] = null;
-    	});
-
-    	function click_handler_2(...args) {
-    		return /*click_handler_2*/ ctx[28](/*row*/ ctx[33], ...args);
-    	}
-
-    	const block = {
-    		c: function create() {
-    			tr = element("tr");
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			attr_dev(tr, "class", tr_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameRow*/ ctx[10])) + " svelte-uczycn"));
-    			add_location(tr, file$5, 164, 8, 5111);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, tr, anchor);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(tr, null);
-    			}
-
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(tr, "click", click_handler_2, false, false, false);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
-
-    			if (dirty[0] & /*asStringArray, columns, classNameCell, handleClickCell, c_rows*/ 305160) {
-    				each_value_1 = /*columns*/ ctx[3];
-    				validate_each_argument(each_value_1);
-    				let i;
-
-    				for (i = 0; i < each_value_1.length; i += 1) {
-    					const child_ctx = get_each_context_1$2(ctx, each_value_1, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(child_ctx, dirty);
-    						transition_in(each_blocks[i], 1);
-    					} else {
-    						each_blocks[i] = create_each_block_1$2(child_ctx);
-    						each_blocks[i].c();
-    						transition_in(each_blocks[i], 1);
-    						each_blocks[i].m(tr, null);
-    					}
-    				}
-
-    				group_outros();
-
-    				for (i = each_value_1.length; i < each_blocks.length; i += 1) {
-    					out(i);
-    				}
-
-    				check_outros();
-    			}
-
-    			if (!current || dirty[0] & /*classNameRow*/ 1024 && tr_class_value !== (tr_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameRow*/ ctx[10])) + " svelte-uczycn"))) {
-    				attr_dev(tr, "class", tr_class_value);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-
-    			for (let i = 0; i < each_value_1.length; i += 1) {
-    				transition_in(each_blocks[i]);
-    			}
-
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			each_blocks = each_blocks.filter(Boolean);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				transition_out(each_blocks[i]);
-    			}
-
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(tr);
-    			destroy_each(each_blocks, detaching);
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: fallback_block_1.name,
-    		type: "fallback",
-    		source: "(164:40)          ",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (163:4) {#each c_rows as row, n}
-    function create_each_block$3(ctx) {
-    	let t;
-    	let current;
-    	const row_slot_template = /*#slots*/ ctx[23].row;
-    	const row_slot = create_slot(row_slot_template, ctx, /*$$scope*/ ctx[22], get_row_slot_context);
-    	const row_slot_or_fallback = row_slot || fallback_block_1(ctx);
-    	const after_row_slot_template = /*#slots*/ ctx[23]["after-row"];
-    	const after_row_slot = create_slot(after_row_slot_template, ctx, /*$$scope*/ ctx[22], get_after_row_slot_context);
-
-    	const block = {
-    		c: function create() {
-    			if (row_slot_or_fallback) row_slot_or_fallback.c();
-    			t = space();
-    			if (after_row_slot) after_row_slot.c();
-    		},
-    		m: function mount(target, anchor) {
-    			if (row_slot_or_fallback) {
-    				row_slot_or_fallback.m(target, anchor);
-    			}
-
-    			insert_dev(target, t, anchor);
-
-    			if (after_row_slot) {
-    				after_row_slot.m(target, anchor);
-    			}
-
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			if (row_slot) {
-    				if (row_slot.p && (!current || dirty[0] & /*$$scope, c_rows*/ 4202496)) {
-    					update_slot(row_slot, row_slot_template, ctx, /*$$scope*/ ctx[22], dirty, get_row_slot_changes, get_row_slot_context);
-    				}
-    			} else {
-    				if (row_slot_or_fallback && row_slot_or_fallback.p && dirty[0] & /*classNameRow, c_rows, columns, classNameCell*/ 11272) {
-    					row_slot_or_fallback.p(ctx, dirty);
-    				}
-    			}
-
-    			if (after_row_slot) {
-    				if (after_row_slot.p && (!current || dirty[0] & /*$$scope, c_rows*/ 4202496)) {
-    					update_slot(after_row_slot, after_row_slot_template, ctx, /*$$scope*/ ctx[22], dirty, get_after_row_slot_changes, get_after_row_slot_context);
-    				}
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(row_slot_or_fallback, local);
-    			transition_in(after_row_slot, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(row_slot_or_fallback, local);
-    			transition_out(after_row_slot, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (row_slot_or_fallback) row_slot_or_fallback.d(detaching);
-    			if (detaching) detach_dev(t);
-    			if (after_row_slot) after_row_slot.d(detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_each_block$3.name,
-    		type: "each",
-    		source: "(163:4) {#each c_rows as row, n}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function create_fragment$5(ctx) {
-    	let table;
-    	let thead;
-    	let t0;
-    	let thead_class_value;
-    	let t1;
-    	let tbody;
-    	let tbody_class_value;
-    	let table_class_value;
-    	let current;
-    	let if_block = /*showFilterHeader*/ ctx[14] && create_if_block_4$1(ctx);
-    	const header_slot_template = /*#slots*/ ctx[23].header;
-    	const header_slot = create_slot(header_slot_template, ctx, /*$$scope*/ ctx[22], get_header_slot_context);
-    	const header_slot_or_fallback = header_slot || fallback_block_2(ctx);
-    	let each_value = /*c_rows*/ ctx[13];
-    	validate_each_argument(each_value);
-    	let each_blocks = [];
-
-    	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$3(get_each_context$3(ctx, each_value, i));
-    	}
-
-    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
-    		each_blocks[i] = null;
-    	});
-
-    	const block = {
-    		c: function create() {
-    			table = element("table");
-    			thead = element("thead");
-    			if (if_block) if_block.c();
-    			t0 = space();
-    			if (header_slot_or_fallback) header_slot_or_fallback.c();
-    			t1 = space();
-    			tbody = element("tbody");
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].c();
-    			}
-
-    			attr_dev(thead, "class", thead_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameThead*/ ctx[7])) + " svelte-uczycn"));
-    			add_location(thead, file$5, 115, 2, 3529);
-    			attr_dev(tbody, "class", tbody_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTbody*/ ctx[8])) + " svelte-uczycn"));
-    			add_location(tbody, file$5, 161, 2, 4987);
-    			attr_dev(table, "class", table_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTable*/ ctx[6])) + " svelte-uczycn"));
-    			add_location(table, file$5, 114, 0, 3481);
-    		},
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, table, anchor);
-    			append_dev(table, thead);
-    			if (if_block) if_block.m(thead, null);
-    			append_dev(thead, t0);
-
-    			if (header_slot_or_fallback) {
-    				header_slot_or_fallback.m(thead, null);
-    			}
-
-    			append_dev(table, t1);
-    			append_dev(table, tbody);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(tbody, null);
-    			}
-
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			if (/*showFilterHeader*/ ctx[14]) if_block.p(ctx, dirty);
-
-    			if (header_slot) {
-    				if (header_slot.p && (!current || dirty[0] & /*$$scope, sortOrder, sortBy*/ 4194307)) {
-    					update_slot(header_slot, header_slot_template, ctx, /*$$scope*/ ctx[22], dirty, get_header_slot_changes, get_header_slot_context);
-    				}
-    			} else {
-    				if (header_slot_or_fallback && header_slot_or_fallback.p && dirty[0] & /*columns, sortOrder, iconAsc, iconDesc, sortBy*/ 59) {
-    					header_slot_or_fallback.p(ctx, dirty);
-    				}
-    			}
-
-    			if (!current || dirty[0] & /*classNameThead*/ 128 && thead_class_value !== (thead_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameThead*/ ctx[7])) + " svelte-uczycn"))) {
-    				attr_dev(thead, "class", thead_class_value);
-    			}
-
-    			if (dirty[0] & /*$$scope, c_rows, asStringArray, classNameRow, handleClickRow, columns, classNameCell, handleClickCell*/ 4631560) {
-    				each_value = /*c_rows*/ ctx[13];
-    				validate_each_argument(each_value);
-    				let i;
-
-    				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$3(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(child_ctx, dirty);
-    						transition_in(each_blocks[i], 1);
-    					} else {
-    						each_blocks[i] = create_each_block$3(child_ctx);
-    						each_blocks[i].c();
-    						transition_in(each_blocks[i], 1);
-    						each_blocks[i].m(tbody, null);
-    					}
-    				}
-
-    				group_outros();
-
-    				for (i = each_value.length; i < each_blocks.length; i += 1) {
-    					out(i);
-    				}
-
-    				check_outros();
-    			}
-
-    			if (!current || dirty[0] & /*classNameTbody*/ 256 && tbody_class_value !== (tbody_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTbody*/ ctx[8])) + " svelte-uczycn"))) {
-    				attr_dev(tbody, "class", tbody_class_value);
-    			}
-
-    			if (!current || dirty[0] & /*classNameTable*/ 64 && table_class_value !== (table_class_value = "" + (null_to_empty(/*asStringArray*/ ctx[15](/*classNameTable*/ ctx[6])) + " svelte-uczycn"))) {
-    				attr_dev(table, "class", table_class_value);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(header_slot_or_fallback, local);
-
-    			for (let i = 0; i < each_value.length; i += 1) {
-    				transition_in(each_blocks[i]);
-    			}
-
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(header_slot_or_fallback, local);
-    			each_blocks = each_blocks.filter(Boolean);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				transition_out(each_blocks[i]);
-    			}
-
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(table);
-    			if (if_block) if_block.d();
-    			if (header_slot_or_fallback) header_slot_or_fallback.d(detaching);
-    			destroy_each(each_blocks, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_fragment$5.name,
-    		type: "component",
-    		source: "",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    function instance$5($$self, $$props, $$invalidate) {
-    	let c_rows;
-    	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots("SvelteTable", slots, ['header','row','after-row']);
-    	const dispatch = createEventDispatcher();
-    	let { columns } = $$props;
-    	let { rows } = $$props;
-    	let { sortBy = "" } = $$props;
-    	let { sortOrder = 1 } = $$props;
-    	let { iconAsc = "▲" } = $$props;
-    	let { iconDesc = "▼" } = $$props;
-    	let { classNameTable = "" } = $$props;
-    	let { classNameThead = "" } = $$props;
-    	let { classNameTbody = "" } = $$props;
-    	let { classNameSelect = "" } = $$props;
-    	let { classNameRow = "" } = $$props;
-    	let { classNameCell = "" } = $$props;
-    	let { filterSelections = {} } = $$props;
-    	let sortFunction = () => "";
-
-    	let showFilterHeader = columns.some(c => {
-    		// check if there are any filter or search headers
-    		return c.filterOptions !== undefined || c.searchValue !== undefined;
-    	});
-
-    	let filterValues = {};
-    	let searchValues = {};
-    	let columnByKey = {};
-
-    	columns.forEach(col => {
-    		$$invalidate(21, columnByKey[col.key] = col, columnByKey);
-    	});
-
-    	const asStringArray = v => [].concat(v).filter(v => typeof v === "string" && v !== "").join(" ");
-
-    	const calculateFilterValues = () => {
-    		$$invalidate(12, filterValues = {});
-
-    		columns.forEach(c => {
-    			if (typeof c.filterOptions === "function") {
-    				$$invalidate(12, filterValues[c.key] = c.filterOptions(rows), filterValues);
-    			} else if (Array.isArray(c.filterOptions)) {
-    				// if array of strings is provided, use it for name and value
-    				$$invalidate(12, filterValues[c.key] = c.filterOptions.map(val => ({ name: val, value: val })), filterValues);
-    			}
-    		});
-    	};
-
-    	
-    	
-
-    	const updateSortOrder = colKey => {
-    		if (colKey === sortBy) {
-    			$$invalidate(1, sortOrder = sortOrder === 1 ? -1 : 1);
-    		} else {
-    			$$invalidate(1, sortOrder = 1);
-    		}
-    	};
-
-    	const handleClickCol = (event, col) => {
-    		updateSortOrder(col.key);
-    		$$invalidate(0, sortBy = col.key);
-    		dispatch("clickCol", { event, col, key: col.key });
-    	};
-
-    	const handleClickRow = (event, row) => {
-    		dispatch("clickRow", { event, row });
-    	};
-
-    	const handleClickCell = (event, row, key) => {
-    		dispatch("clickCell", { event, row, key });
-    	};
-
-    	const writable_props = [
-    		"columns",
-    		"rows",
-    		"sortBy",
-    		"sortOrder",
-    		"iconAsc",
-    		"iconDesc",
-    		"classNameTable",
-    		"classNameThead",
-    		"classNameTbody",
-    		"classNameSelect",
-    		"classNameRow",
-    		"classNameCell",
-    		"filterSelections"
-    	];
-
-    	Object_1$1.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<SvelteTable> was created with unknown prop '${key}'`);
-    	});
-
-    	function input_input_handler(col) {
-    		filterSelections[col.key] = this.value;
-    		$$invalidate(2, filterSelections);
-    		$$invalidate(3, columns);
-    		$$invalidate(12, filterValues);
-    	}
-
-    	function select_change_handler(col) {
-    		filterSelections[col.key] = select_value(this);
-    		$$invalidate(2, filterSelections);
-    		$$invalidate(3, columns);
-    		$$invalidate(12, filterValues);
-    	}
-
-    	const click_handler = (col, e) => handleClickCol(e, col);
-
-    	const click_handler_1 = (row, col, e) => {
-    		handleClickCell(e, row, col.key);
-    	};
-
-    	const click_handler_2 = (row, e) => {
-    		handleClickRow(e, row);
-    	};
-
-    	$$self.$$set = $$props => {
-    		if ("columns" in $$props) $$invalidate(3, columns = $$props.columns);
-    		if ("rows" in $$props) $$invalidate(19, rows = $$props.rows);
-    		if ("sortBy" in $$props) $$invalidate(0, sortBy = $$props.sortBy);
-    		if ("sortOrder" in $$props) $$invalidate(1, sortOrder = $$props.sortOrder);
-    		if ("iconAsc" in $$props) $$invalidate(4, iconAsc = $$props.iconAsc);
-    		if ("iconDesc" in $$props) $$invalidate(5, iconDesc = $$props.iconDesc);
-    		if ("classNameTable" in $$props) $$invalidate(6, classNameTable = $$props.classNameTable);
-    		if ("classNameThead" in $$props) $$invalidate(7, classNameThead = $$props.classNameThead);
-    		if ("classNameTbody" in $$props) $$invalidate(8, classNameTbody = $$props.classNameTbody);
-    		if ("classNameSelect" in $$props) $$invalidate(9, classNameSelect = $$props.classNameSelect);
-    		if ("classNameRow" in $$props) $$invalidate(10, classNameRow = $$props.classNameRow);
-    		if ("classNameCell" in $$props) $$invalidate(11, classNameCell = $$props.classNameCell);
-    		if ("filterSelections" in $$props) $$invalidate(2, filterSelections = $$props.filterSelections);
-    		if ("$$scope" in $$props) $$invalidate(22, $$scope = $$props.$$scope);
-    	};
-
-    	$$self.$capture_state = () => ({
-    		createEventDispatcher,
-    		dispatch,
-    		columns,
-    		rows,
-    		sortBy,
-    		sortOrder,
-    		iconAsc,
-    		iconDesc,
-    		classNameTable,
-    		classNameThead,
-    		classNameTbody,
-    		classNameSelect,
-    		classNameRow,
-    		classNameCell,
-    		filterSelections,
-    		sortFunction,
-    		showFilterHeader,
-    		filterValues,
-    		searchValues,
-    		columnByKey,
-    		asStringArray,
-    		calculateFilterValues,
-    		updateSortOrder,
-    		handleClickCol,
-    		handleClickRow,
-    		handleClickCell,
-    		c_rows
-    	});
-
-    	$$self.$inject_state = $$props => {
-    		if ("columns" in $$props) $$invalidate(3, columns = $$props.columns);
-    		if ("rows" in $$props) $$invalidate(19, rows = $$props.rows);
-    		if ("sortBy" in $$props) $$invalidate(0, sortBy = $$props.sortBy);
-    		if ("sortOrder" in $$props) $$invalidate(1, sortOrder = $$props.sortOrder);
-    		if ("iconAsc" in $$props) $$invalidate(4, iconAsc = $$props.iconAsc);
-    		if ("iconDesc" in $$props) $$invalidate(5, iconDesc = $$props.iconDesc);
-    		if ("classNameTable" in $$props) $$invalidate(6, classNameTable = $$props.classNameTable);
-    		if ("classNameThead" in $$props) $$invalidate(7, classNameThead = $$props.classNameThead);
-    		if ("classNameTbody" in $$props) $$invalidate(8, classNameTbody = $$props.classNameTbody);
-    		if ("classNameSelect" in $$props) $$invalidate(9, classNameSelect = $$props.classNameSelect);
-    		if ("classNameRow" in $$props) $$invalidate(10, classNameRow = $$props.classNameRow);
-    		if ("classNameCell" in $$props) $$invalidate(11, classNameCell = $$props.classNameCell);
-    		if ("filterSelections" in $$props) $$invalidate(2, filterSelections = $$props.filterSelections);
-    		if ("sortFunction" in $$props) $$invalidate(20, sortFunction = $$props.sortFunction);
-    		if ("showFilterHeader" in $$props) $$invalidate(14, showFilterHeader = $$props.showFilterHeader);
-    		if ("filterValues" in $$props) $$invalidate(12, filterValues = $$props.filterValues);
-    		if ("searchValues" in $$props) searchValues = $$props.searchValues;
-    		if ("columnByKey" in $$props) $$invalidate(21, columnByKey = $$props.columnByKey);
-    		if ("c_rows" in $$props) $$invalidate(13, c_rows = $$props.c_rows);
-    	};
-
-    	if ($$props && "$$inject" in $$props) {
-    		$$self.$inject_state($$props.$$inject);
-    	}
-
-    	$$self.$$.update = () => {
-    		if ($$self.$$.dirty[0] & /*columnByKey, sortBy*/ 2097153) {
-    			{
-    				let col = columnByKey[sortBy];
-
-    				if (col !== undefined && col.sortable === true && typeof col.value === "function") {
-    					$$invalidate(20, sortFunction = r => col.value(r));
-    				}
-    			}
-    		}
-
-    		if ($$self.$$.dirty[0] & /*rows, filterSelections, columnByKey, sortFunction, sortOrder*/ 3670022) {
-    			$$invalidate(13, c_rows = rows.filter(r => {
-    				// get search and filter results/matches
-    				return Object.keys(filterSelections).every(f => {
-    					// check search (text input) matches
-    					let resSearch = filterSelections[f] === "" || columnByKey[f].searchValue && (columnByKey[f].searchValue(r) + "").toLocaleLowerCase().indexOf((filterSelections[f] + "").toLocaleLowerCase()) >= 0;
-
-    					// check filter (dropdown) matches
-    					let resFilter = resSearch || filterSelections[f] === undefined || // default to value() if filterValue() not provided in col
-    					filterSelections[f] === (typeof columnByKey[f].filterValue === "function"
-    					? columnByKey[f].filterValue(r)
-    					: columnByKey[f].value(r));
-
-    					return resFilter;
-    				});
-    			}).map(r => Object.assign({}, r, { $sortOn: sortFunction(r) })).sort((a, b) => {
-    				if (a.$sortOn > b.$sortOn) return sortOrder; else if (a.$sortOn < b.$sortOn) return -sortOrder;
-    				return 0;
-    			}));
-    		}
-
-    		if ($$self.$$.dirty[0] & /*columns, rows*/ 524296) {
-    			{
-    				// if filters are enabled, watch rows and columns
-    				if (showFilterHeader && columns && rows) {
-    					calculateFilterValues();
-    				}
-    			}
-    		}
-    	};
-
-    	return [
-    		sortBy,
-    		sortOrder,
-    		filterSelections,
-    		columns,
-    		iconAsc,
-    		iconDesc,
-    		classNameTable,
-    		classNameThead,
-    		classNameTbody,
-    		classNameSelect,
-    		classNameRow,
-    		classNameCell,
-    		filterValues,
-    		c_rows,
-    		showFilterHeader,
-    		asStringArray,
-    		handleClickCol,
-    		handleClickRow,
-    		handleClickCell,
-    		rows,
-    		sortFunction,
-    		columnByKey,
-    		$$scope,
-    		slots,
-    		input_input_handler,
-    		select_change_handler,
-    		click_handler,
-    		click_handler_1,
-    		click_handler_2
-    	];
-    }
-
-    class SvelteTable extends SvelteComponentDev {
-    	constructor(options) {
-    		super(options);
-
-    		init(
-    			this,
-    			options,
-    			instance$5,
-    			create_fragment$5,
-    			safe_not_equal,
-    			{
-    				columns: 3,
-    				rows: 19,
-    				sortBy: 0,
-    				sortOrder: 1,
-    				iconAsc: 4,
-    				iconDesc: 5,
-    				classNameTable: 6,
-    				classNameThead: 7,
-    				classNameTbody: 8,
-    				classNameSelect: 9,
-    				classNameRow: 10,
-    				classNameCell: 11,
-    				filterSelections: 2
-    			},
-    			[-1, -1]
-    		);
-
-    		dispatch_dev("SvelteRegisterComponent", {
-    			component: this,
-    			tagName: "SvelteTable",
-    			options,
-    			id: create_fragment$5.name
-    		});
-
-    		const { ctx } = this.$$;
-    		const props = options.props || {};
-
-    		if (/*columns*/ ctx[3] === undefined && !("columns" in props)) {
-    			console.warn("<SvelteTable> was created without expected prop 'columns'");
-    		}
-
-    		if (/*rows*/ ctx[19] === undefined && !("rows" in props)) {
-    			console.warn("<SvelteTable> was created without expected prop 'rows'");
-    		}
-    	}
-
-    	get columns() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set columns(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get rows() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set rows(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get sortBy() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set sortBy(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get sortOrder() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set sortOrder(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get iconAsc() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set iconAsc(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get iconDesc() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set iconDesc(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get classNameTable() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set classNameTable(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get classNameThead() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set classNameThead(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get classNameTbody() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set classNameTbody(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get classNameSelect() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set classNameSelect(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get classNameRow() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set classNameRow(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get classNameCell() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set classNameCell(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get filterSelections() {
-    		throw new Error("<SvelteTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set filterSelections(value) {
-    		throw new Error("<SvelteTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-    }
-
-    const fRefleshCharmTable = writable(false);
-
-    /* src/CharmList.svelte generated by Svelte v3.38.2 */
-
-    const { Object: Object_1, console: console_1$1 } = globals;
-    const file$4 = "src/CharmList.svelte";
-
-    function get_each_context_1$1(ctx, list, i) {
-    	const child_ctx = ctx.slice();
-    	child_ctx[17] = list[i];
-    	return child_ctx;
-    }
-
-    function get_each_context$2(ctx, list, i) {
-    	const child_ctx = ctx.slice();
-    	child_ctx[14] = list[i];
-    	return child_ctx;
-    }
-
-    // (214:2) {:else}
-    function create_else_block$1(ctx) {
-    	let sveltetable;
-    	let current;
-
-    	sveltetable = new SvelteTable({
-    			props: {
-    				columns: /*columns*/ ctx[1],
-    				rows: /*charms*/ ctx[0],
-    				classNameTable: ["table table-striped table-hover table-responsible"],
-    				classNameThead: ["table-dark hide-first-child.disabled"],
-    				$$slots: {
-    					"after-row": [
-    						create_after_row_slot,
-    						({ n, row }) => ({ 12: n, 13: row }),
-    						({ n, row }) => (n ? 4096 : 0) | (row ? 8192 : 0)
-    					],
-    					row: [
-    						create_row_slot,
-    						({ n, row }) => ({ 12: n, 13: row }),
-    						({ n, row }) => (n ? 4096 : 0) | (row ? 8192 : 0)
-    					]
-    				},
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	sveltetable.$on("clickCol", /*onSort*/ ctx[2]);
-
-    	const block = {
-    		c: function create() {
-    			create_component(sveltetable.$$.fragment);
-    		},
-    		m: function mount(target, anchor) {
-    			mount_component(sveltetable, target, anchor);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			const sveltetable_changes = {};
-    			if (dirty & /*charms*/ 1) sveltetable_changes.rows = /*charms*/ ctx[0];
-
-    			if (dirty & /*$$scope, n, charms, row*/ 1060865) {
-    				sveltetable_changes.$$scope = { dirty, ctx };
-    			}
-
-    			sveltetable.$set(sveltetable_changes);
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(sveltetable.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(sveltetable.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			destroy_component(sveltetable, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block$1.name,
-    		type: "else",
-    		source: "(214:2) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (210:2) {#if charms == null}
-    function create_if_block$1(ctx) {
-    	let div;
-    	let span;
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			span = element("span");
-    			span.textContent = "Loading...";
-    			attr_dev(span, "class", "visually-hidden");
-    			add_location(span, file$4, 211, 6, 7421);
-    			attr_dev(div, "class", "spinner-border text-info svelte-77aprl");
-    			attr_dev(div, "role", "status");
-    			add_location(div, file$4, 210, 4, 7362);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			append_dev(div, span);
-    		},
-    		p: noop,
-    		i: noop,
-    		o: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block$1.name,
-    		type: "if",
-    		source: "(210:2) {#if charms == null}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (232:12) {:else}
-    function create_else_block_2(ctx) {
-    	let html_tag;
-
-    	let raw_value = (/*col*/ ctx[17].renderValue
-    	? /*col*/ ctx[17].renderValue(/*row*/ ctx[13])
-    	: /*col*/ ctx[17].value(/*row*/ ctx[13])) + "";
-
-    	let html_anchor;
-
-    	const block = {
-    		c: function create() {
-    			html_anchor = empty();
-    			html_tag = new HtmlTag(html_anchor);
-    		},
-    		m: function mount(target, anchor) {
-    			html_tag.m(raw_value, target, anchor);
-    			insert_dev(target, html_anchor, anchor);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*row*/ 8192 && raw_value !== (raw_value = (/*col*/ ctx[17].renderValue
-    			? /*col*/ ctx[17].renderValue(/*row*/ ctx[13])
-    			: /*col*/ ctx[17].value(/*row*/ ctx[13])) + "")) html_tag.p(raw_value);
-    		},
-    		i: noop,
-    		o: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(html_anchor);
-    			if (detaching) html_tag.d();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_else_block_2.name,
-    		type: "else",
-    		source: "(232:12) {:else}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (226:12) {#if col.renderComponent}
-    function create_if_block_5(ctx) {
-    	let switch_instance;
-    	let switch_instance_anchor;
-    	let current;
-
-    	const switch_instance_spread_levels = [
-    		/*col*/ ctx[17].renderComponent.props || {},
-    		{ row: /*row*/ ctx[13] },
-    		{ col: /*col*/ ctx[17] }
-    	];
-
-    	var switch_value = /*col*/ ctx[17].renderComponent.component || /*col*/ ctx[17].renderComponent;
-
-    	function switch_props(ctx) {
-    		let switch_instance_props = {};
-
-    		for (let i = 0; i < switch_instance_spread_levels.length; i += 1) {
-    			switch_instance_props = assign(switch_instance_props, switch_instance_spread_levels[i]);
-    		}
-
-    		return {
-    			props: switch_instance_props,
-    			$$inline: true
-    		};
-    	}
-
-    	if (switch_value) {
-    		switch_instance = new switch_value(switch_props());
-    	}
-
-    	const block = {
-    		c: function create() {
-    			if (switch_instance) create_component(switch_instance.$$.fragment);
-    			switch_instance_anchor = empty();
-    		},
-    		m: function mount(target, anchor) {
-    			if (switch_instance) {
-    				mount_component(switch_instance, target, anchor);
-    			}
-
-    			insert_dev(target, switch_instance_anchor, anchor);
-    			current = true;
-    		},
-    		p: function update(ctx, dirty) {
-    			const switch_instance_changes = (dirty & /*columns, row*/ 8194)
-    			? get_spread_update(switch_instance_spread_levels, [
-    					dirty & /*columns*/ 2 && get_spread_object(/*col*/ ctx[17].renderComponent.props || {}),
-    					dirty & /*row*/ 8192 && { row: /*row*/ ctx[13] },
-    					dirty & /*columns*/ 2 && { col: /*col*/ ctx[17] }
-    				])
-    			: {};
-
-    			if (switch_value !== (switch_value = /*col*/ ctx[17].renderComponent.component || /*col*/ ctx[17].renderComponent)) {
-    				if (switch_instance) {
-    					group_outros();
-    					const old_component = switch_instance;
-
-    					transition_out(old_component.$$.fragment, 1, 0, () => {
-    						destroy_component(old_component, 1);
-    					});
-
-    					check_outros();
-    				}
-
-    				if (switch_value) {
-    					switch_instance = new switch_value(switch_props());
-    					create_component(switch_instance.$$.fragment);
-    					transition_in(switch_instance.$$.fragment, 1);
-    					mount_component(switch_instance, switch_instance_anchor.parentNode, switch_instance_anchor);
-    				} else {
-    					switch_instance = null;
-    				}
-    			} else if (switch_value) {
-    				switch_instance.$set(switch_instance_changes);
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			if (switch_instance) transition_in(switch_instance.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			if (switch_instance) transition_out(switch_instance.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(switch_instance_anchor);
-    			if (switch_instance) destroy_component(switch_instance, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block_5.name,
-    		type: "if",
-    		source: "(226:12) {#if col.renderComponent}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (222:8) {#each columns as col}
-    function create_each_block_1$1(ctx) {
-    	let td;
-    	let current_block_type_index;
-    	let if_block;
-    	let t;
-    	let current;
-    	let mounted;
-    	let dispose;
-    	const if_block_creators = [create_if_block_5, create_else_block_2];
-    	const if_blocks = [];
-
-    	function select_block_type_2(ctx, dirty) {
-    		if (/*col*/ ctx[17].renderComponent) return 0;
-    		return 1;
-    	}
-
-    	current_block_type_index = select_block_type_2(ctx);
+    	current_block_type_index = select_block_type_1(ctx);
     	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
     	function click_handler(...args) {
-    		return /*click_handler*/ ctx[5](/*col*/ ctx[17], /*row*/ ctx[13], /*n*/ ctx[12], ...args);
+    		return /*click_handler*/ ctx[13](/*col*/ ctx[25], /*row*/ ctx[21], /*n*/ ctx[20], ...args);
     	}
 
     	const block = {
@@ -10597,8 +14486,8 @@ for (const input of inputs) {
     			td = element("td");
     			if_block.c();
     			t = space();
-    			attr_dev(td, "class", "" + (null_to_empty([/*col*/ ctx[17].class].join(" ")) + " svelte-77aprl"));
-    			add_location(td, file$4, 222, 10, 7893);
+    			attr_dev(td, "class", "" + (null_to_empty([/*col*/ ctx[25].class].join(" ")) + " svelte-dzt1tj"));
+    			add_location(td, file$6, 172, 8, 6689);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, td, anchor);
@@ -10634,27 +14523,27 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block_1$1.name,
+    		id: create_each_block_1$2.name,
     		type: "each",
-    		source: "(222:8) {#each columns as col}",
+    		source: "(172:6) {#each columns as col}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (221:6) 
+    // (171:4) 
     function create_row_slot(ctx) {
     	let tr;
     	let current;
     	let mounted;
     	let dispose;
-    	let each_value_1 = /*columns*/ ctx[1];
+    	let each_value_1 = /*columns*/ ctx[7];
     	validate_each_argument(each_value_1);
     	let each_blocks = [];
 
     	for (let i = 0; i < each_value_1.length; i += 1) {
-    		each_blocks[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
+    		each_blocks[i] = create_each_block_1$2(get_each_context_1$2(ctx, each_value_1, i));
     	}
 
     	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -10662,7 +14551,7 @@ for (const input of inputs) {
     	});
 
     	function click_handler_1(...args) {
-    		return /*click_handler_1*/ ctx[6](/*row*/ ctx[13], ...args);
+    		return /*click_handler_1*/ ctx[14](/*row*/ ctx[21], ...args);
     	}
 
     	const block = {
@@ -10674,7 +14563,7 @@ for (const input of inputs) {
     			}
 
     			attr_dev(tr, "slot", "row");
-    			add_location(tr, file$4, 220, 6, 7786);
+    			add_location(tr, file$6, 170, 4, 6586);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, tr, anchor);
@@ -10693,19 +14582,19 @@ for (const input of inputs) {
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
 
-    			if (dirty & /*columns, row*/ 8194) {
-    				each_value_1 = /*columns*/ ctx[1];
+    			if (dirty & /*columns, row*/ 2097280) {
+    				each_value_1 = /*columns*/ ctx[7];
     				validate_each_argument(each_value_1);
     				let i;
 
     				for (i = 0; i < each_value_1.length; i += 1) {
-    					const child_ctx = get_each_context_1$1(ctx, each_value_1, i);
+    					const child_ctx = get_each_context_1$2(ctx, each_value_1, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(child_ctx, dirty);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block_1$1(child_ctx);
+    						each_blocks[i] = create_each_block_1$2(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(tr, null);
@@ -10751,29 +14640,29 @@ for (const input of inputs) {
     		block,
     		id: create_row_slot.name,
     		type: "slot",
-    		source: "(221:6) ",
+    		source: "(171:4) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (239:8) {#if row.isSubstitutableCharmsShown}
-    function create_if_block_2$1(ctx) {
+    // (189:6) {#if isSubstitutableCharmsShown[row.rowid]}
+    function create_if_block_1$2(ctx) {
     	let current_block_type_index;
     	let if_block;
     	let if_block_anchor;
     	let current;
-    	const if_block_creators = [create_if_block_3, create_if_block_4, create_else_block_1];
+    	const if_block_creators = [create_if_block_2$2, create_if_block_3, create_else_block$3];
     	const if_blocks = [];
 
-    	function select_block_type_1(ctx, dirty) {
-    		if (/*row*/ ctx[13].substitutableCharms == null) return 0;
-    		if (/*row*/ ctx[13].substitutableCharms.length === 0) return 1;
+    	function select_block_type(ctx, dirty) {
+    		if (/*row*/ ctx[21].substitutableCharms == null) return 0;
+    		if (/*row*/ ctx[21].substitutableCharms.length === 0) return 1;
     		return 2;
     	}
 
-    	current_block_type_index = select_block_type_1(ctx);
+    	current_block_type_index = select_block_type(ctx);
     	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
     	const block = {
@@ -10788,7 +14677,7 @@ for (const input of inputs) {
     		},
     		p: function update(ctx, dirty) {
     			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type_1(ctx);
+    			current_block_type_index = select_block_type(ctx);
 
     			if (current_block_type_index === previous_block_index) {
     				if_blocks[current_block_type_index].p(ctx, dirty);
@@ -10830,26 +14719,26 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_2$1.name,
+    		id: create_if_block_1$2.name,
     		type: "if",
-    		source: "(239:8) {#if row.isSubstitutableCharmsShown}",
+    		source: "(189:6) {#if isSubstitutableCharmsShown[row.rowid]}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (244:10) {:else}
-    function create_else_block_1(ctx) {
+    // (194:8) {:else}
+    function create_else_block$3(ctx) {
     	let div;
     	let div_transition;
     	let current;
-    	let each_value = /*row*/ ctx[13].substitutableCharms;
+    	let each_value = /*row*/ ctx[21].substitutableCharms;
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
     	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$3(get_each_context$3(ctx, each_value, i));
     	}
 
     	const block = {
@@ -10861,7 +14750,7 @@ for (const input of inputs) {
     			}
 
     			attr_dev(div, "class", "row-substitutes");
-    			add_location(div, file$4, 244, 12, 8833);
+    			add_location(div, file$6, 194, 10, 7600);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -10873,18 +14762,18 @@ for (const input of inputs) {
     			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*row*/ 8192) {
-    				each_value = /*row*/ ctx[13].substitutableCharms;
+    			if (dirty & /*row*/ 2097152) {
+    				each_value = /*row*/ ctx[21].substitutableCharms;
     				validate_each_argument(each_value);
     				let i;
 
     				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$2(ctx, each_value, i);
+    					const child_ctx = get_each_context$3(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(child_ctx, dirty);
     					} else {
-    						each_blocks[i] = create_each_block$2(child_ctx);
+    						each_blocks[i] = create_each_block$3(child_ctx);
     						each_blocks[i].c();
     						each_blocks[i].m(div, null);
     					}
@@ -10921,17 +14810,17 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_else_block_1.name,
+    		id: create_else_block$3.name,
     		type: "else",
-    		source: "(244:10) {:else}",
+    		source: "(194:8) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (242:57) 
-    function create_if_block_4(ctx) {
+    // (192:55) 
+    function create_if_block_3(ctx) {
     	const block = {
     		c: noop,
     		m: noop,
@@ -10943,17 +14832,17 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_4.name,
+    		id: create_if_block_3.name,
     		type: "if",
-    		source: "(242:57) ",
+    		source: "(192:55) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (240:10) {#if row.substitutableCharms == null}
-    function create_if_block_3(ctx) {
+    // (190:8) {#if row.substitutableCharms == null}
+    function create_if_block_2$2(ctx) {
     	let div;
 
     	const block = {
@@ -10962,7 +14851,7 @@ for (const input of inputs) {
     			div.textContent = "searching...";
     			set_style(div, "width", "100%");
     			set_style(div, "border-bottom", "solid 1px #ddd");
-    			add_location(div, file$4, 240, 12, 8644);
+    			add_location(div, file$6, 190, 10, 7419);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -10977,38 +14866,38 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_3.name,
+    		id: create_if_block_2$2.name,
     		type: "if",
-    		source: "(240:10) {#if row.substitutableCharms == null}",
+    		source: "(190:8) {#if row.substitutableCharms == null}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (246:12) {#each row.substitutableCharms as c}
-    function create_each_block$2(ctx) {
+    // (196:10) {#each row.substitutableCharms as c}
+    function create_each_block$3(ctx) {
     	let div;
-    	let t0_value = /*c*/ ctx[14].rowid + "";
+    	let t0_value = /*c*/ ctx[22].rowid + "";
     	let t0;
     	let t1;
-    	let t2_value = /*c*/ ctx[14].skill1 + "";
+    	let t2_value = /*c*/ ctx[22].skill1 + "";
     	let t2;
-    	let t3_value = /*c*/ ctx[14].skill1Level + "";
+    	let t3_value = /*c*/ ctx[22].skill1Level + "";
     	let t3;
     	let t4;
-    	let t5_value = /*c*/ ctx[14].skill2 + "";
+    	let t5_value = /*c*/ ctx[22].skill2 + "";
     	let t5;
-    	let t6_value = /*c*/ ctx[14].skill2Level + "";
+    	let t6_value = /*c*/ ctx[22].skill2Level + "";
     	let t6;
     	let t7;
-    	let t8_value = /*c*/ ctx[14].slot1 + "";
+    	let t8_value = /*c*/ ctx[22].slot1 + "";
     	let t8;
     	let t9;
-    	let t10_value = /*c*/ ctx[14].slot2 + "";
+    	let t10_value = /*c*/ ctx[22].slot2 + "";
     	let t10;
     	let t11;
-    	let t12_value = /*c*/ ctx[14].slot3 + "";
+    	let t12_value = /*c*/ ctx[22].slot3 + "";
     	let t12;
     	let t13;
 
@@ -11032,7 +14921,7 @@ for (const input of inputs) {
     			set_style(div, "width", "100%");
     			set_style(div, "text-align", "left");
     			set_style(div, "padding", "0.3rem 2rem");
-    			add_location(div, file$4, 246, 14, 8961);
+    			add_location(div, file$6, 196, 12, 7724);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -11052,14 +14941,14 @@ for (const input of inputs) {
     			append_dev(div, t13);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*row*/ 8192 && t0_value !== (t0_value = /*c*/ ctx[14].rowid + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*row*/ 8192 && t2_value !== (t2_value = /*c*/ ctx[14].skill1 + "")) set_data_dev(t2, t2_value);
-    			if (dirty & /*row*/ 8192 && t3_value !== (t3_value = /*c*/ ctx[14].skill1Level + "")) set_data_dev(t3, t3_value);
-    			if (dirty & /*row*/ 8192 && t5_value !== (t5_value = /*c*/ ctx[14].skill2 + "")) set_data_dev(t5, t5_value);
-    			if (dirty & /*row*/ 8192 && t6_value !== (t6_value = /*c*/ ctx[14].skill2Level + "")) set_data_dev(t6, t6_value);
-    			if (dirty & /*row*/ 8192 && t8_value !== (t8_value = /*c*/ ctx[14].slot1 + "")) set_data_dev(t8, t8_value);
-    			if (dirty & /*row*/ 8192 && t10_value !== (t10_value = /*c*/ ctx[14].slot2 + "")) set_data_dev(t10, t10_value);
-    			if (dirty & /*row*/ 8192 && t12_value !== (t12_value = /*c*/ ctx[14].slot3 + "")) set_data_dev(t12, t12_value);
+    			if (dirty & /*row*/ 2097152 && t0_value !== (t0_value = /*c*/ ctx[22].rowid + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*row*/ 2097152 && t2_value !== (t2_value = /*c*/ ctx[22].skill1 + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*row*/ 2097152 && t3_value !== (t3_value = /*c*/ ctx[22].skill1Level + "")) set_data_dev(t3, t3_value);
+    			if (dirty & /*row*/ 2097152 && t5_value !== (t5_value = /*c*/ ctx[22].skill2 + "")) set_data_dev(t5, t5_value);
+    			if (dirty & /*row*/ 2097152 && t6_value !== (t6_value = /*c*/ ctx[22].skill2Level + "")) set_data_dev(t6, t6_value);
+    			if (dirty & /*row*/ 2097152 && t8_value !== (t8_value = /*c*/ ctx[22].slot1 + "")) set_data_dev(t8, t8_value);
+    			if (dirty & /*row*/ 2097152 && t10_value !== (t10_value = /*c*/ ctx[22].slot2 + "")) set_data_dev(t10, t10_value);
+    			if (dirty & /*row*/ 2097152 && t12_value !== (t12_value = /*c*/ ctx[22].slot3 + "")) set_data_dev(t12, t12_value);
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
@@ -11068,17 +14957,17 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block$2.name,
+    		id: create_each_block$3.name,
     		type: "each",
-    		source: "(246:12) {#each row.substitutableCharms as c}",
+    		source: "(196:10) {#each row.substitutableCharms as c}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (255:8) {#if charms[n].isScrennshotShown}
-    function create_if_block_1$1(ctx) {
+    // (205:6) {#if isScreenshotShown[row.rowid]}
+    function create_if_block$3(ctx) {
     	let div;
     	let canvas;
     	let canvas_id_value;
@@ -11089,13 +14978,12 @@ for (const input of inputs) {
     		c: function create() {
     			div = element("div");
     			canvas = element("canvas");
-    			attr_dev(canvas, "id", canvas_id_value = "charm-table-row-" + /*n*/ ctx[12] + "-screenshot");
+    			attr_dev(canvas, "id", canvas_id_value = "charm-table-row-" + /*row*/ ctx[21].rowid + "-screenshot");
     			set_style(canvas, "width", "100%");
-    			attr_dev(canvas, "class", "svelte-77aprl");
-    			add_location(canvas, file$4, 256, 12, 9385);
+    			add_location(canvas, file$6, 206, 10, 8131);
     			set_style(div, "width", "100%");
     			set_style(div, "border-bottom", "solid 1px #ddd");
-    			add_location(div, file$4, 255, 10, 9281);
+    			add_location(div, file$6, 205, 8, 8029);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -11103,7 +14991,7 @@ for (const input of inputs) {
     			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			if (!current || dirty & /*n*/ 4096 && canvas_id_value !== (canvas_id_value = "charm-table-row-" + /*n*/ ctx[12] + "-screenshot")) {
+    			if (!current || dirty & /*row*/ 2097152 && canvas_id_value !== (canvas_id_value = "charm-table-row-" + /*row*/ ctx[21].rowid + "-screenshot")) {
     				attr_dev(canvas, "id", canvas_id_value);
     			}
     		},
@@ -11130,23 +15018,23 @@ for (const input of inputs) {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$1.name,
+    		id: create_if_block$3.name,
     		type: "if",
-    		source: "(255:8) {#if charms[n].isScrennshotShown}",
+    		source: "(205:6) {#if isScreenshotShown[row.rowid]}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (238:6) 
+    // (188:4) 
     function create_after_row_slot(ctx) {
     	let div;
     	let t;
     	let div_id_value;
     	let current;
-    	let if_block0 = /*row*/ ctx[13].isSubstitutableCharmsShown && create_if_block_2$1(ctx);
-    	let if_block1 = /*charms*/ ctx[0][/*n*/ ctx[12]].isScrennshotShown && create_if_block_1$1(ctx);
+    	let if_block0 = /*isSubstitutableCharmsShown*/ ctx[5][/*row*/ ctx[21].rowid] && create_if_block_1$2(ctx);
+    	let if_block1 = /*isScreenshotShown*/ ctx[4][/*row*/ ctx[21].rowid] && create_if_block$3(ctx);
 
     	const block = {
     		c: function create() {
@@ -11155,10 +15043,9 @@ for (const input of inputs) {
     			t = space();
     			if (if_block1) if_block1.c();
     			attr_dev(div, "slot", "after-row");
-    			attr_dev(div, "id", div_id_value = "charm-table-row-" + /*n*/ ctx[12]);
+    			attr_dev(div, "id", div_id_value = "charm-table-row-" + /*row*/ ctx[21].rowid);
     			set_style(div, "width", "100%");
-    			attr_dev(div, "class", "svelte-77aprl");
-    			add_location(div, file$4, 237, 6, 8457);
+    			add_location(div, file$6, 187, 4, 7223);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -11168,15 +15055,15 @@ for (const input of inputs) {
     			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			if (/*row*/ ctx[13].isSubstitutableCharmsShown) {
+    			if (/*isSubstitutableCharmsShown*/ ctx[5][/*row*/ ctx[21].rowid]) {
     				if (if_block0) {
     					if_block0.p(ctx, dirty);
 
-    					if (dirty & /*row*/ 8192) {
+    					if (dirty & /*isSubstitutableCharmsShown, row*/ 2097184) {
     						transition_in(if_block0, 1);
     					}
     				} else {
-    					if_block0 = create_if_block_2$1(ctx);
+    					if_block0 = create_if_block_1$2(ctx);
     					if_block0.c();
     					transition_in(if_block0, 1);
     					if_block0.m(div, t);
@@ -11191,15 +15078,15 @@ for (const input of inputs) {
     				check_outros();
     			}
 
-    			if (/*charms*/ ctx[0][/*n*/ ctx[12]].isScrennshotShown) {
+    			if (/*isScreenshotShown*/ ctx[4][/*row*/ ctx[21].rowid]) {
     				if (if_block1) {
     					if_block1.p(ctx, dirty);
 
-    					if (dirty & /*charms, n*/ 4097) {
+    					if (dirty & /*isScreenshotShown, row*/ 2097168) {
     						transition_in(if_block1, 1);
     					}
     				} else {
-    					if_block1 = create_if_block_1$1(ctx);
+    					if_block1 = create_if_block$3(ctx);
     					if_block1.c();
     					transition_in(if_block1, 1);
     					if_block1.m(div, null);
@@ -11214,7 +15101,7 @@ for (const input of inputs) {
     				check_outros();
     			}
 
-    			if (!current || dirty & /*n*/ 4096 && div_id_value !== (div_id_value = "charm-table-row-" + /*n*/ ctx[12])) {
+    			if (!current || dirty & /*row*/ 2097152 && div_id_value !== (div_id_value = "charm-table-row-" + /*row*/ ctx[21].rowid)) {
     				attr_dev(div, "id", div_id_value);
     			}
     		},
@@ -11240,95 +15127,123 @@ for (const input of inputs) {
     		block,
     		id: create_after_row_slot.name,
     		type: "slot",
-    		source: "(238:6) ",
+    		source: "(188:4) ",
     		ctx
     	});
 
     	return block;
     }
 
-    function create_fragment$4(ctx) {
-    	let div1;
-    	let div0;
-    	let current_block_type_index;
-    	let if_block;
+    function create_fragment$6(ctx) {
+    	let div;
+    	let sveltetable;
+    	let updating_sliceBegin;
+    	let updating_sliceEnd;
     	let current;
-    	const if_block_creators = [create_if_block$1, create_else_block$1];
-    	const if_blocks = [];
 
-    	function select_block_type(ctx, dirty) {
-    		if (/*charms*/ ctx[0] == null) return 0;
-    		return 1;
+    	function sveltetable_sliceBegin_binding(value) {
+    		/*sveltetable_sliceBegin_binding*/ ctx[15](value);
     	}
 
-    	current_block_type_index = select_block_type(ctx);
-    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    	function sveltetable_sliceEnd_binding(value) {
+    		/*sveltetable_sliceEnd_binding*/ ctx[16](value);
+    	}
+
+    	let sveltetable_props = {
+    		columns: /*columns*/ ctx[7],
+    		rows: /*charms*/ ctx[3],
+    		classNameTable: ["table table-striped table-hover table-responsible"],
+    		classNameThead: ["table-dark hide-first-child.disabled"],
+    		disableFilterHeader: /*disableFilterHeader*/ ctx[2],
+    		$$slots: {
+    			"after-row": [
+    				create_after_row_slot,
+    				({ n, row }) => ({ 20: n, 21: row }),
+    				({ n, row }) => (n ? 1048576 : 0) | (row ? 2097152 : 0)
+    			],
+    			row: [
+    				create_row_slot,
+    				({ n, row }) => ({ 20: n, 21: row }),
+    				({ n, row }) => (n ? 1048576 : 0) | (row ? 2097152 : 0)
+    			]
+    		},
+    		$$scope: { ctx }
+    	};
+
+    	if (/*sliceBegin*/ ctx[0] !== void 0) {
+    		sveltetable_props.sliceBegin = /*sliceBegin*/ ctx[0];
+    	}
+
+    	if (/*sliceEnd*/ ctx[1] !== void 0) {
+    		sveltetable_props.sliceEnd = /*sliceEnd*/ ctx[1];
+    	}
+
+    	sveltetable = new SvelteTable({ props: sveltetable_props, $$inline: true });
+    	binding_callbacks.push(() => bind(sveltetable, "sliceBegin", sveltetable_sliceBegin_binding));
+    	binding_callbacks.push(() => bind(sveltetable, "sliceEnd", sveltetable_sliceEnd_binding));
+    	sveltetable.$on("clickCol", /*onSort*/ ctx[8]);
 
     	const block = {
     		c: function create() {
-    			div1 = element("div");
-    			div0 = element("div");
-    			if_block.c();
-    			attr_dev(div0, "id", "charm-list");
-    			attr_dev(div0, "class", "svelte-77aprl");
-    			add_location(div0, file$4, 208, 0, 7313);
-    			attr_dev(div1, "class", "tab-content svelte-77aprl");
-    			add_location(div1, file$4, 207, 0, 7287);
+    			div = element("div");
+    			create_component(sveltetable.$$.fragment);
+    			attr_dev(div, "class", "charm-table svelte-dzt1tj");
+    			attr_dev(div, "style", /*styleVars*/ ctx[6]);
+    			add_location(div, file$6, 160, 0, 6141);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div1, anchor);
-    			append_dev(div1, div0);
-    			if_blocks[current_block_type_index].m(div0, null);
+    			insert_dev(target, div, anchor);
+    			mount_component(sveltetable, div, null);
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
-    			let previous_block_index = current_block_type_index;
-    			current_block_type_index = select_block_type(ctx);
+    			const sveltetable_changes = {};
+    			if (dirty & /*charms*/ 8) sveltetable_changes.rows = /*charms*/ ctx[3];
+    			if (dirty & /*disableFilterHeader*/ 4) sveltetable_changes.disableFilterHeader = /*disableFilterHeader*/ ctx[2];
 
-    			if (current_block_type_index === previous_block_index) {
-    				if_blocks[current_block_type_index].p(ctx, dirty);
-    			} else {
-    				group_outros();
+    			if (dirty & /*$$scope, row, isScreenshotShown, isSubstitutableCharmsShown*/ 270532656) {
+    				sveltetable_changes.$$scope = { dirty, ctx };
+    			}
 
-    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-    					if_blocks[previous_block_index] = null;
-    				});
+    			if (!updating_sliceBegin && dirty & /*sliceBegin*/ 1) {
+    				updating_sliceBegin = true;
+    				sveltetable_changes.sliceBegin = /*sliceBegin*/ ctx[0];
+    				add_flush_callback(() => updating_sliceBegin = false);
+    			}
 
-    				check_outros();
-    				if_block = if_blocks[current_block_type_index];
+    			if (!updating_sliceEnd && dirty & /*sliceEnd*/ 2) {
+    				updating_sliceEnd = true;
+    				sveltetable_changes.sliceEnd = /*sliceEnd*/ ctx[1];
+    				add_flush_callback(() => updating_sliceEnd = false);
+    			}
 
-    				if (!if_block) {
-    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-    					if_block.c();
-    				} else {
-    					if_block.p(ctx, dirty);
-    				}
+    			sveltetable.$set(sveltetable_changes);
 
-    				transition_in(if_block, 1);
-    				if_block.m(div0, null);
+    			if (!current || dirty & /*styleVars*/ 64) {
+    				attr_dev(div, "style", /*styleVars*/ ctx[6]);
     			}
     		},
     		i: function intro(local) {
     			if (current) return;
-    			transition_in(if_block);
+    			transition_in(sveltetable.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
-    			transition_out(if_block);
+    			transition_out(sveltetable.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div1);
-    			if_blocks[current_block_type_index].d();
+    			if (detaching) detach_dev(div);
+    			destroy_component(sveltetable);
     		}
     	};
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$4.name,
+    		id: create_fragment$6.name,
     		type: "component",
     		source: "",
     		ctx
@@ -11339,12 +15254,21 @@ for (const input of inputs) {
 
     const N_CHARM_SLOT_MAX = 3;
 
-    function instance$4($$self, $$props, $$invalidate) {
-    	let $fRefleshCharmTable;
-    	validate_store(fRefleshCharmTable, "fRefleshCharmTable");
-    	component_subscribe($$self, fRefleshCharmTable, $$value => $$invalidate(4, $fRefleshCharmTable = $$value));
+    function instance$6($$self, $$props, $$invalidate) {
+    	let styleVars;
+    	let $charmManager;
+    	validate_store(charmManager, "charmManager");
+    	component_subscribe($$self, charmManager, $$value => $$invalidate(17, $charmManager = $$value));
     	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots("CharmList", slots, []);
+    	validate_slots("CharmTable", slots, []);
+    	let { headerColor = "mediumseagreen" } = $$props;
+    	let { disableFilterHeader = false } = $$props;
+    	let { showImageColumn = true } = $$props;
+    	let { showSubstitutesColumn = true } = $$props;
+    	let { charms } = $$props;
+    	let { sliceBegin } = $$props;
+    	let { sliceEnd } = $$props;
+    	const allSkills = getAllSkillNames();
 
     	const columns = [
     		{
@@ -11444,86 +15368,62 @@ for (const input of inputs) {
     			sortable: true,
     			filterOptions: ["有り", "無し"]
     		}
-    	];
+    	].filter(i => {
+    		switch (i.key) {
+    			case "image":
+    				return showImageColumn;
+    			case "substitutableCharms":
+    				return showSubstitutesColumn;
+    			default:
+    				return true;
+    		}
+    	});
 
     	// fields
-    	let charmManager = new MHRiseCharmManager();
+    	let isScreenshotShown = [];
 
-    	let charms = null;
+    	let isSubstitutableCharmsShown = [];
 
-    	// init
-    	const init = async () => {
-    		if (charmManager == null) {
-    			setTimeout(init, 1000);
-    		} else {
-    			await updateCharmTable();
-    			searchSubstitutableCharms();
-    		}
-    	};
-
-    	init();
-
-    	// functions
-    	async function updateCharmTable() {
-    		$$invalidate(0, charms = [...await charmManager.searchCharms("select rowid,* from charms")].map(row => {
-    			row.evaluation = skillToSlotLevel[row.skill1] * row.skill1Level + skillToSlotLevel[row.skill2] * row.skill2Level + row.slot1 + row.slot2 + row.slot3;
-    			return row;
-    		}));
-    	}
-
-    	async function searchSubstitutableCharms() {
-    		while (typeof Module.getSubstitutesAll !== "function") {
-    			await new Promise(r => setTimeout(r, 100));
-    		}
-
-    		const res = Module.getSubstitutesAll(JSON.stringify(charms)); // use wasm module
-    		const substitutes = JSON.parse(res);
-
-    		for (const i in charms) {
-    			const [baseId, upperIds] = substitutes[0] || [Number.MAX_SAFE_INTEGER, []];
-
-    			if (charms[i].rowid > baseId) {
-    				console.log("internal error");
-    			} else if (charms[i].rowid < baseId) {
-    				$$invalidate(0, charms[i].substitutableCharms = [], charms);
-    			} else {
-    				$$invalidate(0, charms[i].substitutableCharms = upperIds.map(u => charms[u - 1]), charms);
-    				substitutes.shift();
-    			}
-    		}
-    	} // for (const [baseId, upperIds] of substitutes) {
-    	//   charms[baseId - 1].substitutableCharms = upperIds.map(i => charms[i - 1])
-
-    	// }
     	// handlers
     	function onSort(event) {
     		// close all accordion
-    		charms.forEach(i => i.isScrennshotShown = i.isSubstitutableCharmsShown = false);
+    		$$invalidate(4, isScreenshotShown = []);
+
+    		$$invalidate(5, isSubstitutableCharmsShown = []);
     	}
 
     	function onClickRow({ row }) {
-    		const index = row.rowid - 1;
-    		$$invalidate(0, charms[index].isSubstitutableCharmsShown = !charms[index].isSubstitutableCharmsShown, charms);
+    		const index = row.rowid;
+    		$$invalidate(5, isSubstitutableCharmsShown[index] = !isSubstitutableCharmsShown[index], isSubstitutableCharmsShown);
     	}
 
-    	async function toggleScreenshot({ e, row, index }) {
+    	async function toggleScreenshot({ e, row }) {
     		e.stopPropagation();
-    		const toShow = !charms[index].isScrennshotShown;
-    		$$invalidate(0, charms[index].isScrennshotShown = toShow, charms);
+    		const index = row.rowid;
+    		const toShow = !isScreenshotShown[index];
+    		$$invalidate(4, isScreenshotShown[index] = toShow, isScreenshotShown);
 
     		if (toShow) {
     			// console.log(charms[index].imagename)
-    			const screenshot = await charmManager.getScreenshot(row.imagename);
+    			const screenshot = await $charmManager.getScreenshot(row.imagename);
 
     			// await new Promise((resolve) => requestAnimationFrame(resolve))
     			cv.imshow(`charm-table-row-${index}-screenshot`, screenshot);
     		}
     	}
 
-    	const writable_props = [];
+    	const writable_props = [
+    		"headerColor",
+    		"disableFilterHeader",
+    		"showImageColumn",
+    		"showSubstitutesColumn",
+    		"charms",
+    		"sliceBegin",
+    		"sliceEnd"
+    	];
 
     	Object_1.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1$1.warn(`<CharmList> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<CharmTable> was created with unknown prop '${key}'`);
     	});
 
     	const click_handler = (col, row, n, e) => {
@@ -11534,29 +15434,61 @@ for (const input of inputs) {
 
     	const click_handler_1 = (row, e) => onClickRow({ row });
 
+    	function sveltetable_sliceBegin_binding(value) {
+    		sliceBegin = value;
+    		$$invalidate(0, sliceBegin);
+    	}
+
+    	function sveltetable_sliceEnd_binding(value) {
+    		sliceEnd = value;
+    		$$invalidate(1, sliceEnd);
+    	}
+
+    	$$self.$$set = $$props => {
+    		if ("headerColor" in $$props) $$invalidate(10, headerColor = $$props.headerColor);
+    		if ("disableFilterHeader" in $$props) $$invalidate(2, disableFilterHeader = $$props.disableFilterHeader);
+    		if ("showImageColumn" in $$props) $$invalidate(11, showImageColumn = $$props.showImageColumn);
+    		if ("showSubstitutesColumn" in $$props) $$invalidate(12, showSubstitutesColumn = $$props.showSubstitutesColumn);
+    		if ("charms" in $$props) $$invalidate(3, charms = $$props.charms);
+    		if ("sliceBegin" in $$props) $$invalidate(0, sliceBegin = $$props.sliceBegin);
+    		if ("sliceEnd" in $$props) $$invalidate(1, sliceEnd = $$props.sliceEnd);
+    	};
+
     	$$self.$capture_state = () => ({
     		slide,
     		SvelteTable,
-    		MHRiseCharmManager,
-    		skillToSlotLevel,
-    		allSkills,
-    		fRefleshCharmTable,
-    		N_CHARM_SLOT_MAX,
-    		columns,
+    		getAllSkillNames,
     		charmManager,
+    		headerColor,
+    		disableFilterHeader,
+    		showImageColumn,
+    		showSubstitutesColumn,
     		charms,
-    		init,
-    		updateCharmTable,
-    		searchSubstitutableCharms,
+    		sliceBegin,
+    		sliceEnd,
+    		N_CHARM_SLOT_MAX,
+    		allSkills,
+    		columns,
+    		isScreenshotShown,
+    		isSubstitutableCharmsShown,
     		onSort,
     		onClickRow,
     		toggleScreenshot,
-    		$fRefleshCharmTable
+    		$charmManager,
+    		styleVars
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ("charmManager" in $$props) charmManager = $$props.charmManager;
-    		if ("charms" in $$props) $$invalidate(0, charms = $$props.charms);
+    		if ("headerColor" in $$props) $$invalidate(10, headerColor = $$props.headerColor);
+    		if ("disableFilterHeader" in $$props) $$invalidate(2, disableFilterHeader = $$props.disableFilterHeader);
+    		if ("showImageColumn" in $$props) $$invalidate(11, showImageColumn = $$props.showImageColumn);
+    		if ("showSubstitutesColumn" in $$props) $$invalidate(12, showSubstitutesColumn = $$props.showSubstitutesColumn);
+    		if ("charms" in $$props) $$invalidate(3, charms = $$props.charms);
+    		if ("sliceBegin" in $$props) $$invalidate(0, sliceBegin = $$props.sliceBegin);
+    		if ("sliceEnd" in $$props) $$invalidate(1, sliceEnd = $$props.sliceEnd);
+    		if ("isScreenshotShown" in $$props) $$invalidate(4, isScreenshotShown = $$props.isScreenshotShown);
+    		if ("isSubstitutableCharmsShown" in $$props) $$invalidate(5, isSubstitutableCharmsShown = $$props.isSubstitutableCharmsShown);
+    		if ("styleVars" in $$props) $$invalidate(6, styleVars = $$props.styleVars);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -11564,27 +15496,1527 @@ for (const input of inputs) {
     	}
 
     	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*$fRefleshCharmTable*/ 16) {
-    			if ($fRefleshCharmTable) {
-    				(async () => {
-    					console.log("reflesh table");
-    					set_store_value(fRefleshCharmTable, $fRefleshCharmTable = false, $fRefleshCharmTable);
-    					await updateCharmTable();
-    					searchSubstitutableCharms();
-    				})();
-    			}
+    		if ($$self.$$.dirty & /*headerColor, showImageColumn, showSubstitutesColumn*/ 7168) {
+    			$$invalidate(6, styleVars = Object.entries({
+    				"header-background-color": headerColor,
+    				"table-width": `${61 + (showImageColumn ? 3 : 0) + (showSubstitutesColumn ? 3 : 0)}rem`
+    			}).map(([k, v]) => `--${k}:${v}`).join(";"));
     		}
     	};
 
     	return [
+    		sliceBegin,
+    		sliceEnd,
+    		disableFilterHeader,
     		charms,
+    		isScreenshotShown,
+    		isSubstitutableCharmsShown,
+    		styleVars,
     		columns,
     		onSort,
     		onClickRow,
-    		$fRefleshCharmTable,
+    		headerColor,
+    		showImageColumn,
+    		showSubstitutesColumn,
     		click_handler,
-    		click_handler_1
+    		click_handler_1,
+    		sveltetable_sliceBegin_binding,
+    		sveltetable_sliceEnd_binding
     	];
+    }
+
+    class CharmTable extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+
+    		init(this, options, instance$6, create_fragment$6, safe_not_equal, {
+    			headerColor: 10,
+    			disableFilterHeader: 2,
+    			showImageColumn: 11,
+    			showSubstitutesColumn: 12,
+    			charms: 3,
+    			sliceBegin: 0,
+    			sliceEnd: 1
+    		});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "CharmTable",
+    			options,
+    			id: create_fragment$6.name
+    		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*charms*/ ctx[3] === undefined && !("charms" in props)) {
+    			console.warn("<CharmTable> was created without expected prop 'charms'");
+    		}
+
+    		if (/*sliceBegin*/ ctx[0] === undefined && !("sliceBegin" in props)) {
+    			console.warn("<CharmTable> was created without expected prop 'sliceBegin'");
+    		}
+
+    		if (/*sliceEnd*/ ctx[1] === undefined && !("sliceEnd" in props)) {
+    			console.warn("<CharmTable> was created without expected prop 'sliceEnd'");
+    		}
+    	}
+
+    	get headerColor() {
+    		throw new Error("<CharmTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set headerColor(value) {
+    		throw new Error("<CharmTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get disableFilterHeader() {
+    		throw new Error("<CharmTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set disableFilterHeader(value) {
+    		throw new Error("<CharmTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get showImageColumn() {
+    		throw new Error("<CharmTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set showImageColumn(value) {
+    		throw new Error("<CharmTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get showSubstitutesColumn() {
+    		throw new Error("<CharmTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set showSubstitutesColumn(value) {
+    		throw new Error("<CharmTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get charms() {
+    		throw new Error("<CharmTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set charms(value) {
+    		throw new Error("<CharmTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get sliceBegin() {
+    		throw new Error("<CharmTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set sliceBegin(value) {
+    		throw new Error("<CharmTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get sliceEnd() {
+    		throw new Error("<CharmTable>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set sliceEnd(value) {
+    		throw new Error("<CharmTable>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src/CharmSearcher.svelte generated by Svelte v3.38.2 */
+    const file$5 = "src/CharmSearcher.svelte";
+
+    function get_each_context$2(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[24] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_1$1(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[24] = list[i];
+    	child_ctx[27] = list;
+    	child_ctx[28] = i;
+    	return child_ctx;
+    }
+
+    function get_each_context_2$1(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[24] = list[i];
+    	child_ctx[29] = list;
+    	child_ctx[30] = i;
+    	return child_ctx;
+    }
+
+    // (98:8) {#each [...Array(skillFilters.filter(i => i).length + 1).keys()] as i}
+    function create_each_block_2$1(ctx) {
+    	let div;
+    	let autocomplete0;
+    	let updating_selectedItem;
+    	let t0;
+    	let autocomplete1;
+    	let updating_selectedItem_1;
+    	let t1;
+    	let current;
+
+    	function autocomplete0_selectedItem_binding(value) {
+    		/*autocomplete0_selectedItem_binding*/ ctx[13](value, /*i*/ ctx[24]);
+    	}
+
+    	let autocomplete0_props = {
+    		items: allSkillDetails,
+    		labelFieldName: "name",
+    		valueFieldName: "name",
+    		keywordsFunction: func_1,
+    		placeholder: "スキル" + (/*i*/ ctx[24] + 1),
+    		showClear: true,
+    		hideArrow: true,
+    		className: "autocomplete-skill"
+    	};
+
+    	if (/*skillFilters*/ ctx[0][/*i*/ ctx[24]] !== void 0) {
+    		autocomplete0_props.selectedItem = /*skillFilters*/ ctx[0][/*i*/ ctx[24]];
+    	}
+
+    	autocomplete0 = new SimpleAutocomplete({
+    			props: autocomplete0_props,
+    			$$inline: true
+    		});
+
+    	binding_callbacks.push(() => bind(autocomplete0, "selectedItem", autocomplete0_selectedItem_binding));
+
+    	function autocomplete1_selectedItem_binding(value) {
+    		/*autocomplete1_selectedItem_binding*/ ctx[14](value, /*i*/ ctx[24]);
+    	}
+
+    	let autocomplete1_props = {
+    		items: /*SKILL_LEVEL_LIST*/ ctx[11],
+    		placeholder: "Lv",
+    		hideArrow: true,
+    		className: "autocomplete-skill-level"
+    	};
+
+    	if (/*skillLevelFilters*/ ctx[1][/*i*/ ctx[24]] !== void 0) {
+    		autocomplete1_props.selectedItem = /*skillLevelFilters*/ ctx[1][/*i*/ ctx[24]];
+    	}
+
+    	autocomplete1 = new SimpleAutocomplete({
+    			props: autocomplete1_props,
+    			$$inline: true
+    		});
+
+    	binding_callbacks.push(() => bind(autocomplete1, "selectedItem", autocomplete1_selectedItem_binding));
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			create_component(autocomplete0.$$.fragment);
+    			t0 = space();
+    			create_component(autocomplete1.$$.fragment);
+    			t1 = space();
+    			add_location(div, file$5, 98, 10, 2671);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			mount_component(autocomplete0, div, null);
+    			append_dev(div, t0);
+    			mount_component(autocomplete1, div, null);
+    			append_dev(div, t1);
+    			current = true;
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+    			const autocomplete0_changes = {};
+    			if (dirty & /*skillFilters*/ 1) autocomplete0_changes.placeholder = "スキル" + (/*i*/ ctx[24] + 1);
+
+    			if (!updating_selectedItem && dirty & /*skillFilters, Array*/ 1) {
+    				updating_selectedItem = true;
+    				autocomplete0_changes.selectedItem = /*skillFilters*/ ctx[0][/*i*/ ctx[24]];
+    				add_flush_callback(() => updating_selectedItem = false);
+    			}
+
+    			autocomplete0.$set(autocomplete0_changes);
+    			const autocomplete1_changes = {};
+
+    			if (!updating_selectedItem_1 && dirty & /*skillLevelFilters, Array, skillFilters*/ 3) {
+    				updating_selectedItem_1 = true;
+    				autocomplete1_changes.selectedItem = /*skillLevelFilters*/ ctx[1][/*i*/ ctx[24]];
+    				add_flush_callback(() => updating_selectedItem_1 = false);
+    			}
+
+    			autocomplete1.$set(autocomplete1_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(autocomplete0.$$.fragment, local);
+    			transition_in(autocomplete1.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(autocomplete0.$$.fragment, local);
+    			transition_out(autocomplete1.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_component(autocomplete0);
+    			destroy_component(autocomplete1);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_2$1.name,
+    		type: "each",
+    		source: "(98:8) {#each [...Array(skillFilters.filter(i => i).length + 1).keys()] as i}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (121:8) {#each [...Array(MAX_SLOTS).keys()] as i}
+    function create_each_block_1$1(ctx) {
+    	let autocomplete;
+    	let updating_selectedItem;
+    	let t;
+    	let current;
+
+    	function autocomplete_selectedItem_binding(value) {
+    		/*autocomplete_selectedItem_binding*/ ctx[15](value, /*i*/ ctx[24]);
+    	}
+
+    	let autocomplete_props = {
+    		items: [...Array(3).keys()].map(func_2),
+    		placeholder: "スロット" + (/*i*/ ctx[24] + 1),
+    		showClear: true,
+    		hideArrow: true,
+    		className: "autocomplete-slot-level"
+    	};
+
+    	if (/*slots*/ ctx[2][/*i*/ ctx[24]] !== void 0) {
+    		autocomplete_props.selectedItem = /*slots*/ ctx[2][/*i*/ ctx[24]];
+    	}
+
+    	autocomplete = new SimpleAutocomplete({
+    			props: autocomplete_props,
+    			$$inline: true
+    		});
+
+    	binding_callbacks.push(() => bind(autocomplete, "selectedItem", autocomplete_selectedItem_binding));
+
+    	const block = {
+    		c: function create() {
+    			create_component(autocomplete.$$.fragment);
+    			t = text(" ");
+    		},
+    		m: function mount(target, anchor) {
+    			mount_component(autocomplete, target, anchor);
+    			insert_dev(target, t, anchor);
+    			current = true;
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+    			const autocomplete_changes = {};
+
+    			if (!updating_selectedItem && dirty & /*slots, Array, MAX_SLOTS*/ 4) {
+    				updating_selectedItem = true;
+    				autocomplete_changes.selectedItem = /*slots*/ ctx[2][/*i*/ ctx[24]];
+    				add_flush_callback(() => updating_selectedItem = false);
+    			}
+
+    			autocomplete.$set(autocomplete_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(autocomplete.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(autocomplete.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			destroy_component(autocomplete, detaching);
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_1$1.name,
+    		type: "each",
+    		source: "(121:8) {#each [...Array(MAX_SLOTS).keys()] as i}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (143:6) {:else}
+    function create_else_block$2(ctx) {
+    	let t0;
+    	let select;
+    	let option0;
+    	let option1;
+    	let option2;
+    	let option3;
+    	let t5;
+    	let charmtable;
+    	let updating_charms;
+    	let updating_sliceBegin;
+    	let updating_sliceEnd;
+    	let t6;
+    	let div;
+    	let ul;
+    	let li0;
+    	let span1;
+    	let span0;
+    	let li0_class_value;
+    	let t8;
+    	let t9;
+    	let li1;
+    	let span3;
+    	let span2;
+    	let li1_class_value;
+    	let current;
+    	let mounted;
+    	let dispose;
+
+    	function charmtable_charms_binding(value) {
+    		/*charmtable_charms_binding*/ ctx[17](value);
+    	}
+
+    	function charmtable_sliceBegin_binding(value) {
+    		/*charmtable_sliceBegin_binding*/ ctx[18](value);
+    	}
+
+    	function charmtable_sliceEnd_binding(value) {
+    		/*charmtable_sliceEnd_binding*/ ctx[19](value);
+    	}
+
+    	let charmtable_props = {
+    		disableFilterHeader: true,
+    		headerColor: "dodgerblue"
+    	};
+
+    	if (/*searchResultsToShow*/ ctx[8] !== void 0) {
+    		charmtable_props.charms = /*searchResultsToShow*/ ctx[8];
+    	}
+
+    	if (/*sliceBegin*/ ctx[9] !== void 0) {
+    		charmtable_props.sliceBegin = /*sliceBegin*/ ctx[9];
+    	}
+
+    	if (/*sliceEnd*/ ctx[10] !== void 0) {
+    		charmtable_props.sliceEnd = /*sliceEnd*/ ctx[10];
+    	}
+
+    	charmtable = new CharmTable({ props: charmtable_props, $$inline: true });
+    	binding_callbacks.push(() => bind(charmtable, "charms", charmtable_charms_binding));
+    	binding_callbacks.push(() => bind(charmtable, "sliceBegin", charmtable_sliceBegin_binding));
+    	binding_callbacks.push(() => bind(charmtable, "sliceEnd", charmtable_sliceEnd_binding));
+    	let each_value = [...Array(/*nPages*/ ctx[6]).keys()];
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			t0 = text("show\n        ");
+    			select = element("select");
+    			option0 = element("option");
+    			option0.textContent = "10";
+    			option1 = element("option");
+    			option1.textContent = "25";
+    			option2 = element("option");
+    			option2.textContent = "50";
+    			option3 = element("option");
+    			option3.textContent = "100";
+    			t5 = text("\n        charms\n        ");
+    			create_component(charmtable.$$.fragment);
+    			t6 = space();
+    			div = element("div");
+    			ul = element("ul");
+    			li0 = element("li");
+    			span1 = element("span");
+    			span0 = element("span");
+    			span0.textContent = "«";
+    			t8 = space();
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			t9 = space();
+    			li1 = element("li");
+    			span3 = element("span");
+    			span2 = element("span");
+    			span2.textContent = "»";
+    			option0.__value = "10";
+    			option0.value = option0.__value;
+    			add_location(option0, file$5, 145, 10, 4441);
+    			option1.__value = "25";
+    			option1.value = option1.__value;
+    			add_location(option1, file$5, 146, 10, 4471);
+    			option2.__value = "50";
+    			option2.value = option2.__value;
+    			add_location(option2, file$5, 147, 10, 4501);
+    			option3.__value = "100";
+    			option3.value = option3.__value;
+    			add_location(option3, file$5, 148, 10, 4531);
+    			if (/*itemsPerPage*/ ctx[5] === void 0) add_render_callback(() => /*select_change_handler*/ ctx[16].call(select));
+    			add_location(select, file$5, 144, 8, 4396);
+    			attr_dev(span0, "aria-hidden", "true");
+    			add_location(span0, file$5, 161, 16, 5084);
+    			attr_dev(span1, "class", "page-link");
+    			add_location(span1, file$5, 160, 14, 5012);
+    			attr_dev(li0, "class", li0_class_value = "page-item " + (/*currentPage*/ ctx[4] === 0 ? "disabled" : ""));
+    			attr_dev(li0, "aria-label", "Previous");
+    			add_location(li0, file$5, 159, 12, 4915);
+    			attr_dev(span2, "aria-hidden", "true");
+    			add_location(span2, file$5, 171, 16, 5604);
+    			attr_dev(span3, "class", "page-link");
+    			add_location(span3, file$5, 170, 14, 5532);
+
+    			attr_dev(li1, "class", li1_class_value = "page-item " + (/*currentPage*/ ctx[4] === /*nPages*/ ctx[6] - 1
+    			? "disabled"
+    			: ""));
+
+    			attr_dev(li1, "aria-label", "Next");
+    			add_location(li1, file$5, 169, 12, 5428);
+    			attr_dev(ul, "class", "pagination svelte-1galzg3");
+    			add_location(ul, file$5, 158, 10, 4879);
+    			attr_dev(div, "id", "charm-search-result-pager");
+    			attr_dev(div, "class", "svelte-1galzg3");
+    			add_location(div, file$5, 157, 8, 4832);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t0, anchor);
+    			insert_dev(target, select, anchor);
+    			append_dev(select, option0);
+    			append_dev(select, option1);
+    			append_dev(select, option2);
+    			append_dev(select, option3);
+    			select_option(select, /*itemsPerPage*/ ctx[5]);
+    			insert_dev(target, t5, anchor);
+    			mount_component(charmtable, target, anchor);
+    			insert_dev(target, t6, anchor);
+    			insert_dev(target, div, anchor);
+    			append_dev(div, ul);
+    			append_dev(ul, li0);
+    			append_dev(li0, span1);
+    			append_dev(span1, span0);
+    			append_dev(ul, t8);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(ul, null);
+    			}
+
+    			append_dev(ul, t9);
+    			append_dev(ul, li1);
+    			append_dev(li1, span3);
+    			append_dev(span3, span2);
+    			current = true;
+
+    			if (!mounted) {
+    				dispose = [
+    					listen_dev(select, "change", /*select_change_handler*/ ctx[16]),
+    					listen_dev(span1, "click", /*click_handler*/ ctx[20], false, false, false),
+    					listen_dev(span3, "click", /*click_handler_2*/ ctx[22], false, false, false)
+    				];
+
+    				mounted = true;
+    			}
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*itemsPerPage*/ 32) {
+    				select_option(select, /*itemsPerPage*/ ctx[5]);
+    			}
+
+    			const charmtable_changes = {};
+
+    			if (!updating_charms && dirty & /*searchResultsToShow*/ 256) {
+    				updating_charms = true;
+    				charmtable_changes.charms = /*searchResultsToShow*/ ctx[8];
+    				add_flush_callback(() => updating_charms = false);
+    			}
+
+    			if (!updating_sliceBegin && dirty & /*sliceBegin*/ 512) {
+    				updating_sliceBegin = true;
+    				charmtable_changes.sliceBegin = /*sliceBegin*/ ctx[9];
+    				add_flush_callback(() => updating_sliceBegin = false);
+    			}
+
+    			if (!updating_sliceEnd && dirty & /*sliceEnd*/ 1024) {
+    				updating_sliceEnd = true;
+    				charmtable_changes.sliceEnd = /*sliceEnd*/ ctx[10];
+    				add_flush_callback(() => updating_sliceEnd = false);
+    			}
+
+    			charmtable.$set(charmtable_changes);
+
+    			if (!current || dirty & /*currentPage*/ 16 && li0_class_value !== (li0_class_value = "page-item " + (/*currentPage*/ ctx[4] === 0 ? "disabled" : ""))) {
+    				attr_dev(li0, "class", li0_class_value);
+    			}
+
+    			if (dirty & /*Array, nPages, currentPage*/ 80) {
+    				each_value = [...Array(/*nPages*/ ctx[6]).keys()];
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$2(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block$2(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(ul, t9);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value.length;
+    			}
+
+    			if (!current || dirty & /*currentPage, nPages*/ 80 && li1_class_value !== (li1_class_value = "page-item " + (/*currentPage*/ ctx[4] === /*nPages*/ ctx[6] - 1
+    			? "disabled"
+    			: ""))) {
+    				attr_dev(li1, "class", li1_class_value);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(charmtable.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(charmtable.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t0);
+    			if (detaching) detach_dev(select);
+    			if (detaching) detach_dev(t5);
+    			destroy_component(charmtable, detaching);
+    			if (detaching) detach_dev(t6);
+    			if (detaching) detach_dev(div);
+    			destroy_each(each_blocks, detaching);
+    			mounted = false;
+    			run_all(dispose);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block$2.name,
+    		type: "else",
+    		source: "(143:6) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (141:43) 
+    function create_if_block_2$1(ctx) {
+    	let div;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			div.textContent = "not found";
+    			set_style(div, "text-align", "center");
+    			add_location(div, file$5, 141, 8, 4313);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    		},
+    		p: noop,
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_2$1.name,
+    		type: "if",
+    		source: "(141:43) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (139:38) 
+    function create_if_block_1$1(ctx) {
+    	const block = {
+    		c: noop,
+    		m: noop,
+    		p: noop,
+    		i: noop,
+    		o: noop,
+    		d: noop
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_1$1.name,
+    		type: "if",
+    		source: "(139:38) ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (137:6) {#if isSpinnerShown}
+    function create_if_block$2(ctx) {
+    	let div;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			attr_dev(div, "class", "spinner-border text-info");
+    			attr_dev(div, "role", "status");
+    			add_location(div, file$5, 137, 8, 4140);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    		},
+    		p: noop,
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$2.name,
+    		type: "if",
+    		source: "(137:6) {#if isSpinnerShown}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (165:12) {#each [...Array(nPages).keys()] as i}
+    function create_each_block$2(ctx) {
+    	let li;
+    	let span;
+    	let t_value = /*i*/ ctx[24] + 1 + "";
+    	let t;
+    	let li_class_value;
+    	let mounted;
+    	let dispose;
+
+    	function click_handler_1() {
+    		return /*click_handler_1*/ ctx[21](/*i*/ ctx[24]);
+    	}
+
+    	const block = {
+    		c: function create() {
+    			li = element("li");
+    			span = element("span");
+    			t = text(t_value);
+    			attr_dev(span, "class", "page-link");
+    			add_location(span, file$5, 166, 16, 5304);
+    			attr_dev(li, "class", li_class_value = "page-item " + (/*i*/ ctx[24] === /*currentPage*/ ctx[4] ? "active" : ""));
+    			add_location(li, file$5, 165, 14, 5229);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, li, anchor);
+    			append_dev(li, span);
+    			append_dev(span, t);
+
+    			if (!mounted) {
+    				dispose = listen_dev(span, "click", click_handler_1, false, false, false);
+    				mounted = true;
+    			}
+    		},
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+    			if (dirty & /*nPages*/ 64 && t_value !== (t_value = /*i*/ ctx[24] + 1 + "")) set_data_dev(t, t_value);
+
+    			if (dirty & /*nPages, currentPage*/ 80 && li_class_value !== (li_class_value = "page-item " + (/*i*/ ctx[24] === /*currentPage*/ ctx[4] ? "active" : ""))) {
+    				attr_dev(li, "class", li_class_value);
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(li);
+    			mounted = false;
+    			dispose();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block$2.name,
+    		type: "each",
+    		source: "(165:12) {#each [...Array(nPages).keys()] as i}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$5(ctx) {
+    	let div5;
+    	let div4;
+    	let div2;
+    	let div0;
+    	let t0;
+    	let t1;
+    	let div1;
+    	let t2;
+    	let br;
+    	let t3;
+    	let t4;
+    	let hr;
+    	let t5;
+    	let div3;
+    	let current_block_type_index;
+    	let if_block;
+    	let current;
+    	let each_value_2 = [...Array(/*skillFilters*/ ctx[0].filter(func).length + 1).keys()];
+    	validate_each_argument(each_value_2);
+    	let each_blocks_1 = [];
+
+    	for (let i = 0; i < each_value_2.length; i += 1) {
+    		each_blocks_1[i] = create_each_block_2$1(get_each_context_2$1(ctx, each_value_2, i));
+    	}
+
+    	const out = i => transition_out(each_blocks_1[i], 1, 1, () => {
+    		each_blocks_1[i] = null;
+    	});
+
+    	let each_value_1 = [...Array(MAX_SLOTS).keys()];
+    	validate_each_argument(each_value_1);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
+    	}
+
+    	const out_1 = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	const if_block_creators = [create_if_block$2, create_if_block_1$1, create_if_block_2$1, create_else_block$2];
+    	const if_blocks = [];
+
+    	function select_block_type(ctx, dirty) {
+    		if (/*isSpinnerShown*/ ctx[7]) return 0;
+    		if (/*searchResults*/ ctx[3] == null) return 1;
+    		if (/*searchResults*/ ctx[3].length === 0) return 2;
+    		return 3;
+    	}
+
+    	current_block_type_index = select_block_type(ctx);
+    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+
+    	const block = {
+    		c: function create() {
+    			div5 = element("div");
+    			div4 = element("div");
+    			div2 = element("div");
+    			div0 = element("div");
+    			t0 = text("スキル:\n        ");
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].c();
+    			}
+
+    			t1 = space();
+    			div1 = element("div");
+    			t2 = text("スロット:");
+    			br = element("br");
+    			t3 = space();
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			t4 = space();
+    			hr = element("hr");
+    			t5 = space();
+    			div3 = element("div");
+    			if_block.c();
+    			attr_dev(div0, "id", "skills");
+    			attr_dev(div0, "class", "svelte-1galzg3");
+    			add_location(div0, file$5, 95, 6, 2551);
+    			add_location(br, file$5, 119, 13, 3562);
+    			attr_dev(div1, "id", "slots");
+    			attr_dev(div1, "class", "svelte-1galzg3");
+    			add_location(div1, file$5, 118, 6, 3532);
+    			attr_dev(div2, "id", "charm-search-form");
+    			attr_dev(div2, "class", "svelte-1galzg3");
+    			add_location(div2, file$5, 94, 4, 2516);
+    			attr_dev(hr, "class", "svelte-1galzg3");
+    			add_location(hr, file$5, 133, 4, 4064);
+    			attr_dev(div3, "id", "charm-search-result");
+    			attr_dev(div3, "class", "svelte-1galzg3");
+    			add_location(div3, file$5, 135, 4, 4074);
+    			attr_dev(div4, "id", "charm-searcher");
+    			attr_dev(div4, "class", "svelte-1galzg3");
+    			add_location(div4, file$5, 92, 2, 2459);
+    			attr_dev(div5, "class", "tab-content svelte-1galzg3");
+    			add_location(div5, file$5, 91, 0, 2431);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div5, anchor);
+    			append_dev(div5, div4);
+    			append_dev(div4, div2);
+    			append_dev(div2, div0);
+    			append_dev(div0, t0);
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].m(div0, null);
+    			}
+
+    			append_dev(div2, t1);
+    			append_dev(div2, div1);
+    			append_dev(div1, t2);
+    			append_dev(div1, br);
+    			append_dev(div1, t3);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(div1, null);
+    			}
+
+    			append_dev(div4, t4);
+    			append_dev(div4, hr);
+    			append_dev(div4, t5);
+    			append_dev(div4, div3);
+    			if_blocks[current_block_type_index].m(div3, null);
+    			current = true;
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*SKILL_LEVEL_LIST, skillLevelFilters, Array, skillFilters, allSkillDetails*/ 2051) {
+    				each_value_2 = [...Array(/*skillFilters*/ ctx[0].filter(func).length + 1).keys()];
+    				validate_each_argument(each_value_2);
+    				let i;
+
+    				for (i = 0; i < each_value_2.length; i += 1) {
+    					const child_ctx = get_each_context_2$1(ctx, each_value_2, i);
+
+    					if (each_blocks_1[i]) {
+    						each_blocks_1[i].p(child_ctx, dirty);
+    						transition_in(each_blocks_1[i], 1);
+    					} else {
+    						each_blocks_1[i] = create_each_block_2$1(child_ctx);
+    						each_blocks_1[i].c();
+    						transition_in(each_blocks_1[i], 1);
+    						each_blocks_1[i].m(div0, null);
+    					}
+    				}
+
+    				group_outros();
+
+    				for (i = each_value_2.length; i < each_blocks_1.length; i += 1) {
+    					out(i);
+    				}
+
+    				check_outros();
+    			}
+
+    			if (dirty & /*Array, MAX_SLOTS, slots*/ 4) {
+    				each_value_1 = [...Array(MAX_SLOTS).keys()];
+    				validate_each_argument(each_value_1);
+    				let i;
+
+    				for (i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1$1(ctx, each_value_1, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block_1$1(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(div1, null);
+    					}
+    				}
+
+    				group_outros();
+
+    				for (i = each_value_1.length; i < each_blocks.length; i += 1) {
+    					out_1(i);
+    				}
+
+    				check_outros();
+    			}
+
+    			let previous_block_index = current_block_type_index;
+    			current_block_type_index = select_block_type(ctx);
+
+    			if (current_block_type_index === previous_block_index) {
+    				if_blocks[current_block_type_index].p(ctx, dirty);
+    			} else {
+    				group_outros();
+
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    					if_blocks[previous_block_index] = null;
+    				});
+
+    				check_outros();
+    				if_block = if_blocks[current_block_type_index];
+
+    				if (!if_block) {
+    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    					if_block.c();
+    				} else {
+    					if_block.p(ctx, dirty);
+    				}
+
+    				transition_in(if_block, 1);
+    				if_block.m(div3, null);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			for (let i = 0; i < each_value_2.length; i += 1) {
+    				transition_in(each_blocks_1[i]);
+    			}
+
+    			for (let i = 0; i < each_value_1.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
+
+    			transition_in(if_block);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			each_blocks_1 = each_blocks_1.filter(Boolean);
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				transition_out(each_blocks_1[i]);
+    			}
+
+    			each_blocks = each_blocks.filter(Boolean);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
+
+    			transition_out(if_block);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div5);
+    			destroy_each(each_blocks_1, detaching);
+    			destroy_each(each_blocks, detaching);
+    			if_blocks[current_block_type_index].d();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$5.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    const MAX_SKILL_LEVEL = 7;
+    const MAX_SLOTS = 3;
+    const func = i => i;
+    const func_1 = s => `${s.name} ${s.hiragana} ${s.englishCharacters}`;
+    const func_2 = i => i + 1;
+
+    function instance$5($$self, $$props, $$invalidate) {
+    	let nPages;
+    	let searchResultsToShow;
+    	let sliceBegin;
+    	let sliceEnd;
+    	let $charmManager;
+    	validate_store(charmManager, "charmManager");
+    	component_subscribe($$self, charmManager, $$value => $$invalidate(12, $charmManager = $$value));
+    	let { $$slots: slots$1 = {}, $$scope } = $$props;
+    	validate_slots("CharmSearcher", slots$1, []);
+    	const SKILL_LEVEL_LIST = [...Array(MAX_SKILL_LEVEL).keys()].map(i => i + 1);
+    	let skillFilters = [];
+    	let skillLevelFilters = [];
+    	let slots = [];
+    	let isSpinnerShown = false;
+    	let searchResults = null;
+
+    	// table pagination
+    	let currentPage = 0, previousCurrentPage = 0, itemsPerPage = 10;
+
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<CharmSearcher> was created with unknown prop '${key}'`);
+    	});
+
+    	function autocomplete0_selectedItem_binding(value, i) {
+    		if ($$self.$$.not_equal(skillFilters[i], value)) {
+    			skillFilters[i] = value;
+    			$$invalidate(0, skillFilters);
+    		}
+    	}
+
+    	function autocomplete1_selectedItem_binding(value, i) {
+    		if ($$self.$$.not_equal(skillLevelFilters[i], value)) {
+    			skillLevelFilters[i] = value;
+    			($$invalidate(1, skillLevelFilters), $$invalidate(0, skillFilters));
+    		}
+    	}
+
+    	function autocomplete_selectedItem_binding(value, i) {
+    		if ($$self.$$.not_equal(slots[i], value)) {
+    			slots[i] = value;
+    			((($$invalidate(2, slots), $$invalidate(0, skillFilters)), $$invalidate(1, skillLevelFilters)), $$invalidate(12, $charmManager));
+    		}
+    	}
+
+    	function select_change_handler() {
+    		itemsPerPage = select_value(this);
+    		$$invalidate(5, itemsPerPage);
+    	}
+
+    	function charmtable_charms_binding(value) {
+    		searchResultsToShow = value;
+    		((((($$invalidate(8, searchResultsToShow), $$invalidate(3, searchResults)), $$invalidate(2, slots)), $$invalidate(0, skillFilters)), $$invalidate(1, skillLevelFilters)), $$invalidate(12, $charmManager));
+    	}
+
+    	function charmtable_sliceBegin_binding(value) {
+    		sliceBegin = value;
+    		(((((((($$invalidate(9, sliceBegin), $$invalidate(5, itemsPerPage)), $$invalidate(4, currentPage)), $$invalidate(3, searchResults)), $$invalidate(6, nPages)), $$invalidate(2, slots)), $$invalidate(0, skillFilters)), $$invalidate(1, skillLevelFilters)), $$invalidate(12, $charmManager));
+    	}
+
+    	function charmtable_sliceEnd_binding(value) {
+    		sliceEnd = value;
+    		(((((((($$invalidate(10, sliceEnd), $$invalidate(5, itemsPerPage)), $$invalidate(4, currentPage)), $$invalidate(3, searchResults)), $$invalidate(6, nPages)), $$invalidate(2, slots)), $$invalidate(0, skillFilters)), $$invalidate(1, skillLevelFilters)), $$invalidate(12, $charmManager));
+    	}
+
+    	const click_handler = () => $$invalidate(4, currentPage--, currentPage);
+    	const click_handler_1 = i => $$invalidate(4, currentPage = i);
+    	const click_handler_2 = () => $$invalidate(4, currentPage++, currentPage);
+
+    	$$self.$capture_state = () => ({
+    		AutoComplete: SimpleAutocomplete,
+    		CharmTable,
+    		allSkillDetails,
+    		charmManager,
+    		MAX_SKILL_LEVEL,
+    		SKILL_LEVEL_LIST,
+    		MAX_SLOTS,
+    		skillFilters,
+    		skillLevelFilters,
+    		slots,
+    		isSpinnerShown,
+    		searchResults,
+    		currentPage,
+    		previousCurrentPage,
+    		itemsPerPage,
+    		nPages,
+    		searchResultsToShow,
+    		sliceBegin,
+    		sliceEnd,
+    		$charmManager
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("skillFilters" in $$props) $$invalidate(0, skillFilters = $$props.skillFilters);
+    		if ("skillLevelFilters" in $$props) $$invalidate(1, skillLevelFilters = $$props.skillLevelFilters);
+    		if ("slots" in $$props) $$invalidate(2, slots = $$props.slots);
+    		if ("isSpinnerShown" in $$props) $$invalidate(7, isSpinnerShown = $$props.isSpinnerShown);
+    		if ("searchResults" in $$props) $$invalidate(3, searchResults = $$props.searchResults);
+    		if ("currentPage" in $$props) $$invalidate(4, currentPage = $$props.currentPage);
+    		if ("previousCurrentPage" in $$props) previousCurrentPage = $$props.previousCurrentPage;
+    		if ("itemsPerPage" in $$props) $$invalidate(5, itemsPerPage = $$props.itemsPerPage);
+    		if ("nPages" in $$props) $$invalidate(6, nPages = $$props.nPages);
+    		if ("searchResultsToShow" in $$props) $$invalidate(8, searchResultsToShow = $$props.searchResultsToShow);
+    		if ("sliceBegin" in $$props) $$invalidate(9, sliceBegin = $$props.sliceBegin);
+    		if ("sliceEnd" in $$props) $$invalidate(10, sliceEnd = $$props.sliceEnd);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*skillFilters, skillLevelFilters*/ 3) {
+    			// form update (skill)
+    			{
+    				for (const i in skillFilters) {
+    					if (skillFilters[i] && skillLevelFilters[i] == null) {
+    						$$invalidate(1, skillLevelFilters[i] = 1, skillLevelFilters);
+    					}
+
+    					if (skillFilters[i] == null) {
+    						skillFilters.splice(i, 1);
+    						skillLevelFilters.splice(i, 1);
+    					}
+    				}
+    			}
+    		}
+
+    		if ($$self.$$.dirty & /*slots, skillFilters, skillLevelFilters, $charmManager*/ 4103) {
+    			{
+    				$$invalidate(7, isSpinnerShown = true);
+    				$$invalidate(2, slots = slots.filter(i => i));
+
+    				const base = JSON.stringify({
+    					skills: skillFilters.map(i => i.name),
+    					skillLevels: skillLevelFilters,
+    					slots
+    				});
+
+    				const search = () => {
+    					if (!skillFilters.length && !skillLevelFilters.length && !slots.length) {
+    						$$invalidate(3, searchResults = null);
+    						return;
+    					}
+
+    					if (typeof Module.getSubstitutesAll !== "function") {
+    						setTimeout(search, 100);
+    						return;
+    					}
+
+    					const matchIds = Module.getSubstitutes(
+    						JSON.stringify($charmManager.charms.map(i => {
+    							const { substitutableCharms, imagename, evaluation, ...rest } = i;
+    							return rest;
+    						})),
+    						base
+    					);
+
+    					$$invalidate(3, searchResults = JSON.parse(matchIds).map(id => $charmManager.charms.find(i => i.rowid === id)));
+    				};
+
+    				search();
+    				$$invalidate(7, isSpinnerShown = false);
+    			}
+    		}
+
+    		if ($$self.$$.dirty & /*searchResults, itemsPerPage*/ 40) {
+    			$$invalidate(6, nPages = Math.ceil((searchResults || []).length / itemsPerPage));
+    		}
+
+    		if ($$self.$$.dirty & /*searchResults, nPages*/ 72) {
+    			{
+    				if (searchResults && nPages) {
+    					$$invalidate(4, currentPage = 0);
+    				}
+    			}
+    		}
+
+    		if ($$self.$$.dirty & /*searchResults*/ 8) {
+    			$$invalidate(8, searchResultsToShow = searchResults); //?.slice(itemsPerPage * currentPage, itemsPerPage * (currentPage+1))
+    		}
+
+    		if ($$self.$$.dirty & /*itemsPerPage, currentPage*/ 48) {
+    			$$invalidate(9, sliceBegin = itemsPerPage * currentPage);
+    		}
+
+    		if ($$self.$$.dirty & /*itemsPerPage, currentPage*/ 48) {
+    			$$invalidate(10, sliceEnd = itemsPerPage * (currentPage + 1));
+    		}
+
+    		if ($$self.$$.dirty & /*slots*/ 4) {
+    			// form update (slot)
+    			$$invalidate(2, slots = slots.sort((a, b) => b - a));
+    		}
+    	};
+
+    	return [
+    		skillFilters,
+    		skillLevelFilters,
+    		slots,
+    		searchResults,
+    		currentPage,
+    		itemsPerPage,
+    		nPages,
+    		isSpinnerShown,
+    		searchResultsToShow,
+    		sliceBegin,
+    		sliceEnd,
+    		SKILL_LEVEL_LIST,
+    		$charmManager,
+    		autocomplete0_selectedItem_binding,
+    		autocomplete1_selectedItem_binding,
+    		autocomplete_selectedItem_binding,
+    		select_change_handler,
+    		charmtable_charms_binding,
+    		charmtable_sliceBegin_binding,
+    		charmtable_sliceEnd_binding,
+    		click_handler,
+    		click_handler_1,
+    		click_handler_2
+    	];
+    }
+
+    class CharmSearcher extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$5, create_fragment$5, safe_not_equal, {});
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "CharmSearcher",
+    			options,
+    			id: create_fragment$5.name
+    		});
+    	}
+    }
+
+    /* src/CharmList.svelte generated by Svelte v3.38.2 */
+    const file$4 = "src/CharmList.svelte";
+
+    // (28:4) {:else}
+    function create_else_block$1(ctx) {
+    	let charmtable;
+    	let updating_charms;
+    	let current;
+
+    	function charmtable_charms_binding(value) {
+    		/*charmtable_charms_binding*/ ctx[1](value);
+    	}
+
+    	let charmtable_props = {};
+
+    	if (/*charms*/ ctx[0] !== void 0) {
+    		charmtable_props.charms = /*charms*/ ctx[0];
+    	}
+
+    	charmtable = new CharmTable({ props: charmtable_props, $$inline: true });
+    	binding_callbacks.push(() => bind(charmtable, "charms", charmtable_charms_binding));
+
+    	const block = {
+    		c: function create() {
+    			create_component(charmtable.$$.fragment);
+    		},
+    		m: function mount(target, anchor) {
+    			mount_component(charmtable, target, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const charmtable_changes = {};
+
+    			if (!updating_charms && dirty & /*charms*/ 1) {
+    				updating_charms = true;
+    				charmtable_changes.charms = /*charms*/ ctx[0];
+    				add_flush_callback(() => updating_charms = false);
+    			}
+
+    			charmtable.$set(charmtable_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(charmtable.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(charmtable.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			destroy_component(charmtable, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block$1.name,
+    		type: "else",
+    		source: "(28:4) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (24:4) {#if charms == null}
+    function create_if_block$1(ctx) {
+    	let div;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			attr_dev(div, "class", "spinner-border text-info svelte-2qpa7f");
+    			attr_dev(div, "role", "status");
+    			add_location(div, file$4, 24, 6, 597);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    		},
+    		p: noop,
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$1.name,
+    		type: "if",
+    		source: "(24:4) {#if charms == null}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$4(ctx) {
+    	let div1;
+    	let div0;
+    	let current_block_type_index;
+    	let if_block;
+    	let current;
+    	const if_block_creators = [create_if_block$1, create_else_block$1];
+    	const if_blocks = [];
+
+    	function select_block_type(ctx, dirty) {
+    		if (/*charms*/ ctx[0] == null) return 0;
+    		return 1;
+    	}
+
+    	current_block_type_index = select_block_type(ctx);
+    	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+
+    	const block = {
+    		c: function create() {
+    			div1 = element("div");
+    			div0 = element("div");
+    			if_block.c();
+    			attr_dev(div0, "id", "charm-list");
+    			attr_dev(div0, "class", "svelte-2qpa7f");
+    			add_location(div0, file$4, 22, 2, 544);
+    			attr_dev(div1, "class", "tab-content svelte-2qpa7f");
+    			add_location(div1, file$4, 21, 0, 516);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, div0);
+    			if_blocks[current_block_type_index].m(div0, null);
+    			current = true;
+    		},
+    		p: function update(ctx, [dirty]) {
+    			let previous_block_index = current_block_type_index;
+    			current_block_type_index = select_block_type(ctx);
+
+    			if (current_block_type_index === previous_block_index) {
+    				if_blocks[current_block_type_index].p(ctx, dirty);
+    			} else {
+    				group_outros();
+
+    				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+    					if_blocks[previous_block_index] = null;
+    				});
+
+    				check_outros();
+    				if_block = if_blocks[current_block_type_index];
+
+    				if (!if_block) {
+    					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+    					if_block.c();
+    				} else {
+    					if_block.p(ctx, dirty);
+    				}
+
+    				transition_in(if_block, 1);
+    				if_block.m(div0, null);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div1);
+    			if_blocks[current_block_type_index].d();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$4.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$4($$self, $$props, $$invalidate) {
+    	let $charmManager;
+    	validate_store(charmManager, "charmManager");
+    	component_subscribe($$self, charmManager, $$value => $$invalidate(2, $charmManager = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("CharmList", slots, []);
+    	let charms;
+
+    	setInterval(
+    		() => {
+    			// WORKAROUND: charms does not follow charManager.charms...
+    			if (charms !== $charmManager?.charms) {
+    				$$invalidate(0, charms = $charmManager?.charms);
+    			}
+    		},
+    		1000
+    	);
+
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<CharmList> was created with unknown prop '${key}'`);
+    	});
+
+    	function charmtable_charms_binding(value) {
+    		charms = value;
+    		$$invalidate(0, charms);
+    	}
+
+    	$$self.$capture_state = () => ({
+    		CharmTable,
+    		MHRiseCharmManager,
+    		skillToSlotLevel,
+    		charmManager,
+    		charms,
+    		$charmManager
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("charms" in $$props) $$invalidate(0, charms = $$props.charms);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [charms, charmtable_charms_binding];
     }
 
     class CharmList extends SvelteComponentDev {
@@ -11970,7 +17402,7 @@ for (const input of inputs) {
 
     /* src/CharmScanner.svelte generated by Svelte v3.38.2 */
 
-    const { console: console_1 } = globals;
+    const { console: console_1$1 } = globals;
     const file$2 = "src/CharmScanner.svelte";
 
     function get_each_context$1(ctx, list, i) {
@@ -11979,7 +17411,7 @@ for (const input of inputs) {
     	return child_ctx;
     }
 
-    // (106:6) {#each $videoReaderProps as props}
+    // (104:6) {#each $videoReaderProps as props}
     function create_each_block$1(ctx) {
     	let videoreader;
     	let current;
@@ -12025,14 +17457,14 @@ for (const input of inputs) {
     		block,
     		id: create_each_block$1.name,
     		type: "each",
-    		source: "(106:6) {#each $videoReaderProps as props}",
+    		source: "(104:6) {#each $videoReaderProps as props}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (112:33) 
+    // (110:33) 
     function create_if_block_2(ctx) {
     	let t0;
     	let t1_value = 1 + Number(/*currentFileIndex*/ ctx[4]) + "";
@@ -12074,14 +17506,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(112:33) ",
+    		source: "(110:33) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (110:6) {#if isScanFinished}
+    // (108:6) {#if isScanFinished}
     function create_if_block_1(ctx) {
     	let t;
 
@@ -12102,14 +17534,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(110:6) {#if isScanFinished}",
+    		source: "(108:6) {#if isScanFinished}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (134:6) {:else}
+    // (132:6) {:else}
     function create_else_block(ctx) {
     	let t;
 
@@ -12130,14 +17562,14 @@ for (const input of inputs) {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(134:6) {:else}",
+    		source: "(132:6) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (124:6) {#if fInitialized}
+    // (122:6) {#if fInitialized}
     function create_if_block(ctx) {
     	let input;
     	let t0;
@@ -12160,14 +17592,14 @@ for (const input of inputs) {
     			attr_dev(input, "type", "file");
     			attr_dev(input, "accept", ".mp4");
     			input.multiple = true;
-    			attr_dev(input, "class", "svelte-199ged2");
-    			add_location(input, file$2, 124, 8, 3051);
+    			attr_dev(input, "class", "svelte-18sy7xy");
+    			add_location(input, file$2, 122, 8, 2910);
     			if (img.src !== (img_src_value = "https://static.thenounproject.com/png/625182-200.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "");
-    			attr_dev(img, "class", "svelte-199ged2");
-    			add_location(img, file$2, 131, 8, 3272);
-    			attr_dev(div, "class", "svelte-199ged2");
-    			add_location(div, file$2, 132, 8, 3388);
+    			attr_dev(img, "class", "svelte-18sy7xy");
+    			add_location(img, file$2, 129, 8, 3131);
+    			attr_dev(div, "class", "svelte-18sy7xy");
+    			add_location(div, file$2, 130, 8, 3247);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -12182,24 +17614,13 @@ for (const input of inputs) {
     					listen_dev(input, "change", /*onFileSelected*/ ctx[9], false, false, false),
     					listen_dev(input, "change", /*input_change_handler*/ ctx[12]),
     					listen_dev(img, "click", /*click_handler*/ ctx[14], false, false, false),
-    					listen_dev(
-    						div,
-    						"click",
-    						function () {
-    							if (is_function(/*domInput*/ ctx[1].click)) /*domInput*/ ctx[1].click.apply(this, arguments);
-    						},
-    						false,
-    						false,
-    						false
-    					)
+    					listen_dev(div, "click", /*click_handler_1*/ ctx[15], false, false, false)
     				];
 
     				mounted = true;
     			}
     		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
-    		},
+    		p: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(input);
     			/*input_binding*/ ctx[13](null);
@@ -12216,7 +17637,7 @@ for (const input of inputs) {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(124:6) {#if fInitialized}",
+    		source: "(122:6) {#if fInitialized}",
     		ctx
     	});
 
@@ -12230,12 +17651,12 @@ for (const input of inputs) {
     	let t0;
     	let t1;
     	let div2;
-    	let textarea;
-    	let t2;
     	let div1;
+    	let t2;
     	let t3;
     	let t4;
     	let t5;
+    	let textarea;
     	let t6;
     	let div3;
     	let current;
@@ -12281,35 +17702,35 @@ for (const input of inputs) {
     			if (if_block0) if_block0.c();
     			t1 = space();
     			div2 = element("div");
-    			textarea = element("textarea");
-    			t2 = space();
     			div1 = element("div");
-    			t3 = text("Found ");
-    			t4 = text(/*nScanedCharms*/ ctx[6]);
-    			t5 = text(" charms in this scan.");
+    			t2 = text("Found ");
+    			t3 = text(/*nScanedCharms*/ ctx[6]);
+    			t4 = text(" charms.");
+    			t5 = space();
+    			textarea = element("textarea");
     			t6 = space();
     			div3 = element("div");
     			if_block1.c();
     			attr_dev(div0, "id", "status");
-    			attr_dev(div0, "class", "svelte-199ged2");
-    			add_location(div0, file$2, 104, 4, 2528);
+    			attr_dev(div0, "class", "svelte-18sy7xy");
+    			add_location(div0, file$2, 102, 4, 2400);
+    			attr_dev(div1, "class", "svelte-18sy7xy");
+    			add_location(div1, file$2, 116, 6, 2728);
     			attr_dev(textarea, "placeholder", "納刀術,2,ひるみ軽減,1,1,0,0");
     			textarea.value = /*exportData*/ ctx[7];
-    			attr_dev(textarea, "class", "svelte-199ged2");
-    			add_location(textarea, file$2, 118, 6, 2856);
-    			attr_dev(div1, "class", "svelte-199ged2");
-    			add_location(div1, file$2, 119, 6, 2930);
+    			attr_dev(textarea, "class", "svelte-18sy7xy");
+    			add_location(textarea, file$2, 117, 6, 2775);
     			attr_dev(div2, "id", "result");
-    			attr_dev(div2, "class", "svelte-199ged2");
-    			add_location(div2, file$2, 117, 4, 2832);
+    			attr_dev(div2, "class", "svelte-18sy7xy");
+    			add_location(div2, file$2, 115, 4, 2704);
     			attr_dev(div3, "id", "upload");
-    			attr_dev(div3, "class", "svelte-199ged2");
-    			add_location(div3, file$2, 122, 4, 3000);
+    			attr_dev(div3, "class", "svelte-18sy7xy");
+    			add_location(div3, file$2, 120, 4, 2859);
     			attr_dev(div4, "id", "scanner");
-    			attr_dev(div4, "class", "svelte-199ged2");
-    			add_location(div4, file$2, 103, 2, 2505);
-    			attr_dev(div5, "class", "tab-content svelte-199ged2");
-    			add_location(div5, file$2, 102, 0, 2477);
+    			attr_dev(div4, "class", "svelte-18sy7xy");
+    			add_location(div4, file$2, 101, 2, 2377);
+    			attr_dev(div5, "class", "tab-content svelte-18sy7xy");
+    			add_location(div5, file$2, 100, 0, 2349);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -12327,12 +17748,12 @@ for (const input of inputs) {
     			if (if_block0) if_block0.m(div0, null);
     			append_dev(div4, t1);
     			append_dev(div4, div2);
-    			append_dev(div2, textarea);
-    			append_dev(div2, t2);
     			append_dev(div2, div1);
+    			append_dev(div1, t2);
     			append_dev(div1, t3);
     			append_dev(div1, t4);
-    			append_dev(div1, t5);
+    			append_dev(div2, t5);
+    			append_dev(div2, textarea);
     			append_dev(div4, t6);
     			append_dev(div4, div3);
     			if_block1.m(div3, null);
@@ -12379,11 +17800,11 @@ for (const input of inputs) {
     				}
     			}
 
+    			if (!current || dirty & /*nScanedCharms*/ 64) set_data_dev(t3, /*nScanedCharms*/ ctx[6]);
+
     			if (!current || dirty & /*exportData*/ 128) {
     				prop_dev(textarea, "value", /*exportData*/ ctx[7]);
     			}
-
-    			if (!current || dirty & /*nScanedCharms*/ 64) set_data_dev(t4, /*nScanedCharms*/ ctx[6]);
 
     			if (current_block_type_1 === (current_block_type_1 = select_block_type_1(ctx)) && if_block1) {
     				if_block1.p(ctx, dirty);
@@ -12447,9 +17868,6 @@ for (const input of inputs) {
     		$$unsubscribe_videoReaderProps = noop,
     		$$subscribe_videoReaderProps = () => ($$unsubscribe_videoReaderProps(), $$unsubscribe_videoReaderProps = subscribe(videoReaderProps, $$value => $$invalidate(8, $videoReaderProps = $$value)), videoReaderProps);
 
-    	let $fRefleshCharmTable;
-    	validate_store(fRefleshCharmTable, "fRefleshCharmTable");
-    	component_subscribe($$self, fRefleshCharmTable, $$value => $$invalidate(17, $fRefleshCharmTable = $$value));
     	$$self.$$.on_destroy.push(() => $$unsubscribe_videoReaderProps());
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("CharmScanner", slots, []);
@@ -12546,11 +17964,7 @@ for (const input of inputs) {
 
     		const charms = charmScanner.getCharms();
     		console.log(JSON.stringify(charms));
-
-    		// await charmManager.registerCharms(charms)
     		$$invalidate(5, isScanFinished = true);
-
-    		set_store_value(fRefleshCharmTable, $fRefleshCharmTable = true, $fRefleshCharmTable);
     	}
 
     	function onFinishVideoRead() {
@@ -12564,7 +17978,7 @@ for (const input of inputs) {
     	const writable_props = ["charmScanner", "charmManager", "fInitialized"];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<CharmScanner> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1$1.warn(`<CharmScanner> was created with unknown prop '${key}'`);
     	});
 
     	function input_change_handler() {
@@ -12583,6 +17997,10 @@ for (const input of inputs) {
     		domInput.click();
     	};
 
+    	const click_handler_1 = () => {
+    		domInput.click;
+    	};
+
     	$$self.$$set = $$props => {
     		if ("charmScanner" in $$props) $$invalidate(10, charmScanner = $$props.charmScanner);
     		if ("charmManager" in $$props) $$invalidate(11, charmManager = $$props.charmManager);
@@ -12592,7 +18010,6 @@ for (const input of inputs) {
     	$$self.$capture_state = () => ({
     		writable,
     		VideoReader,
-    		fRefleshCharmTable,
     		VIDEO_WIDTH,
     		VIDEO_HEIGHT,
     		VIDEO_FRAME_RATE,
@@ -12612,8 +18029,7 @@ for (const input of inputs) {
     		initVideoReaders,
     		onFileSelected,
     		onFinishVideoRead,
-    		$videoReaderProps,
-    		$fRefleshCharmTable
+    		$videoReaderProps
     	});
 
     	$$self.$inject_state = $$props => {
@@ -12650,7 +18066,8 @@ for (const input of inputs) {
     		charmManager,
     		input_change_handler,
     		input_binding,
-    		click_handler
+    		click_handler,
+    		click_handler_1
     	];
     }
 
@@ -12675,15 +18092,15 @@ for (const input of inputs) {
     		const props = options.props || {};
 
     		if (/*charmScanner*/ ctx[10] === undefined && !("charmScanner" in props)) {
-    			console_1.warn("<CharmScanner> was created without expected prop 'charmScanner'");
+    			console_1$1.warn("<CharmScanner> was created without expected prop 'charmScanner'");
     		}
 
     		if (/*charmManager*/ ctx[11] === undefined && !("charmManager" in props)) {
-    			console_1.warn("<CharmScanner> was created without expected prop 'charmManager'");
+    			console_1$1.warn("<CharmScanner> was created without expected prop 'charmManager'");
     		}
 
     		if (/*fInitialized*/ ctx[0] === undefined && !("fInitialized" in props)) {
-    			console_1.warn("<CharmScanner> was created without expected prop 'fInitialized'");
+    			console_1$1.warn("<CharmScanner> was created without expected prop 'fInitialized'");
     		}
     	}
 
@@ -12759,22 +18176,21 @@ for (const input of inputs) {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[9] = list[i];
-    	child_ctx[10] = list;
-    	child_ctx[11] = i;
+    	child_ctx[8] = list[i];
+    	child_ctx[10] = i;
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[9] = list[i];
-    	child_ctx[11] = i;
+    	child_ctx[8] = list[i];
+    	child_ctx[10] = i;
     	return child_ctx;
     }
 
     function get_each_context_2(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[13] = list[i];
+    	child_ctx[12] = list[i];
     	return child_ctx;
     }
 
@@ -12785,7 +18201,7 @@ for (const input of inputs) {
     	const block = {
     		c: function create() {
     			path = svg_element("path");
-    			attr_dev(path, "d", /*iconData*/ ctx[13]);
+    			attr_dev(path, "d", /*iconData*/ ctx[12]);
     			add_location(path, file$1, 35, 14, 1071);
     		},
     		m: function mount(target, anchor) {
@@ -12815,13 +18231,13 @@ for (const input of inputs) {
     	let svg;
     	let t0;
     	let span;
-    	let t1_value = /*option*/ ctx[9].tabTitle + "";
+    	let t1_value = /*option*/ ctx[8].tabTitle + "";
     	let t1;
     	let button_class_value;
     	let t2;
     	let mounted;
     	let dispose;
-    	let each_value_2 = /*option*/ ctx[9].iconData || [];
+    	let each_value_2 = /*option*/ ctx[8].iconData || [];
     	validate_each_argument(each_value_2);
     	let each_blocks = [];
 
@@ -12851,9 +18267,9 @@ for (const input of inputs) {
     			set_style(span, "display", /*isNavigationOpen*/ ctx[0] ? "inline" : "none");
     			attr_dev(span, "class", "svelte-nk63sn");
     			add_location(span, file$1, 38, 10, 1139);
-    			attr_dev(button, "id", /*i*/ ctx[11]);
+    			attr_dev(button, "id", /*i*/ ctx[10]);
 
-    			attr_dev(button, "class", button_class_value = "" + (null_to_empty(/*currentNavOptionId*/ ctx[4] == /*i*/ ctx[11]
+    			attr_dev(button, "class", button_class_value = "" + (null_to_empty(/*currentNavOptionId*/ ctx[4] == /*i*/ ctx[10]
     			? "active navigation-link"
     			: "navigation-link") + " svelte-nk63sn"));
 
@@ -12883,7 +18299,7 @@ for (const input of inputs) {
     		},
     		p: function update(ctx, dirty) {
     			if (dirty & /*navOptions*/ 0) {
-    				each_value_2 = /*option*/ ctx[9].iconData || [];
+    				each_value_2 = /*option*/ ctx[8].iconData || [];
     				validate_each_argument(each_value_2);
     				let i;
 
@@ -12910,7 +18326,7 @@ for (const input of inputs) {
     				set_style(span, "display", /*isNavigationOpen*/ ctx[0] ? "inline" : "none");
     			}
 
-    			if (dirty & /*currentNavOptionId*/ 16 && button_class_value !== (button_class_value = "" + (null_to_empty(/*currentNavOptionId*/ ctx[4] == /*i*/ ctx[11]
+    			if (dirty & /*currentNavOptionId*/ 16 && button_class_value !== (button_class_value = "" + (null_to_empty(/*currentNavOptionId*/ ctx[4] == /*i*/ ctx[10]
     			? "active navigation-link"
     			: "navigation-link") + " svelte-nk63sn"))) {
     				attr_dev(button, "class", button_class_value);
@@ -12939,7 +18355,6 @@ for (const input of inputs) {
     function create_each_block(ctx) {
     	let div;
     	let switch_instance;
-    	let updating_onActivate;
     	let t;
     	let div_class_value;
     	let current;
@@ -12949,24 +18364,19 @@ for (const input of inputs) {
     			fInitialized: /*fInitialized*/ ctx[1],
     			charmScanner: /*charmScanner*/ ctx[2],
     			charmManager: /*charmManager*/ ctx[3]
+    		},
+    		{
+    			onActivate: /*onActivate*/ ctx[5][/*i*/ ctx[10]]
     		}
     	];
 
-    	function switch_instance_onActivate_binding(value) {
-    		/*switch_instance_onActivate_binding*/ ctx[7](value, /*i*/ ctx[11]);
-    	}
-
-    	var switch_value = navOptions[/*i*/ ctx[11]].component;
+    	var switch_value = navOptions[/*i*/ ctx[10]].component;
 
     	function switch_props(ctx) {
     		let switch_instance_props = {};
 
     		for (let i = 0; i < switch_instance_spread_levels.length; i += 1) {
     			switch_instance_props = assign(switch_instance_props, switch_instance_spread_levels[i]);
-    		}
-
-    		if (/*onActivate*/ ctx[5][/*i*/ ctx[11]] !== void 0) {
-    			switch_instance_props.onActivate = /*onActivate*/ ctx[5][/*i*/ ctx[11]];
     		}
 
     		return {
@@ -12976,8 +18386,7 @@ for (const input of inputs) {
     	}
 
     	if (switch_value) {
-    		switch_instance = new switch_value(switch_props(ctx));
-    		binding_callbacks.push(() => bind(switch_instance, "onActivate", switch_instance_onActivate_binding));
+    		switch_instance = new switch_value(switch_props());
     	}
 
     	const block = {
@@ -12986,7 +18395,7 @@ for (const input of inputs) {
     			if (switch_instance) create_component(switch_instance.$$.fragment);
     			t = space();
 
-    			attr_dev(div, "class", div_class_value = "h-100 " + (/*currentNavOptionId*/ ctx[4] == /*i*/ ctx[11]
+    			attr_dev(div, "class", div_class_value = "h-100 " + (/*currentNavOptionId*/ ctx[4] == /*i*/ ctx[10]
     			? "d-block"
     			: "d-none"));
 
@@ -13002,26 +18411,21 @@ for (const input of inputs) {
     			append_dev(div, t);
     			current = true;
     		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
-
-    			const switch_instance_changes = (dirty & /*fInitialized, charmScanner, charmManager*/ 14)
+    		p: function update(ctx, dirty) {
+    			const switch_instance_changes = (dirty & /*fInitialized, charmScanner, charmManager, onActivate*/ 46)
     			? get_spread_update(switch_instance_spread_levels, [
-    					{
+    					dirty & /*fInitialized, charmScanner, charmManager*/ 14 && {
     						fInitialized: /*fInitialized*/ ctx[1],
     						charmScanner: /*charmScanner*/ ctx[2],
     						charmManager: /*charmManager*/ ctx[3]
+    					},
+    					dirty & /*onActivate*/ 32 && {
+    						onActivate: /*onActivate*/ ctx[5][/*i*/ ctx[10]]
     					}
     				])
     			: {};
 
-    			if (!updating_onActivate && dirty & /*onActivate*/ 32) {
-    				updating_onActivate = true;
-    				switch_instance_changes.onActivate = /*onActivate*/ ctx[5][/*i*/ ctx[11]];
-    				add_flush_callback(() => updating_onActivate = false);
-    			}
-
-    			if (switch_value !== (switch_value = navOptions[/*i*/ ctx[11]].component)) {
+    			if (switch_value !== (switch_value = navOptions[/*i*/ ctx[10]].component)) {
     				if (switch_instance) {
     					group_outros();
     					const old_component = switch_instance;
@@ -13034,8 +18438,7 @@ for (const input of inputs) {
     				}
 
     				if (switch_value) {
-    					switch_instance = new switch_value(switch_props(ctx));
-    					binding_callbacks.push(() => bind(switch_instance, "onActivate", switch_instance_onActivate_binding));
+    					switch_instance = new switch_value(switch_props());
     					create_component(switch_instance.$$.fragment);
     					transition_in(switch_instance.$$.fragment, 1);
     					mount_component(switch_instance, div, t);
@@ -13046,7 +18449,7 @@ for (const input of inputs) {
     				switch_instance.$set(switch_instance_changes);
     			}
 
-    			if (!current || dirty & /*currentNavOptionId*/ 16 && div_class_value !== (div_class_value = "h-100 " + (/*currentNavOptionId*/ ctx[4] == /*i*/ ctx[11]
+    			if (!current || dirty & /*currentNavOptionId*/ 16 && div_class_value !== (div_class_value = "h-100 " + (/*currentNavOptionId*/ ctx[4] == /*i*/ ctx[10]
     			? "d-block"
     			: "d-none"))) {
     				attr_dev(div, "class", div_class_value);
@@ -13249,7 +18652,7 @@ for (const input of inputs) {
     	let { fInitialized } = $$props;
     	let { charmScanner } = $$props;
     	let { charmManager } = $$props;
-    	let currentNavOptionId = 2;
+    	let currentNavOptionId = 4;
     	let currentNavOption = navOptions[currentNavOptionId];
     	let onActivate = {};
 
@@ -13267,13 +18670,6 @@ for (const input of inputs) {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Nav> was created with unknown prop '${key}'`);
     	});
-
-    	function switch_instance_onActivate_binding(value, i) {
-    		if ($$self.$$.not_equal(onActivate[i], value)) {
-    			onActivate[i] = value;
-    			$$invalidate(5, onActivate);
-    		}
-    	}
 
     	$$self.$$set = $$props => {
     		if ("isNavigationOpen" in $$props) $$invalidate(0, isNavigationOpen = $$props.isNavigationOpen);
@@ -13315,8 +18711,7 @@ for (const input of inputs) {
     		charmManager,
     		currentNavOptionId,
     		onActivate,
-    		switchComponent,
-    		switch_instance_onActivate_binding
+    		switchComponent
     	];
     }
 
@@ -13392,6 +18787,8 @@ for (const input of inputs) {
     }
 
     /* src/App.svelte generated by Svelte v3.38.2 */
+
+    const { console: console_1 } = globals;
     const file = "src/App.svelte";
 
     function create_fragment(ctx) {
@@ -13409,7 +18806,7 @@ for (const input of inputs) {
     	let current;
 
     	function hamburger_isOpen_binding(value) {
-    		/*hamburger_isOpen_binding*/ ctx[4](value);
+    		/*hamburger_isOpen_binding*/ ctx[3](value);
     	}
 
     	let hamburger_props = {};
@@ -13425,8 +18822,7 @@ for (const input of inputs) {
     		{
     			isNavigationOpen: /*isNavigationOpen*/ ctx[0],
     			fInitialized: /*fInitialized*/ ctx[1],
-    			charmScanner: /*charmScanner*/ ctx[2],
-    			charmManager: /*charmManager*/ ctx[3]
+    			charmScanner: /*charmScanner*/ ctx[2]
     		}
     	];
 
@@ -13452,18 +18848,18 @@ for (const input of inputs) {
     			t3 = space();
     			div1 = element("div");
     			div1.textContent = `v${VERSION}`;
-    			attr_dev(h1, "class", "svelte-1py2mvt");
-    			add_location(h1, file, 25, 3, 658);
-    			attr_dev(header, "class", "svelte-1py2mvt");
-    			add_location(header, file, 23, 2, 598);
+    			attr_dev(h1, "class", "svelte-1ue2c4m");
+    			add_location(h1, file, 37, 3, 1008);
+    			attr_dev(header, "class", "svelte-1ue2c4m");
+    			add_location(header, file, 35, 2, 948);
     			attr_dev(div0, "id", "nav-wrapper");
-    			attr_dev(div0, "class", "svelte-1py2mvt");
-    			add_location(div0, file, 27, 2, 689);
+    			attr_dev(div0, "class", "svelte-1ue2c4m");
+    			add_location(div0, file, 47, 2, 1450);
     			attr_dev(div1, "id", "version");
-    			attr_dev(div1, "class", "svelte-1py2mvt");
-    			add_location(div1, file, 30, 2, 805);
-    			attr_dev(main, "class", "svelte-1py2mvt");
-    			add_location(main, file, 22, 0, 589);
+    			attr_dev(div1, "class", "svelte-1ue2c4m");
+    			add_location(div1, file, 50, 2, 1548);
+    			attr_dev(main, "class", "svelte-1ue2c4m");
+    			add_location(main, file, 34, 0, 939);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -13492,13 +18888,12 @@ for (const input of inputs) {
 
     			hamburger.$set(hamburger_changes);
 
-    			const nav_changes = (dirty & /*isNavigationOpen, fInitialized, charmScanner, charmManager*/ 15)
+    			const nav_changes = (dirty & /*isNavigationOpen, fInitialized, charmScanner*/ 7)
     			? get_spread_update(nav_spread_levels, [
     					{
     						isNavigationOpen: /*isNavigationOpen*/ ctx[0],
     						fInitialized: /*fInitialized*/ ctx[1],
-    						charmScanner: /*charmScanner*/ ctx[2],
-    						charmManager: /*charmManager*/ ctx[3]
+    						charmScanner: /*charmScanner*/ ctx[2]
     					}
     				])
     			: {};
@@ -13538,24 +18933,37 @@ for (const input of inputs) {
     const VERSION = "0.5.0";
 
     function instance($$self, $$props, $$invalidate) {
+    	let $charmManager;
+    	validate_store(charmManager, "charmManager");
+    	component_subscribe($$self, charmManager, $$value => $$invalidate(4, $charmManager = $$value));
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("App", slots, []);
+    	let isDemoMode = false;
     	let isNavigationOpen = false;
     	let fInitialized = false;
     	let charmScanner;
-    	let charmManager;
 
     	window.addEventListener("load", async () => {
     		$$invalidate(2, charmScanner = new MHRiseCharmScanner());
-    		$$invalidate(3, charmManager = new MHRiseCharmManager());
+    		set_store_value(charmManager, $charmManager = new MHRiseCharmManager(), $charmManager);
     		await charmScanner.init();
     		$$invalidate(1, fInitialized = true);
     	});
 
+    	function onChangeDemoMode() {
+    		if (isDemoMode) {
+    			set_store_value(charmManager, $charmManager = new MHRiseCharmManager({ isDemoMode: true }), $charmManager);
+    			console.log(charmScanner.charmTableName);
+    		} else {
+    			set_store_value(charmManager, $charmManager = new MHRiseCharmManager(), $charmManager);
+    			console.log(charmScanner.charmTableName);
+    		}
+    	}
+
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<App> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<App> was created with unknown prop '${key}'`);
     	});
 
     	function hamburger_isOpen_binding(value) {
@@ -13568,32 +18976,29 @@ for (const input of inputs) {
     		MHRiseCharmScanner,
     		Hamburger,
     		Nav,
+    		charmManager,
     		TITLE,
     		VERSION,
+    		isDemoMode,
     		isNavigationOpen,
     		fInitialized,
     		charmScanner,
-    		charmManager
+    		onChangeDemoMode,
+    		$charmManager
     	});
 
     	$$self.$inject_state = $$props => {
+    		if ("isDemoMode" in $$props) isDemoMode = $$props.isDemoMode;
     		if ("isNavigationOpen" in $$props) $$invalidate(0, isNavigationOpen = $$props.isNavigationOpen);
     		if ("fInitialized" in $$props) $$invalidate(1, fInitialized = $$props.fInitialized);
     		if ("charmScanner" in $$props) $$invalidate(2, charmScanner = $$props.charmScanner);
-    		if ("charmManager" in $$props) $$invalidate(3, charmManager = $$props.charmManager);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [
-    		isNavigationOpen,
-    		fInitialized,
-    		charmScanner,
-    		charmManager,
-    		hamburger_isOpen_binding
-    	];
+    	return [isNavigationOpen, fInitialized, charmScanner, hamburger_isOpen_binding];
     }
 
     class App extends SvelteComponentDev {
