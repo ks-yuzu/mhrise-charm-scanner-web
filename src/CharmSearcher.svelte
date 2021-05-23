@@ -1,17 +1,35 @@
 <script>
   import AutoComplete from 'simple-svelte-autocomplete'
+  import CharmTable from './CharmTable.svelte'
   import {allSkillDetails} from './mhrise-skills.js'
+  import {charmManager} from './stores.js'
 
-  export let charmManager
-
-  const MAX_SKILL_LEVEL   = 7
-  const MAX_SLOTS = 3
+  const MAX_SKILL_LEVEL  = 7
+  const SKILL_LEVEL_LIST = [...Array(MAX_SKILL_LEVEL).keys()].map(i => i + 1)
+  const MAX_SLOTS        = 3
 
   let skillFilters      = []
   let skillLevelFilters = []
   let slots             = []
 
+  let isSpinnerShown    = false
+  let searchResults     = null
 
+  // table pagination
+  let currentPage         = 0,
+      previousCurrentPage = 0,
+      itemsPerPage        = 10
+  $: nPages = Math.ceil((searchResults||[]).length / itemsPerPage)
+  $: {
+    if ( searchResults && nPages ) {
+      currentPage = 0
+    }
+  }
+  $: searchResultsToShow = searchResults //?.slice(itemsPerPage * currentPage, itemsPerPage * (currentPage+1))
+  $: sliceBegin = itemsPerPage * currentPage
+  $: sliceEnd   = itemsPerPage * (currentPage+1)
+
+  // form update (skill)
   $: {
     for (const i in skillFilters) {
       if ( skillFilters[i] && skillLevelFilters[i] == null ) {
@@ -24,12 +42,45 @@
     }
   }
 
+  // form update (slot)
   $: slots = slots.sort((a, b) => b - a)
 
-  // async function exportCharms() {
-  //   textareaValue = [
-  //     ...(await charmManager.sql('select * from charms')).result.rows
-  //   ] .map(row => {
+  $: {
+    isSpinnerShown = true
+    slots = slots.filter(i => i)
+
+    const base = JSON.stringify({
+      skills: skillFilters.map(i => i.name),
+      skillLevels: skillLevelFilters,
+      slots,
+    })
+
+    const search = () => {
+      if ( !skillFilters.length && !skillLevelFilters.length && !slots.length) {
+        searchResults = null
+        return
+      }
+
+      if ( typeof Module.getSubstitutesAll !== 'function' ) {
+        setTimeout(search, 100)
+        return
+      }
+
+      const matchIds = Module.getSubstitutes(
+        JSON.stringify($charmManager.charms.map(i => {
+          const {substitutableCharms, imagename, evaluation, ...rest} = i
+          return rest
+        })),
+        base
+      )
+
+      searchResults = JSON.parse(matchIds).map(id => $charmManager.charms.find(i => i.rowid === id))
+    }
+
+    search()
+    isSpinnerShown = false
+  }
+
   //       const {skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3} = row
   //       return [skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3].join(',')
   //     })
@@ -40,8 +91,7 @@
 
 <div class="tab-content">
   <div id="charm-searcher">
-    登録された護石から性能検索を行います。<br>
-    スキルを装飾品で付けられる護石も検索対象になります。<br>
+    <!-- <h2>検索条件</h2> -->
     <div id="charm-search-form">
       <div id="skills">
         スキル:
@@ -57,7 +107,7 @@
                           hideArrow
                           className="autocomplete-skill"
                           />
-            <AutoComplete items={[...Array(MAX_SKILL_LEVEL + 1).keys()]}
+            <AutoComplete items={SKILL_LEVEL_LIST}
                           bind:selectedItem={skillLevelFilters[i]}
                           placeholder="Lv"
                           hideArrow
@@ -75,16 +125,66 @@
                         showClear
                         hideArrow
                         className="autocomplete-slot-level"
-                        />
+                        />&nbsp;
         {/each}
       </div>
       <!-- <input type="checkbox" checked disabled> 装飾品を使うパターンを含める -->
+    </div>
+
+    <hr>
+
+    <div id="charm-search-result">
+      {#if isSpinnerShown}
+        <div class="spinner-border text-info" role="status"></div>
+      {:else if searchResults == null}
+        <!-- blank -->
+      {:else if searchResults.length === 0}
+        <div style="text-align: center">not found</div>
+      {:else}
+        show
+        <select bind:value={itemsPerPage}>
+          <option>10</option>
+          <option>25</option>
+          <option>50</option>
+          <option>100</option>
+        </select>
+        charms
+        <CharmTable bind:charms={searchResultsToShow}
+                    bind:sliceBegin
+                    bind:sliceEnd
+                    disableFilterHeader={true}
+                    headerColor='dodgerblue'
+                    />
+        <div id="charm-search-result-pager">
+          <ul class="pagination">
+            <li class="page-item {currentPage === 0 ? 'disabled' : ''}" aria-label="Previous">
+              <span class="page-link" on:click={() => currentPage--}>
+                <span aria-hidden="true">&laquo;</span>
+              </span>
+            </li>
+            {#each [...Array(nPages).keys()] as i}
+              <li class="page-item {i === currentPage ? 'active' : ''}">
+                <span class="page-link" on:click={() => currentPage = i}>{i + 1}</span>
+              </li>
+            {/each}
+            <li class="page-item {currentPage === (nPages - 1) ? 'disabled' : ''}" aria-label="Next">
+              <span class="page-link" on:click={() => currentPage++}>
+                <span aria-hidden="true">&raquo;</span>
+              </span>
+            </li>
+          </ul>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
 
 
 <style>
+  h2 {
+    font-size: x-large;
+  }
+
   .tab-content {
     margin:     0;
     padding:    0;
@@ -93,15 +193,32 @@
   }
 
   .tab-content > #charm-searcher {
-    margin:     1rem auto;
+    margin:     0;
     padding:    0;
 
-    width:      95%;
+    width:      100%;
   }
 
-  .tab-content #charm-search-form #skills,
-  .tab-content #charm-search-form #slots {
+  .tab-content > #charm-searcher hr {
+    color: #ccc;
+  }
+
+  .tab-content > #charm-searcher #charm-search-form,
+  .tab-content > #charm-searcher #charm-search-result {
+    width:      calc(100% - 2rem);
+    margin:     1rem auto 1.4rem;
+  }
+
+  .tab-content > #charm-searcher #charm-search-form #skills,
+  .tab-content > #charm-searcher #charm-search-form #slots {
     margin:     1rem 0;
+  }
+
+  #charm-search-result-pager ul.pagination {
+    width:           67rem;
+
+    justify-content: center;
+    flex-wrap:       wrap;
   }
 
   :global(.tab-content > #charm-searcher .autocomplete-skill-level) {
