@@ -54,7 +54,7 @@ import { Lightbox } from 'svelte-lightbox'
         右端の画像ボタンを押すことで、スキャン時のスクリーンショットを確認できます。<br>
         右端に上向き矢印がある場合、上位互換の護石があります。クリックで該当の護石を確認することができます。<br>
         <br>
-        <span style="color: red">輪廻錬金の際は充分に確認し、自己責任にて行ってください。<br></span>
+        <!-- <span style="color: red">輪廻錬金の際は充分に確認し、自己責任にて行ってください。<br></span> -->
         <!-- 本ツールを使用したことにより不利益が生じた場合、一切責任を負いかねます。<br> -->
       </p>
 
@@ -66,6 +66,26 @@ import { Lightbox } from 'svelte-lightbox'
           <img src="img/screenshots/charm-substitutes.png" alt="charm substitutes">
         </Lightbox>
       </div>
+    </div>
+  </div>
+
+  <div class="card border border-light shadow-sm">
+    <div class="card-body">
+      <h2>■ 護石スペック検索</h2>
+      <p>
+        スキャンした護石を検索することができます。
+        装飾品でスキルが実現できる場合も検索対象に含まれます。
+      </p>
+    </div>
+  </div>
+
+  <div class="card border border-light shadow-sm">
+    <div class="card-body">
+      <h2>■ 護石エクスポート</h2>
+      <p>
+        スキャンした護石全てをエクスポートします。
+        出力形式は、護石スキャン時と同様です。
+      </p>
     </div>
   </div>
 
