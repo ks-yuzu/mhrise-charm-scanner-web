@@ -1,7 +1,7 @@
 <script>
   import {writable} from 'svelte/store'
   import VideoReader from './VideoReader.svelte'
-  import {fRefleshCharmTable} from './stores.js'
+
 
   const VIDEO_WIDTH      = 1280 // switch のキャプチャ解像度
   const VIDEO_HEIGHT     = 720
@@ -87,9 +87,7 @@
     const charms = charmScanner.getCharms()
     console.log(JSON.stringify(charms))
 
-    // await charmManager.registerCharms(charms)
     isScanFinished = true
-    $fRefleshCharmTable = true
   }
 
 
@@ -116,8 +114,8 @@
 
 
     <div id="result">
+      <div>Found {nScanedCharms} charms.</div>
       <textarea placeholder="納刀術,2,ひるみ軽減,1,1,0,0">{exportData}</textarea>
-      <div>Found {nScanedCharms} charms in this scan.</div>
     </div>
 
     <div id="upload">
@@ -130,7 +128,7 @@
                bind:files
                bind:this={domInput}>
         <img src="https://static.thenounproject.com/png/625182-200.png" alt="" on:click={()=>{domInput.click()}} />
-        <div on:click={domInput.click}>Click to Select Movie</div>
+        <div on:click={()=>{domInput.click}}>Click to Select Movie</div>
       {:else}
         Loading Files...
       {/if}
@@ -148,11 +146,11 @@
   }
 
   #scanner #status {
-    /* display:  block; */
-    /* position: relative; */
 		width:     96%;
     max-width: 960px;
-    margin:    1rem auto;
+    margin:    2rem auto;
+
+    text-align: center;
   }
 
   #scanner #result {
