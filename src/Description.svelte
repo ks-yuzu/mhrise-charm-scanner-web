@@ -8,6 +8,8 @@ import { Lightbox } from 'svelte-lightbox'
       <h2>■ 概要</h2>
       <p>
         モンスターハンターライズの護石用ツールです。<br>
+        各機能は左のメニューから選択できます。<br>
+        <br>
         機能追加、UI 改善は随時行っています。<br>
       </p>
     </div>
