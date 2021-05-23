@@ -1,59 +1,136 @@
 <script lang:ts>
   import MHRiseCharmManager from './mhrise-charm-manager.js'
   import MHRiseCharmScanner from './mhrise-charm-scanner.js'
+  import Hamburger from './Hamburger.svelte'
   import Nav from './Nav.svelte'
+  import {charmManager} from './stores.js'
 
   const TITLE   = 'MHRise Charm Scanner'
-  const VERSION = '0.4.4'
+  const VERSION = '0.5.2'
 
-  let fInitialized = false
+  let isDemoMode       = false
+  let isNavigationOpen = true
+  let fInitialized     = false
   let charmScanner
-  let charmManager
-
-  // let updateCharmTable
-
 
   window.addEventListener('load', async () => {
     charmScanner = new MHRiseCharmScanner()
-    charmManager = new MHRiseCharmManager()
+    $charmManager = new MHRiseCharmManager()
     await charmScanner.init()
     fInitialized = true
-
-    // updateCharmTable()
   })
+
+  function onChangeDemoMode() {
+    if ( isDemoMode ) {
+      $charmManager = new MHRiseCharmManager({isDemoMode: true})
+      console.log(charmScanner.charmTableName)
+    }
+    else {
+      $charmManager = new MHRiseCharmManager()
+      console.log(charmScanner.charmTableName)
+    }
+  }
 </script>
 
 <main>
-	<h1>{TITLE}</h1>
+  <header>
+    <Hamburger bind:isOpen={isNavigationOpen}/>
+	  <h1>{TITLE}</h1>
+
+    <!-- <div style="position: absolute; right: 0; width: 7rem; margin-top: 0.8rem; display: flex;"> -->
+    <!--   <span style="color: white">DEMO</span> -->
+    <!--   <div class="material-switch"> -->
+    <!--     <input id="switch-demo" type="checkbox" bind:checked={isDemoMode} on:change={onChangeDemoMode}> -->
+    <!--     <label for="switch-demo"></label> -->
+    <!--   </div> -->
+    <!-- </div> -->
+  </header>
   <div id="nav-wrapper">
-    <Nav {...{fInitialized, charmScanner, charmManager}}></Nav>
+    <Nav {...{isNavigationOpen, fInitialized, charmScanner}} />
   </div>
   <div id="version">v{VERSION}</div>
 </main>
 
 
 <style>
+  .material-switch > input[type="checkbox"] {
+      display: none;
+  }
+
+  .material-switch > label {
+      cursor: pointer;
+      height: 0px;
+      position: relative;
+      width: 40px;
+      top: 12px;
+      left: 10px;
+  }
+
+  .material-switch > label::before {
+      background: rgb(10, 10, 100);
+      box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      content: '';
+      height: 16px;
+      margin-top: -8px;
+      position:absolute;
+      opacity: 0.3;
+      transition: all 0.4s ease-in-out;
+      width: 40px;
+  }
+  .material-switch > label::after {
+      background: rgb(255, 255, 255);
+      border-radius: 16px;
+      box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+      content: '';
+      height: 24px;
+      left: -4px;
+      margin-top: -8px;
+      position: absolute;
+      top: -4px;
+      transition: all 0.3s ease-in-out;
+      width: 24px;
+  }
+  .material-switch > input[type="checkbox"]:checked + label::before {
+      background: orange;
+      opacity: 0.5;
+  }
+  .material-switch > input[type="checkbox"]:checked + label::after {
+      background: orange;
+      left: 20px;
+  }
+
 	main {
-    width:  100%;
-    height: 100%;
+    width:   100%;
+    height:  100%;
 
-    margin: 0;
+    margin:  0;
+    padding: 0;
 
-		text-align: center;
-		padding:    1rem;
-		max-width:  240px;
+		text-align: left;
 	}
 
-	h1 {
-		color: #ff3e00;
-		font-size: 4em;
-		font-weight: 100;
+  header {
+    display: flex;
+    background: #222;
+  }
 
-    height: 5rem;
+	header h1 {
+    margin:  0;
+    padding: 0;
+		/* color: #ff3e00; */
+    color: white;
+
+		font-weight: 400;
+		font-size: 1.5em;
+    line-height: 3rem;
+    height: 3rem;
+
+    border: none;
 	}
 
   #nav-wrapper {
-    height: calc(100% - 5rem);
+    height: calc(100% - 3rem);
   }
 
   #version {

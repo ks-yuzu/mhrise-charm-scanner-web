@@ -1,4 +1,4 @@
-// import moment from 'moment'
+import Dexie from "dexie";
 import {fetchImage, countImageDiffAtPoint, getMostMatchedImage, promiseAllRecursive} from './util.js'
 
 export default class MHRiseCharmScanner {

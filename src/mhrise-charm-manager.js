@@ -1,3 +1,5 @@
+import Dexie from "dexie";
+// import {importDB, exportDB} from "dexie-export-import";
 import {skillToSlotLevel} from './mhrise-charm-decorations.js'
 
 export default class MHRiseCharmManager {
@@ -6,14 +8,19 @@ export default class MHRiseCharmManager {
 
   db        = null              // WebSQL
   indexeddb = null              // IndexedDB
+  charms    = null
 
-  constructor() {
-    this.db = openDatabase('mhrise-charm-manager', '', 'MHRise charm manager', 5000)
-    this._createTable()
-    this.sql(`alter table charms add column imagename varchar(128)`).catch(() => {}) // for old schema
+  charmTableName = 'charms'
 
-    this.indexeddb = new Dexie('charms')
-    this.indexeddb.version(1).stores({images: 'name'})
+
+  constructor(params = {}) {
+    const {isDemoMode} = params
+
+    if ( isDemoMode ) {
+      this.charmTableName = 'demoCharms'
+    }
+
+    this._init()
   }
 
 
@@ -31,8 +38,20 @@ export default class MHRiseCharmManager {
   }
 
 
+  async _init() {
+    this.db = openDatabase('mhrise-charm-manager', '', 'MHRise charm manager', 5000)
+    await this._createTable()
+    await this.sql(`alter table ${this.charmTableName} add column imagename varchar(128)`).catch(() => {}) // for old schema
+
+    this.indexeddb = new Dexie(this.charmTableName)
+    this.indexeddb.version(1).stores({images: 'name'})
+
+    this.updateCharmArray()
+  }
+
+
   async reset() {
-    await this.sql('drop table if exists charms')
+    await this.sql(`drop table if exists ${this.charmTableName}`)
     await this._createTable()
   }
 
@@ -43,7 +62,9 @@ export default class MHRiseCharmManager {
       .join(',\n')
 
     console.log(values)
-    await this.sql(`insert or ignore into charms values ${values}`)
+    await this.sql(`insert or ignore into ${this.charmTableName} values ${values}`)
+
+    this.updateCharmArray()
   }
 
 
@@ -54,7 +75,7 @@ export default class MHRiseCharmManager {
 
 
   async _createTable() {
-    await this.sql(`create table if not exists charms(
+    await this.sql(`create table if not exists ${this.charmTableName}(
                skill1      varchar(20),
                skill1Level int,
                skill2      varchar(20),
@@ -65,9 +86,9 @@ export default class MHRiseCharmManager {
                imagename   varchar(128),
                unique (skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3))`)
 
-    await this.sql(`create index if not exists 'charms.skill1' on charms(skill1, skill1Level)`)
-    await this.sql(`create index if not exists 'charms.skill2' on charms(skill2, skill2Level)`)
-    await this.sql(`create index if not exists 'charms.slots' on charms(slot1, slot2, slot3)`)
+    await this.sql(`create index if not exists '${this.charmTableName}.skill1' on ${this.charmTableName}(skill1, skill1Level)`)
+    await this.sql(`create index if not exists '${this.charmTableName}.skill2' on ${this.charmTableName}(skill2, skill2Level)`)
+    await this.sql(`create index if not exists '${this.charmTableName}.slots'  on ${this.charmTableName}(slot1, slot2, slot3)`)
   }
 
 
@@ -122,7 +143,7 @@ export default class MHRiseCharmManager {
               ? '(' + [`(${skillConstraints})`, `(${skillConstraintsRev})`].filter(i => i).join(' or ') + ') and '
               : ''
 
-        const query =`select rowid,* from charms where ${sc} slot1 >= ${requiredSlots[0] || 0} and slot2 >= ${requiredSlots[1] || 0} and slot3 >= ${requiredSlots[2] || 0}`
+        const query =`select rowid,* from ${this.charmTableName} where ${sc} slot1 >= ${requiredSlots[0] || 0} and slot2 >= ${requiredSlots[1] || 0} and slot3 >= ${requiredSlots[2] || 0}`
         // console.log(query)
         const {result} = await this.sql(query)
         // console.log(result.rows)
@@ -136,6 +157,61 @@ export default class MHRiseCharmManager {
 
     return substitutableCharms.sort((a, b) => (a.rowid < b.rowid) ? -1 : (a.rowid > b.rowid) ? 1 : 0)
   }
+
+
+  async updateCharmArray() {
+    this.charms = [
+      ...(await this.searchCharms(`select rowid,* from ${this.charmTableName}`))
+    ].map(row => {
+      row.evaluation = skillToSlotLevel[row.skill1] * row.skill1Level
+                     + skillToSlotLevel[row.skill2] * row.skill2Level
+                     + row.slot1
+                     + row.slot2
+                     + row.slot3
+      return row
+    })
+
+    this.searchSubstitutableCharms()
+  }
+
+
+  async searchSubstitutableCharms() {
+    while ( typeof Module.getSubstitutesAll !== 'function' ) {
+      await new Promise(r => setTimeout(r, 100))
+    }
+
+    const res = Module.getSubstitutesAll( JSON.stringify(this.charms) ) // use wasm module
+    const substitutes = JSON.parse(res)
+
+    for (const i in this.charms) {
+      const [baseId, upperIds] = substitutes[0] || [Number.MAX_SAFE_INTEGER, []]
+
+      if ( this.charms[i].rowid > baseId ) {
+        console.log('internal error')
+      }
+      else if ( this.charms[i].rowid < baseId ) {
+        this.charms[i].substitutableCharms = []
+      }
+      else {
+        this.charms[i].substitutableCharms = upperIds.map(u => this.charms[u - 1])
+        substitutes.shift()
+      }
+    }
+
+    // for (const [baseId, upperIds] of substitutes) {
+    //   charms[baseId - 1].substitutableCharms = upperIds.map(i => charms[i - 1])
+    // }
+  }
+
+  // async exportIdx() {
+  //   const blob = await exportDB(this.indexeddb, {
+  //     filter: (table) => table === 'images'
+  //   })
+  // }
+
+  // async importIdx() {
+  // }
+
 
   // TODO: charm class 作ってコンストラクタでやる
   _row2obj(row) {

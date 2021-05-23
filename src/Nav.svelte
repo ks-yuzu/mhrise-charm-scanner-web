@@ -1,17 +1,17 @@
 <script>
   import {navOptions} from './NavOptions.svelte'
 
+  export let isNavigationOpen
   export let fInitialized
   export let charmScanner
-  export let charmManager
 
-  let currentNavOptionId = 2
+  let currentNavOptionId = 4
   let currentNavOption = navOptions[currentNavOptionId]
 
   let onActivate = {}
 
   function switchComponent(e) {
-    currentNavOptionId = e.srcElement.id
+    currentNavOptionId = e.srcElement.closest('button').id
     currentNavOption = navOptions[currentNavOptionId]
 
     if ( onActivate[currentNavOptionId] ) {
@@ -22,26 +22,32 @@
 
 
 <div id="container">
-  <ul class="nav nav-tabs">
+  <ul class="navigation" style="width: {isNavigationOpen ? '14rem' : '3.2rem'}">
     {#each navOptions as option, i}
-      <li class="nav-item">
+      <li class="navigation-item">
         <button id={i}
-                class={currentNavOptionId == i ? "active nav-link p-2 ml-1" : "nav-link p-2 ml-1"}
+                class={currentNavOptionId == i ? "active navigation-link" : "navigation-link"}
                 role="tab"
                 on:click={switchComponent}
                 >
-          {option.tabTitle}
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" fill="currentColor">
+            {#each (option.iconData || []) as iconData}
+              <path d={iconData}/>
+            {/each}
+          </svg>
+          <span style="display: {isNavigationOpen ? 'inline' : 'none'}">{option.tabTitle}</span>
         </button>
       </li>
     {/each}
   </ul>
 
-  <div class="nav-content">
+  <div class="navigation-content">
     {#each navOptions as option, i}
       <div class="h-100 {currentNavOptionId == i ? 'd-block' : 'd-none'}">
         <svelte:component this={navOptions[i].component}
-                          {...{fInitialized, charmScanner, charmManager}}
-                          bind:onActivate={onActivate[i]}/>
+                          {...{fInitialized, charmScanner}}
+                          onActivate={onActivate[i]}
+                          />
       </div>
     {/each}
   </div>
@@ -50,31 +56,74 @@
 
 <style>
   #container {
+    width:  100%;
     height: 100%;
+
+    display: flex;
+    flex-wrap: nowrap;
   }
 
-  ul.nav {
-    height: 2rem;
-    border-bottom: 2px solid #1266f140;
+  ul.navigation {
+    /* width:   14rem; */
+    height:  100%;
+    margin:  0;
+    padding: 0;
+
+    list-style: none;
+
+    /* border: 2px solid #1266f140; */
+    border: none;
+    border-right: solid 1px #8884;
+
+    flex-grow:   0;
+    flex-shrink: 0;
+
+    transition: left 0.3s ease-in-out;
   }
 
-  ul.nav li.nav-item {
-    width: 8rem;
+  ul.navigation li.navigation-item {
+    width:  100%;
+    height: 3rem;
+    margin: 0;
   }
 
-  ul.nav li.nav-item > button {
+  ul.navigation li.navigation-item > button {
     width: 100%;
-    border-top:   1px solid #8882;
-    border-left:  1px solid #8882;
-    border-right: 1px solid #8882;
+    height: 100%;
+    margin:  0;
+    padding: 0 1rem;
+
+    background: inherit;
+    border:     none;
+
+    text-align: left;
+
+    line-height: 3rem;
   }
 
-  ul.nav li.nav-item > button.active {
+  /* ul.navigation li.navigation-item > button > svg { */
+  /*   position: absolute; */
+
+  /* /\*   margin:  0; *\/ */
+  /* /\*   padding: 0 0 0 1rem; *\/ */
+  /* } */
+
+  ul.navigation li.navigation-item > button > span {
+  /*   margin:  0; */
+    padding: 0 0 0 0.8rem;
+  }
+
+  ul.navigation li.navigation-item > button.active {
     background: #1266f110;
   }
 
-  div.nav-content {
-    height: calc(100% - 2rem);
+  ul.navigation li.navigation-item > button:hover {
+    background: #8881;
+  }
+
+  div.navigation-content {
+    width:    100%;
+    height:   100%;
     overflow: hidden;
   }
 </style>

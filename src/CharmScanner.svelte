@@ -1,7 +1,8 @@
 <script>
   import {writable} from 'svelte/store'
   import VideoReader from './VideoReader.svelte'
-  import {fRefleshCharmTable} from './stores.js'
+  import {charmManager} from './stores.js'
+
 
   const VIDEO_WIDTH      = 1280 // switch のキャプチャ解像度
   const VIDEO_HEIGHT     = 720
@@ -9,7 +10,6 @@
   const N_VIDEO_SPLITS = (navigator.hardwareConcurrency || 8) / 2
 
   export let charmScanner
-  export let charmManager
   export let fInitialized
 
   let domInput    // input 要素
@@ -81,15 +81,13 @@
       })
 
       const charms = charmScanner.getCharms()
-      await charmManager.registerCharms(charms)
+      await $charmManager.registerCharms(charms)
     }
 
     const charms = charmScanner.getCharms()
     console.log(JSON.stringify(charms))
 
-    // await charmManager.registerCharms(charms)
     isScanFinished = true
-    $fRefleshCharmTable = true
   }
 
 
@@ -100,132 +98,94 @@
 </script>
 
 
-<div id="scanner">
-  <div id="status">
-    {#each $videoReaderProps as props}
-      <VideoReader {...props} />
-    {/each}
+<div class="tab-content">
+  <div id="scanner">
+    <div id="status">
+      {#each $videoReaderProps as props}
+        <VideoReader {...props} />
+      {/each}
 
-    {#if isScanFinished}
-      Completed!
-    {:else if files.length > 0}
-      Processing {1 + Number(currentFileIndex)}/{files.length} file. Please wait...
-    {/if}
-
-    <!-- {#if video} -->
-    <!--   <video class="preview" src="{video}" alt="preview" bind:this={domVideo}> -->
-    <!--     <track kind="captions"> -->
-    <!--   </video> -->
-    <!-- {:else} -->
-    <!--   <img class="preview" src="sample/sample-img.png" alt="preview-sample" /> -->
-
-    <!--   <div style="height: 540px; width: 960px; display: flex; align-items: center; justify-content: center;"> -->
-    <!--   {#if fInitialized} -->
-        <!-- <div id="upload" on:click={()=>{domInput.click()}}> -->
-        <!--   <input style="display:none" -->
-        <!--          type="file" -->
-        <!--          accept=".mp4" -->
-        <!--          multiple -->
-        <!--          on:change={(e) => onFileSelected(e)} -->
-        <!--          bind:files -->
-        <!--          bind:this={domInput}> -->
-        <!--   <img src="https://static.thenounproject.com/png/625182-200.png" alt="" /> -->
-        <!--   <div>Click to Select Movie</div> -->
-        <!-- </div> -->
-    <!--   {:else} -->
-    <!--     <div>Loading Files...</div> -->
-    <!--   {/if} -->
-    <!--   </div> -->
-    <!-- {/if} -->
-
-    <!-- <div> -->
-    <!--   <progress value={$progress}></progress> -->
-    <!--   {Math.floor($progress * 100)}% -->
-    <!-- </div> -->
-  </div>
-
-
-  <div id="result">
-    <!-- {#if fFinished} -->
-      <textarea placeholder="charms will be exported here">{exportData}</textarea>
-      <div>Found {nScanedCharms} charms in this scan.</div>
-    <!-- {/if} -->
-  </div>
-
-  {#if fInitialized}
-    <div id="upload">
-      <input style="display:none"
-             type="file"
-             accept=".mp4"
-             multiple
-             on:change={(e) => onFileSelected(e)}
-             bind:files
-             bind:this={domInput}>
-      <img src="https://static.thenounproject.com/png/625182-200.png" alt="" on:click={()=>{domInput.click()}} />
-      <div on:click={()=>{domInput.click()}}>Click to Select Movie</div>
+      {#if isScanFinished}
+        Completed!
+      {:else if files.length > 0}
+        Processing {1 + Number(currentFileIndex)}/{files.length} file. Please wait...
+      {/if}
     </div>
-  {:else}
-    <div>Loading Files...</div>
-  {/if}
+
+
+    <div id="result">
+      <div>Found {nScanedCharms} charms.</div>
+      <textarea placeholder="納刀術,2,ひるみ軽減,1,1,0,0">{exportData}</textarea>
+    </div>
+
+    <div id="upload">
+      {#if fInitialized}
+        <input style="display:none"
+               type="file"
+               accept=".mp4"
+               multiple
+               on:change={onFileSelected}
+               bind:files
+               bind:this={domInput}>
+        <img src="https://static.thenounproject.com/png/625182-200.png" alt="" on:click={()=>{domInput.click()}} />
+        <div on:click={()=>{domInput.click}}>Click to Select Movie</div>
+      {:else}
+        Loading Files...
+      {/if}
+    </div>
+  </div>
 </div>
 
 
 <style>
-  #status {
-    display: block;
-    position: relative;
-		width: 960px;
-    max-width: 100%;
-    margin: 1rem auto; /*tmp*/
+  .tab-content {
+    margin:     0;
+    padding:    0;
+    height:     100%;
+    overflow:   auto; /* width 100% でスクロールさせる用 */
   }
 
-  #status .preview {
-    height: 540px;
-		width:  960px;
-    max-width: 100%;
+  #scanner #status {
+		width:     96%;
+    max-width: 960px;
+    margin:    2rem auto;
+
+    text-align: center;
   }
 
-  #status img.preview {
-    opacity: 0.3;
-    position: absolute;
-    left: 0;
-  }
-
-  #status progress {
-		display: block;
-		width: 100%;
-	}
-
-  #upload,
-  #upload * {
-    z-index: 1;
-		cursor:pointer;
-	}
-
-  #upload {
-    width:  11rem;
+  #scanner #result {
+    width:  95%;
     margin: auto;
   }
 
-  #upload img {
-		width:  60px;
-    height: 60px;
-  }
-
-  #upload div {
-    font-weight: bold;
-  }
-
-  #result {
-    margin:    2rem auto;
-		width:     960px;
-    max-width: 100%;
-  }
-
-  #result textarea {
+  #scanner #result textarea {
     width:       100%;
     height:      20rem;
     font-size:   small;
     font-family: monospace;
+  }
+
+  #scanner #upload,
+  #scanner #upload * {
+    z-index: 1;
+		cursor:  pointer;
+
+    display: block;
+    margin:  auto;
+    text-align: center;
+	}
+
+  #scanner #upload {
+    width:  11rem;
+    margin: auto;
+  }
+
+  #scanner #upload img {
+		width:   60px;
+    height:  60px;
+  }
+
+  #scanner #upload div {
+    font-weight: bold;
   }
 </style>

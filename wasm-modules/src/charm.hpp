@@ -52,9 +52,9 @@ class Charm {
  public:
   Charm(): id(), slots(), skills() {}
   Charm(
-    const std::vector<int>& slots,
     const std::vector<std::string>& skills,
     const std::vector<int>& skillLevels,
+    const std::vector<int>& slots,
     int id = -1
   ): id(id), slots(slots), skills(skills), skillLevels(skillLevels) {}
 
@@ -63,6 +63,17 @@ class Charm {
     slots({c["slot1"], c["slot2"], c["slot3"]}),
     skills({c["skill1"], c["skill2"]}),
     skillLevels({c["skill1Level"], c["skill2Level"]}) {
+  }
+
+  Charm(Charm&&) = default;
+
+
+  bool operator==(const Charm& another) const {
+    if ( this == &another ) { return true; }
+
+    return std::equal(ALL(slots),       std::begin(another.slots))
+        && std::equal(ALL(skills),      std::begin(another.skills))
+        && std::equal(ALL(skillLevels), std::begin(skillLevels));
   }
 
   bool operator<(const Charm& another) const {
@@ -79,13 +90,21 @@ class Charm {
         }
       }
 
+      if ( level <= 0 ) {
+        continue;
+      }
+
+      // precheck if decoration exsists becouse wasm does not support exception
+      if ( skillToSlotLevel.count(this->skills[i]) == 0 ) {
+        // skill have to be realized by decoration and decoration not fount
+        return false;
+      }
+
       const int skillRank = skillToSlotLevel.at(this->skills[i]);
       // std::cout << "skill rank: " << skillRank << std::endl;
       // std::cout << "reduced level: " << level << std::endl;
 
-      if ( level > 0 ) {
-        requiredSlots.insert(std::end(requiredSlots), level, skillRank);
-      }
+      requiredSlots.insert(std::end(requiredSlots), level, skillRank);
     }
     std::sort(std::begin(requiredSlots), std::end(requiredSlots));
     // std::cout << "required slots: " << requiredSlots << std::endl;

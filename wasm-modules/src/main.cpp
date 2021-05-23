@@ -19,7 +19,7 @@
 using JSON = nlohmann::json;
 
 
-std::string getSubstitutes(const std::string& input) {
+std::string getSubstitutesAll(const std::string& input) {
   const JSON json = JSON::parse(input);
 
   std::vector<Charm> charms;
@@ -131,31 +131,70 @@ std::string getSubstitutes(const std::string& input) {
     // }
     // return oss.str().c_str();
 
-    std::map<int, std::vector<int>> res;
+    // 出力用に構造化
+    std::map<int, std::vector<int>> output;
     for (const auto& [i, j] : results) {
-      res[i].push_back(j);
+      output[i].push_back(j);
     }
-    for (auto&& [base, uppers] : res) {
+    for (auto&& [base, uppers] : output) {
       std::sort(ALL(uppers));
       uppers.erase(std::unique(ALL(uppers)), uppers.end());
     }
 
-    return JSON(res).dump();
+    return JSON(output).dump();
   }
+}
+
+
+/*
+ * allCharms の中から base の上位互換を探す
+ */
+std::string getSubstitutes(const std::string& _allCharms, const std::string& _base) {
+  const auto baseJson = JSON::parse(_base);
+  const Charm base(baseJson["skills"], baseJson["skillLevels"], baseJson["slots"]);
+
+  std::vector<Charm> allCharms;
+  allCharms.reserve(1000);
+
+  for (const auto& charm : JSON::parse(_allCharms)) {
+    allCharms.emplace_back(charm);
+  }
+
+  std::vector<int> results;
+  for (const auto i : indices(allCharms)) {
+    // if ( base == allCharms[i] ) {} else
+    if ( base < allCharms[i] ) {
+      results.emplace_back(allCharms[i].id);
+    }
+  }
+
+  std::sort(ALL(results));
+  results.erase(std::unique(ALL(results)), results.end());
+
+  return JSON(results).dump();
 }
 
 
 int main(void) {
 #ifndef __EMSCRIPTEN__
   std::cout << getSubstitutes(
-#include "../test-data/charms.txt"
+    #include "../test-data/charms.txt"
+    ,
+    "{\"rowid\": -1, \"skills\": [\"ブレ抑制\", \"業物\"], \"skillLevels\": [1, 1], \"slots\": [1, 0, 0]}"
+    //"{\"rowid\": -1, \"skills\": [\"ブレ抑制\", \"炎\"], \"skillLevels\": [1, 1], \"slots\": [1, 0, 0]}"
   ) << std::endl;
+
+// std::cout << getSubstitutesAll(
+//   #include "../test-data/charms.txt"
+// ) << std::endl;
+
 #endif //__EMSCRIPTEN__
 }
 
 
 #ifdef __EMSCRIPTEN__
 EMSCRIPTEN_BINDINGS(myModule) {
-  emscripten::function("getSubstitutes", &getSubstitutes);
+  emscripten::function("getSubstitutesAll", &getSubstitutesAll);
+  emscripten::function("getSubstitutes",    &getSubstitutes);
 }
 #endif //__EMSCRIPTEN__
