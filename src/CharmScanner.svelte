@@ -1,6 +1,7 @@
 <script>
   import {writable} from 'svelte/store'
   import VideoReader from './VideoReader.svelte'
+  import {charmManager} from './stores.js'
 
 
   const VIDEO_WIDTH      = 1280 // switch のキャプチャ解像度
@@ -9,7 +10,6 @@
   const N_VIDEO_SPLITS = (navigator.hardwareConcurrency || 8) / 2
 
   export let charmScanner
-  export let charmManager
   export let fInitialized
 
   let domInput    // input 要素
@@ -81,7 +81,7 @@
       })
 
       const charms = charmScanner.getCharms()
-      await charmManager.registerCharms(charms)
+      await $charmManager.registerCharms(charms)
     }
 
     const charms = charmScanner.getCharms()

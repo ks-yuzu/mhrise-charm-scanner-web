@@ -6,10 +6,10 @@
   import {charmManager} from './stores.js'
 
   const TITLE   = 'MHRise Charm Scanner'
-  const VERSION = '0.5.1'
+  const VERSION = '0.5.2'
 
   let isDemoMode       = false
-  let isNavigationOpen = false
+  let isNavigationOpen = true
   let fInitialized     = false
   let charmScanner
 

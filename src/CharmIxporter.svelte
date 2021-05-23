@@ -10,14 +10,14 @@
   }
 
   async function exportCharms() {
-    console.log($charmManager.charmTableName)
+    // console.log($charmManager.charmTableName)
 
     textareaValue = $charmManager.charms.map(row => {
       const {skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3} = row
       return [skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3].join(',')
     }).join('\n')
 
-    $charmManager.exportIdx()
+    // $charmManager.exportIdx()
   }
 </script>
 
