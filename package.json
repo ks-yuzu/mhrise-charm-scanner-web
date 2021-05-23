@@ -24,6 +24,8 @@
   },
   "dependencies": {
     "buffer": "^6.0.3",
+    "dexie": "^3.0.3",
+    "dexie-export-import": "^1.0.0",
     "sirv-cli": "^1.0.0",
     "svelte-lightbox": "github:ks-yuzu/svelte-lightbox",
     "svelte-table": "^0.1.17"
