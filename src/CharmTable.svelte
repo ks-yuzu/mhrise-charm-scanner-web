@@ -273,7 +273,7 @@
   }
 
   :global(.charm-table > table > tbody) {
-    height:     calc(100% - 6rem);
+    height:     calc(100% - 7rem);
     overflow-x: auto;
     overflow-y: scroll;
 

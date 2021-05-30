@@ -9714,20 +9714,20 @@ for (const input of inputs) {
     			a2 = element("a");
     			a2.textContent = "GitHub issue";
     			t59 = text(" にてお願いします。");
-    			attr_dev(h20, "class", "svelte-1l76kga");
+    			attr_dev(h20, "class", "svelte-13v1fom");
     			add_location(h20, file$a, 7, 6, 171);
     			add_location(br0, file$a, 9, 30, 225);
     			add_location(br1, file$a, 10, 31, 261);
     			add_location(br2, file$a, 11, 8, 274);
     			add_location(br3, file$a, 12, 41, 320);
     			add_location(br4, file$a, 13, 28, 353);
-    			attr_dev(p0, "class", "svelte-1l76kga");
+    			attr_dev(p0, "class", "svelte-13v1fom");
     			add_location(p0, file$a, 8, 6, 191);
     			attr_dev(div0, "class", "card-body");
     			add_location(div0, file$a, 6, 4, 141);
-    			attr_dev(div1, "class", "card border border-light shadow-sm svelte-1l76kga");
+    			attr_dev(div1, "class", "card border border-light shadow-sm");
     			add_location(div1, file$a, 5, 2, 88);
-    			attr_dev(h21, "class", "svelte-1l76kga");
+    			attr_dev(h21, "class", "svelte-13v1fom");
     			add_location(h21, file$a, 20, 6, 475);
     			add_location(br5, file$a, 22, 30, 533);
     			attr_dev(a0, "href", "sample/input.mp4");
@@ -9744,15 +9744,15 @@ for (const input of inputs) {
     			add_location(span0, file$a, 30, 10, 907);
     			add_location(br12, file$a, 30, 87, 984);
     			add_location(br13, file$a, 31, 45, 1034);
-    			attr_dev(p1, "class", "svelte-1l76kga");
+    			attr_dev(p1, "class", "svelte-13v1fom");
     			add_location(p1, file$a, 21, 6, 499);
-    			attr_dev(div2, "class", "lightboxes svelte-1l76kga");
+    			attr_dev(div2, "class", "lightboxes svelte-13v1fom");
     			add_location(div2, file$a, 34, 6, 1057);
     			attr_dev(div3, "class", "card-body");
     			add_location(div3, file$a, 19, 4, 445);
-    			attr_dev(div4, "class", "card border border-light shadow-sm svelte-1l76kga");
+    			attr_dev(div4, "class", "card border border-light shadow-sm");
     			add_location(div4, file$a, 18, 2, 392);
-    			attr_dev(h22, "class", "svelte-1l76kga");
+    			attr_dev(h22, "class", "svelte-13v1fom");
     			add_location(h22, file$a, 44, 6, 1388);
     			add_location(br14, file$a, 46, 30, 1444);
     			add_location(br15, file$a, 47, 42, 1491);
@@ -9771,42 +9771,42 @@ for (const input of inputs) {
     			add_location(br24, file$a, 56, 46, 1846);
     			add_location(br25, file$a, 57, 58, 1909);
     			add_location(br26, file$a, 58, 8, 1922);
-    			attr_dev(p2, "class", "svelte-1l76kga");
+    			attr_dev(p2, "class", "svelte-13v1fom");
     			add_location(p2, file$a, 45, 6, 1410);
-    			attr_dev(div5, "class", "lightboxes svelte-1l76kga");
+    			attr_dev(div5, "class", "lightboxes svelte-13v1fom");
     			add_location(div5, file$a, 63, 6, 2085);
     			attr_dev(div6, "class", "card-body");
     			add_location(div6, file$a, 43, 4, 1358);
-    			attr_dev(div7, "class", "card border border-light shadow-sm svelte-1l76kga");
+    			attr_dev(div7, "class", "card border border-light shadow-sm");
     			add_location(div7, file$a, 42, 2, 1305);
-    			attr_dev(h23, "class", "svelte-1l76kga");
+    			attr_dev(h23, "class", "svelte-13v1fom");
     			add_location(h23, file$a, 76, 6, 2601);
-    			attr_dev(p3, "class", "svelte-1l76kga");
+    			attr_dev(p3, "class", "svelte-13v1fom");
     			add_location(p3, file$a, 77, 6, 2627);
     			attr_dev(div8, "class", "card-body");
     			add_location(div8, file$a, 75, 4, 2571);
-    			attr_dev(div9, "class", "card border border-light shadow-sm svelte-1l76kga");
+    			attr_dev(div9, "class", "card border border-light shadow-sm");
     			add_location(div9, file$a, 74, 2, 2518);
-    			attr_dev(h24, "class", "svelte-1l76kga");
+    			attr_dev(h24, "class", "svelte-13v1fom");
     			add_location(h24, file$a, 86, 6, 2814);
-    			attr_dev(p4, "class", "svelte-1l76kga");
+    			attr_dev(p4, "class", "svelte-13v1fom");
     			add_location(p4, file$a, 87, 6, 2840);
     			attr_dev(div10, "class", "card-body");
     			add_location(div10, file$a, 85, 4, 2784);
-    			attr_dev(div11, "class", "card border border-light shadow-sm svelte-1l76kga");
+    			attr_dev(div11, "class", "card border border-light shadow-sm");
     			add_location(div11, file$a, 84, 2, 2731);
-    			attr_dev(h25, "class", "svelte-1l76kga");
+    			attr_dev(h25, "class", "svelte-13v1fom");
     			add_location(h25, file$a, 96, 6, 3019);
     			attr_dev(a2, "href", "https://github.com/ks-yuzu/mhrise-charm-scanner-web/issues");
     			add_location(a2, file$a, 98, 18, 3065);
-    			attr_dev(p5, "class", "svelte-1l76kga");
+    			attr_dev(p5, "class", "svelte-13v1fom");
     			add_location(p5, file$a, 97, 6, 3043);
     			attr_dev(div12, "class", "card-body");
     			add_location(div12, file$a, 95, 4, 2989);
-    			attr_dev(div13, "class", "card border border-light shadow-sm svelte-1l76kga");
+    			attr_dev(div13, "class", "card border border-light shadow-sm");
     			add_location(div13, file$a, 94, 2, 2936);
     			attr_dev(div14, "id", "description");
-    			attr_dev(div14, "class", "svelte-1l76kga");
+    			attr_dev(div14, "class", "svelte-13v1fom");
     			add_location(div14, file$a, 4, 0, 63);
     		},
     		l: function claim(nodes) {
@@ -14504,7 +14504,7 @@ for (const input of inputs) {
     			td = element("td");
     			if_block.c();
     			t = space();
-    			attr_dev(td, "class", "" + (null_to_empty([/*col*/ ctx[25].class].join(" ")) + " svelte-dzt1tj"));
+    			attr_dev(td, "class", "" + (null_to_empty([/*col*/ ctx[25].class].join(" ")) + " svelte-1bydddo"));
     			add_location(td, file$6, 172, 8, 6689);
     		},
     		m: function mount(target, anchor) {
@@ -15205,7 +15205,7 @@ for (const input of inputs) {
     		c: function create() {
     			div = element("div");
     			create_component(sveltetable.$$.fragment);
-    			attr_dev(div, "class", "charm-table svelte-dzt1tj");
+    			attr_dev(div, "class", "charm-table svelte-1bydddo");
     			attr_dev(div, "style", /*styleVars*/ ctx[6]);
     			add_location(div, file$6, 160, 0, 6141);
     		},
@@ -15662,7 +15662,7 @@ for (const input of inputs) {
     	return child_ctx;
     }
 
-    // (98:8) {#each [...Array(skillFilters.filter(i => i).length + 1).keys()] as i}
+    // (127:8) {#each [...Array(skillFilters.filter(i => i).length + 1).keys()] as i}
     function create_each_block_2$1(ctx) {
     	let div;
     	let autocomplete0;
@@ -15679,6 +15679,7 @@ for (const input of inputs) {
 
     	let autocomplete0_props = {
     		items: allSkillDetails,
+    		inputId: "input-skill-" + /*i*/ ctx[24],
     		labelFieldName: "name",
     		valueFieldName: "name",
     		keywordsFunction: func_1,
@@ -15705,6 +15706,7 @@ for (const input of inputs) {
 
     	let autocomplete1_props = {
     		items: /*SKILL_LEVEL_LIST*/ ctx[11],
+    		inputId: "input-skill-level-" + /*i*/ ctx[24],
     		placeholder: "Lv",
     		hideArrow: true,
     		className: "autocomplete-skill-level"
@@ -15728,7 +15730,7 @@ for (const input of inputs) {
     			t0 = space();
     			create_component(autocomplete1.$$.fragment);
     			t1 = space();
-    			add_location(div, file$5, 98, 10, 2671);
+    			add_location(div, file$5, 127, 10, 3458);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -15741,6 +15743,7 @@ for (const input of inputs) {
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
     			const autocomplete0_changes = {};
+    			if (dirty & /*skillFilters*/ 1) autocomplete0_changes.inputId = "input-skill-" + /*i*/ ctx[24];
     			if (dirty & /*skillFilters*/ 1) autocomplete0_changes.placeholder = "スキル" + (/*i*/ ctx[24] + 1);
 
     			if (!updating_selectedItem && dirty & /*skillFilters, Array*/ 1) {
@@ -15751,6 +15754,7 @@ for (const input of inputs) {
 
     			autocomplete0.$set(autocomplete0_changes);
     			const autocomplete1_changes = {};
+    			if (dirty & /*skillFilters*/ 1) autocomplete1_changes.inputId = "input-skill-level-" + /*i*/ ctx[24];
 
     			if (!updating_selectedItem_1 && dirty & /*skillLevelFilters, Array, skillFilters*/ 3) {
     				updating_selectedItem_1 = true;
@@ -15782,14 +15786,14 @@ for (const input of inputs) {
     		block,
     		id: create_each_block_2$1.name,
     		type: "each",
-    		source: "(98:8) {#each [...Array(skillFilters.filter(i => i).length + 1).keys()] as i}",
+    		source: "(127:8) {#each [...Array(skillFilters.filter(i => i).length + 1).keys()] as i}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (121:8) {#each [...Array(MAX_SLOTS).keys()] as i}
+    // (152:8) {#each [...Array(MAX_SLOTS).keys()] as i}
     function create_each_block_1$1(ctx) {
     	let autocomplete;
     	let updating_selectedItem;
@@ -15803,6 +15807,7 @@ for (const input of inputs) {
     	let autocomplete_props = {
     		items: [...Array(3).keys()].map(func_2),
     		placeholder: "スロット" + (/*i*/ ctx[24] + 1),
+    		inputId: "input-slot-" + /*i*/ ctx[24],
     		showClear: true,
     		hideArrow: true,
     		className: "autocomplete-slot-level"
@@ -15860,14 +15865,14 @@ for (const input of inputs) {
     		block,
     		id: create_each_block_1$1.name,
     		type: "each",
-    		source: "(121:8) {#each [...Array(MAX_SLOTS).keys()] as i}",
+    		source: "(152:8) {#each [...Array(MAX_SLOTS).keys()] as i}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (143:6) {:else}
+    // (187:6) {:else}
     function create_else_block$2(ctx) {
     	let t0;
     	let select;
@@ -15972,41 +15977,41 @@ for (const input of inputs) {
     			span2.textContent = "»";
     			option0.__value = "10";
     			option0.value = option0.__value;
-    			add_location(option0, file$5, 145, 10, 4441);
+    			add_location(option0, file$5, 189, 10, 5795);
     			option1.__value = "25";
     			option1.value = option1.__value;
-    			add_location(option1, file$5, 146, 10, 4471);
+    			add_location(option1, file$5, 190, 10, 5825);
     			option2.__value = "50";
     			option2.value = option2.__value;
-    			add_location(option2, file$5, 147, 10, 4501);
+    			add_location(option2, file$5, 191, 10, 5855);
     			option3.__value = "100";
     			option3.value = option3.__value;
-    			add_location(option3, file$5, 148, 10, 4531);
+    			add_location(option3, file$5, 192, 10, 5885);
     			if (/*itemsPerPage*/ ctx[5] === void 0) add_render_callback(() => /*select_change_handler*/ ctx[16].call(select));
-    			add_location(select, file$5, 144, 8, 4396);
+    			add_location(select, file$5, 188, 8, 5750);
     			attr_dev(span0, "aria-hidden", "true");
-    			add_location(span0, file$5, 161, 16, 5084);
+    			add_location(span0, file$5, 205, 16, 6438);
     			attr_dev(span1, "class", "page-link");
-    			add_location(span1, file$5, 160, 14, 5012);
+    			add_location(span1, file$5, 204, 14, 6366);
     			attr_dev(li0, "class", li0_class_value = "page-item " + (/*currentPage*/ ctx[4] === 0 ? "disabled" : ""));
     			attr_dev(li0, "aria-label", "Previous");
-    			add_location(li0, file$5, 159, 12, 4915);
+    			add_location(li0, file$5, 203, 12, 6269);
     			attr_dev(span2, "aria-hidden", "true");
-    			add_location(span2, file$5, 171, 16, 5604);
+    			add_location(span2, file$5, 215, 16, 6958);
     			attr_dev(span3, "class", "page-link");
-    			add_location(span3, file$5, 170, 14, 5532);
+    			add_location(span3, file$5, 214, 14, 6886);
 
     			attr_dev(li1, "class", li1_class_value = "page-item " + (/*currentPage*/ ctx[4] === /*nPages*/ ctx[6] - 1
     			? "disabled"
     			: ""));
 
     			attr_dev(li1, "aria-label", "Next");
-    			add_location(li1, file$5, 169, 12, 5428);
+    			add_location(li1, file$5, 213, 12, 6782);
     			attr_dev(ul, "class", "pagination svelte-1galzg3");
-    			add_location(ul, file$5, 158, 10, 4879);
+    			add_location(ul, file$5, 202, 10, 6233);
     			attr_dev(div, "id", "charm-search-result-pager");
     			attr_dev(div, "class", "svelte-1galzg3");
-    			add_location(div, file$5, 157, 8, 4832);
+    			add_location(div, file$5, 201, 8, 6186);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, t0, anchor);
@@ -16133,14 +16138,14 @@ for (const input of inputs) {
     		block,
     		id: create_else_block$2.name,
     		type: "else",
-    		source: "(143:6) {:else}",
+    		source: "(187:6) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (141:43) 
+    // (185:43) 
     function create_if_block_2$1(ctx) {
     	let div;
 
@@ -16149,7 +16154,7 @@ for (const input of inputs) {
     			div = element("div");
     			div.textContent = "not found";
     			set_style(div, "text-align", "center");
-    			add_location(div, file$5, 141, 8, 4313);
+    			add_location(div, file$5, 185, 8, 5667);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -16166,14 +16171,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_2$1.name,
     		type: "if",
-    		source: "(141:43) ",
+    		source: "(185:43) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (139:38) 
+    // (183:38) 
     function create_if_block_1$1(ctx) {
     	const block = {
     		c: noop,
@@ -16188,14 +16193,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block_1$1.name,
     		type: "if",
-    		source: "(139:38) ",
+    		source: "(183:38) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (137:6) {#if isSpinnerShown}
+    // (181:6) {#if isSpinnerShown}
     function create_if_block$2(ctx) {
     	let div;
 
@@ -16204,7 +16209,7 @@ for (const input of inputs) {
     			div = element("div");
     			attr_dev(div, "class", "spinner-border text-info");
     			attr_dev(div, "role", "status");
-    			add_location(div, file$5, 137, 8, 4140);
+    			add_location(div, file$5, 181, 8, 5494);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -16221,14 +16226,14 @@ for (const input of inputs) {
     		block,
     		id: create_if_block$2.name,
     		type: "if",
-    		source: "(137:6) {#if isSpinnerShown}",
+    		source: "(181:6) {#if isSpinnerShown}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (165:12) {#each [...Array(nPages).keys()] as i}
+    // (209:12) {#each [...Array(nPages).keys()] as i}
     function create_each_block$2(ctx) {
     	let li;
     	let span;
@@ -16248,9 +16253,9 @@ for (const input of inputs) {
     			span = element("span");
     			t = text(t_value);
     			attr_dev(span, "class", "page-link");
-    			add_location(span, file$5, 166, 16, 5304);
+    			add_location(span, file$5, 210, 16, 6658);
     			attr_dev(li, "class", li_class_value = "page-item " + (/*i*/ ctx[24] === /*currentPage*/ ctx[4] ? "active" : ""));
-    			add_location(li, file$5, 165, 14, 5229);
+    			add_location(li, file$5, 209, 14, 6583);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, li, anchor);
@@ -16281,7 +16286,7 @@ for (const input of inputs) {
     		block,
     		id: create_each_block$2.name,
     		type: "each",
-    		source: "(165:12) {#each [...Array(nPages).keys()] as i}",
+    		source: "(209:12) {#each [...Array(nPages).keys()] as i}",
     		ctx
     	});
 
@@ -16306,6 +16311,8 @@ for (const input of inputs) {
     	let current_block_type_index;
     	let if_block;
     	let current;
+    	let mounted;
+    	let dispose;
     	let each_value_2 = [...Array(/*skillFilters*/ ctx[0].filter(func).length + 1).keys()];
     	validate_each_argument(each_value_2);
     	let each_blocks_1 = [];
@@ -16372,24 +16379,24 @@ for (const input of inputs) {
     			if_block.c();
     			attr_dev(div0, "id", "skills");
     			attr_dev(div0, "class", "svelte-1galzg3");
-    			add_location(div0, file$5, 95, 6, 2551);
-    			add_location(br, file$5, 119, 13, 3562);
+    			add_location(div0, file$5, 124, 6, 3338);
+    			add_location(br, file$5, 150, 13, 4459);
     			attr_dev(div1, "id", "slots");
     			attr_dev(div1, "class", "svelte-1galzg3");
-    			add_location(div1, file$5, 118, 6, 3532);
+    			add_location(div1, file$5, 149, 6, 4429);
     			attr_dev(div2, "id", "charm-search-form");
     			attr_dev(div2, "class", "svelte-1galzg3");
-    			add_location(div2, file$5, 94, 4, 2516);
+    			add_location(div2, file$5, 123, 4, 3303);
     			attr_dev(hr, "class", "svelte-1galzg3");
-    			add_location(hr, file$5, 133, 4, 4064);
+    			add_location(hr, file$5, 177, 4, 5418);
     			attr_dev(div3, "id", "charm-search-result");
     			attr_dev(div3, "class", "svelte-1galzg3");
-    			add_location(div3, file$5, 135, 4, 4074);
+    			add_location(div3, file$5, 179, 4, 5428);
     			attr_dev(div4, "id", "charm-searcher");
     			attr_dev(div4, "class", "svelte-1galzg3");
-    			add_location(div4, file$5, 92, 2, 2459);
+    			add_location(div4, file$5, 121, 2, 3246);
     			attr_dev(div5, "class", "tab-content svelte-1galzg3");
-    			add_location(div5, file$5, 91, 0, 2431);
+    			add_location(div5, file$5, 120, 0, 3218);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -16421,9 +16428,14 @@ for (const input of inputs) {
     			append_dev(div4, div3);
     			if_blocks[current_block_type_index].m(div3, null);
     			current = true;
+
+    			if (!mounted) {
+    				dispose = listen_dev(window, "keydown", handleKeydown, false, false, false);
+    				mounted = true;
+    			}
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*SKILL_LEVEL_LIST, skillLevelFilters, Array, skillFilters, allSkillDetails*/ 2051) {
+    			if (dirty & /*SKILL_LEVEL_LIST, Array, skillFilters, skillLevelFilters, allSkillDetails*/ 2051) {
     				each_value_2 = [...Array(/*skillFilters*/ ctx[0].filter(func).length + 1).keys()];
     				validate_each_argument(each_value_2);
     				let i;
@@ -16540,6 +16552,8 @@ for (const input of inputs) {
     			destroy_each(each_blocks_1, detaching);
     			destroy_each(each_blocks, detaching);
     			if_blocks[current_block_type_index].d();
+    			mounted = false;
+    			dispose();
     		}
     	};
 
@@ -16556,6 +16570,45 @@ for (const input of inputs) {
 
     const MAX_SKILL_LEVEL = 7;
     const MAX_SLOTS = 3;
+
+    function handleKeydown(event) {
+    	if (event.keyCode === 27) {
+    		// escape
+    		document.body.click();
+
+    		return;
+    	}
+
+    	if (!(event.ctrlKey && event.metaKey || event.ctrlKey && event.altKey)) {
+    		return;
+    	}
+
+    	let prefix;
+
+    	if (event.key === "k") {
+    		prefix = "input-skill-";
+    	} else if (event.key === "l") {
+    		prefix = "input-skill-level-";
+    	} else if (event.key === "t") {
+    		prefix = "input-slot-";
+    	} else {
+    		return;
+    	}
+
+    	const focusedId = document.activeElement.id;
+
+    	if (focusedId.startsWith(prefix)) {
+    		const currentSuffix = parseInt(focusedId.replace(prefix, ""));
+    		const nextFocus = document.getElementById(`${prefix}${currentSuffix + 1}`) || document.getElementById(`${prefix}0`);
+    		document.body.click();
+    		nextFocus.focus();
+    	} else {
+    		const nextFocus = document.getElementById(`${prefix}0`);
+    		document.body.click();
+    		nextFocus.focus();
+    	}
+    }
+
     const func = i => i;
     const func_1 = s => `${s.name} ${s.hiragana} ${s.englishCharacters}`;
     const func_2 = i => i + 1;
@@ -16647,6 +16700,7 @@ for (const input of inputs) {
     		currentPage,
     		previousCurrentPage,
     		itemsPerPage,
+    		handleKeydown,
     		nPages,
     		searchResultsToShow,
     		sliceBegin,
@@ -16799,10 +16853,12 @@ for (const input of inputs) {
     	}
     }
 
+    function t(){}function l(t,e){for(const l in e)t[l]=e[l];return t}function n(t){return t()}function s(){return Object.create(null)}function o(t){t.forEach(n);}function c(t){return "function"==typeof t}function r(t,e){return t!=t?e==e:t!==e||t&&"object"==typeof t||"function"==typeof t}function i$1(t,e,l,n){if(t){const s=u(t,e,l,n);return t[0](s)}}function u(t,e,n,s){return t[1]&&s?l(n.ctx.slice(),t[1](s(e))):n.ctx}function d(t,e,l,n,s,o,c){const r=function(t,e,l,n){if(t[2]&&n){const s=t[2](n(l));if(void 0===e.dirty)return s;if("object"==typeof s){const t=[],l=Math.max(e.dirty.length,s.length);for(let n=0;n<l;n+=1)t[n]=e.dirty[n]|s[n];return t}return e.dirty|s}return e.dirty}(e,n,s,o);if(r){const s=u(e,l,n,c);t.p(s,r);}}function p(t){const e={};for(const l in t)"$"!==l[0]&&(e[l]=t[l]);return e}function f(e){return e&&c(e.destroy)?e.destroy:t}function b(t,e){t.appendChild(e);}function y(t,e,l){t.insertBefore(e,l||null);}function x(t){t.parentNode.removeChild(t);}function E(t){return document.createElement(t)}function k(t){return document.createTextNode(t)}function z(t,e,l,n){return t.addEventListener(e,l,n),()=>t.removeEventListener(e,l,n)}function L(t,e,l){null==l?t.removeAttribute(e):t.getAttribute(e)!==l&&t.setAttribute(e,l);}function A(t,e){const l=Object.getOwnPropertyDescriptors(t.__proto__);for(const n in e)null==e[n]?t.removeAttribute(n):"style"===n?t.style.cssText=e[n]:"__value"===n?t.value=t[n]=e[n]:l[n]&&l[n].set?t[n]=e[n]:L(t,n,e[n]);}function T(t){return Array.from(t.childNodes)}function O(t,e,l,n){for(let n=0;n<t.length;n+=1){const s=t[n];if(s.nodeName===e){let e=0;const o=[];for(;e<s.attributes.length;){const t=s.attributes[e++];l[t.name]||o.push(t.name);}for(let t=0;t<o.length;t++)s.removeAttribute(o[t]);return t.splice(n,1)[0]}}return n?function(t){return document.createElementNS("http://www.w3.org/2000/svg",t)}(e):E(e)}function _(t,e){for(let l=0;l<t.length;l+=1){const n=t[l];if(3===n.nodeType)return n.data=""+e,t.splice(l,1)[0]}return k(e)}let W;function q(t){W=t;}function K(t,e){const l=t.$$.callbacks[e.type];l&&l.slice().forEach(t=>t(e));}const Q=[],Z=[],tt=[],et=[],lt=Promise.resolve();let nt=!1;function st(t){tt.push(t);}let ct=!1;const rt=new Set;function at(){if(!ct){ct=!0;do{for(let t=0;t<Q.length;t+=1){const e=Q[t];q(e),it(e.$$);}for(Q.length=0;Z.length;)Z.pop()();for(let t=0;t<tt.length;t+=1){const e=tt[t];rt.has(e)||(rt.add(e),e());}tt.length=0;}while(Q.length);for(;et.length;)et.pop()();nt=!1,ct=!1,rt.clear();}}function it(t){if(null!==t.fragment){t.update(),o(t.before_update);const e=t.dirty;t.dirty=[-1],t.fragment&&t.fragment.p(t.ctx,e),t.after_update.forEach(st);}}const pt=new Set;let ft;function mt(t,e){t&&t.i&&(pt.delete(t),t.i(e));}function gt(t,e,l,n){if(t&&t.o){if(pt.has(t))return;pt.add(t),ft.c.push(()=>{pt.delete(t),n&&(l&&t.d(1),n());}),t.o(e);}}function yt(t,e){const l={},n={},s={$$scope:1};let o=t.length;for(;o--;){const c=t[o],r=e[o];if(r){for(const t in c)t in r||(n[t]=1);for(const t in r)s[t]||(l[t]=r[t],s[t]=1);t[o]=r;}else for(const t in c)s[t]=1;}for(const t in n)t in l||(l[t]=void 0);return l}function Ct(t,e,l){const{fragment:s,on_mount:r,on_destroy:a,after_update:i}=t.$$;s&&s.m(e,l),st(()=>{const e=r.map(n).filter(c);a?a.push(...e):o(e),t.$$.on_mount=[];}),i.forEach(st);}function Nt(t,e){const l=t.$$;null!==l.fragment&&(o(l.on_destroy),l.fragment&&l.fragment.d(e),l.on_destroy=l.fragment=null,l.ctx=[]);}function zt(t,e){-1===t.$$.dirty[0]&&(Q.push(t),nt||(nt=!0,lt.then(at)),t.$$.dirty.fill(0)),t.$$.dirty[e/31|0]|=1<<e%31;}function Lt(e,l,n,c,r,a,i=[-1]){const u=W;q(e);const d=l.props||{},p=e.$$={fragment:null,ctx:null,props:a,update:t,not_equal:r,bound:s(),on_mount:[],on_destroy:[],before_update:[],after_update:[],context:new Map(u?u.$$.context:[]),callbacks:s(),dirty:i};let f=!1;if(p.ctx=n?n(e,d,(t,l,...n)=>{const s=n.length?n[0]:l;return p.ctx&&r(p.ctx[t],p.ctx[t]=s)&&(p.bound[t]&&p.bound[t](s),f&&zt(e,t)),l}):[],p.update(),f=!0,o(p.before_update),p.fragment=!!c&&c(p.ctx),l.target){if(l.hydrate){const t=T(l.target);p.fragment&&p.fragment.l(t),t.forEach(x);}else p.fragment&&p.fragment.c();l.intro&&mt(e.$$.fragment),Ct(e,l.target,l.anchor),at();}q(u);}class At{$destroy(){Nt(this,1),this.$destroy=t;}$on(t,e){const l=this.$$.callbacks[t]||(this.$$.callbacks[t]=[]);return l.push(e),()=>{const t=l.indexOf(e);-1!==t&&l.splice(t,1);}}$set(){}}function Tt(t,e){let l=["children","$$scope","$$slots"].concat(e);const n={};for(const e of Object.keys(t))l.includes(e)||(n[e]=t[e]);return n}function Dt(t){var e,l,n="";if(t)if("object"==typeof t)if(Array.isArray(t))for(e=0;e<t.length;e++)t[e]&&(l=Dt(t[e]))&&(n&&(n+=" "),n+=l);else for(e in t)t[e]&&(l=Dt(e))&&(n&&(n+=" "),n+=l);else "boolean"==typeof t||t.call||(n&&(n+=" "),n+=t);return n}function St(){let t,e=0,l="";for(;e<arguments.length;)(t=Dt(arguments[e++]))&&(l&&(l+=" "),l+=t);return l}function Vt(t,e=[]){const l=["focus","blur","change","input","update","submit","fullscreenchange","fullscreenerror","scroll","cut","copy","paste","keydown","keypress","keyup","auxclick","click","contextmenu","dblclick","mousedown","mouseenter","mouseleave","mousemove","mouseover","mouseout","mouseup","pointerlockchange","pointerlockerror","select","wheel","drag","dragend","dragenter","dragstart","dragleave","dragover","drop","touchcancel","touchend","touchmove","touchstart","pointerover","pointerenter","pointerdown","pointermove","pointerup","pointercancel","pointerout","pointerleave","gotpointercapture","lostpointercapture",...e];function n(e){K(t,e);}return t=>{const e=[];for(let s=0;s<l.length;s++)e.push(z(t,l[s],n));return {destroy:()=>{for(let t=0;t<e.length;t++)e[t]();}}}}function en(t){let e,n,o,c,r;const a=t[8].default,u=i$1(a,t,t[7],null),p=u||function(t){let e;return {c(){e=k("Loading...");},l(t){e=_(t,"Loading...");},m(t,l){y(t,e,l);},d(t){t&&x(e);}}}();let h=[t[2],{role:"status"},{class:t[0]}],$={};for(let t=0;t<h.length;t+=1)$=l($,h[t]);return {c(){e=E("div"),n=E("span"),p&&p.c(),this.h();},l(t){e=O(t,"DIV",{role:!0,class:!0});var l=T(e);n=O(l,"SPAN",{class:!0});var s=T(n);p&&p.l(s),s.forEach(x),l.forEach(x),this.h();},h(){L(n,"class","sr-only"),A(e,$);},m(l,a){y(l,e,a),b(e,n),p&&p.m(n,null),o=!0,c||(r=f(t[1].call(null,e)),c=!0);},p(t,[l]){u&&u.p&&128&l&&d(u,a,t,t[7],l,null,null),A(e,$=yt(h,[t[2],{role:"status"},(!o||1&l)&&{class:t[0]}]));},i(t){o||(mt(p,t),o=!0);},o(t){gt(p,t),o=!1;},d(t){t&&x(e),p&&p.d(t),c=!1,r();}}}function ln(t,e,n){const s=Vt(W);let{class:o=""}=e,{type:c="border"}=e,{size:r=""}=e,{color:a=""}=e;const i=Tt(e);let u,{$$slots:d={},$$scope:f}=e;return t.$set=t=>{n(9,e=l(l({},e),p(t))),"class"in t&&n(3,o=t.class),"type"in t&&n(4,c=t.type),"size"in t&&n(5,r=t.size),"color"in t&&n(6,a=t.color),"$$scope"in t&&n(7,f=t.$$scope);},t.$$.update=()=>{120&t.$$.dirty&&n(0,u=St(o,!!r&&`spinner-${c}-${r}`,"spinner-"+c,!!a&&"text-"+a));},e=p(e),[u,s,i,o,c,r,a,f,d]}class nn extends At{constructor(t){super(),Lt(this,t,ln,en,r,{class:3,type:4,size:5,color:6});}}var Vs="undefined"!=typeof globalThis?globalThis:"undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{};function js(t,e){return t(e={exports:{}},e.exports),e.exports}var Bs=js((function(t,e){!function(e,l){t.exports=l.call(e);}(Vs,(function(){var t=t||{},e=document.querySelectorAll.bind(document),l=Object.prototype.toString,n="ontouchstart"in window;function s(t){var e=typeof t;return "function"===e||"object"===e&&!!t}function o(t){var n,o=l.call(t);return "[object String]"===o?e(t):s(t)&&/^\[object (Array|HTMLCollection|NodeList|Object)\]$/.test(o)&&t.hasOwnProperty("length")?t:s(n=t)&&n.nodeType>0?[t]:[]}function c(t){var e,l,n={top:0,left:0},s=t&&t.ownerDocument;return e=s.documentElement,void 0!==t.getBoundingClientRect&&(n=t.getBoundingClientRect()),l=function(t){return null!==(e=t)&&e===e.window?t:9===t.nodeType&&t.defaultView;var e;}(s),{top:n.top+l.pageYOffset-e.clientTop,left:n.left+l.pageXOffset-e.clientLeft}}function r(t){var e="";for(var l in t)t.hasOwnProperty(l)&&(e+=l+":"+t[l]+";");return e}var a={duration:750,delay:200,show:function(t,e,l){if(2===t.button)return !1;e=e||this;var n=document.createElement("div");n.className="waves-ripple waves-rippling",e.appendChild(n);var s=c(e),o=0,i=0;"touches"in t&&t.touches.length?(o=t.touches[0].pageY-s.top,i=t.touches[0].pageX-s.left):(o=t.pageY-s.top,i=t.pageX-s.left),i=i>=0?i:0,o=o>=0?o:0;var u="scale("+e.clientWidth/100*3+")",d="translate(0,0)";l&&(d="translate("+l.x+"px, "+l.y+"px)"),n.setAttribute("data-hold",Date.now()),n.setAttribute("data-x",i),n.setAttribute("data-y",o),n.setAttribute("data-scale",u),n.setAttribute("data-translate",d);var p={top:o+"px",left:i+"px"};n.classList.add("waves-notransition"),n.setAttribute("style",r(p)),n.classList.remove("waves-notransition"),p["-webkit-transform"]=u+" "+d,p["-moz-transform"]=u+" "+d,p["-ms-transform"]=u+" "+d,p["-o-transform"]=u+" "+d,p.transform=u+" "+d,p.opacity="1";var f="mousemove"===t.type?2500:a.duration;p["-webkit-transition-duration"]=f+"ms",p["-moz-transition-duration"]=f+"ms",p["-o-transition-duration"]=f+"ms",p["transition-duration"]=f+"ms",n.setAttribute("style",r(p));},hide:function(t,e){for(var l=(e=e||this).getElementsByClassName("waves-rippling"),s=0,o=l.length;s<o;s++)u(t,e,l[s]);n&&(e.removeEventListener("touchend",a.hide),e.removeEventListener("touchcancel",a.hide)),e.removeEventListener("mouseup",a.hide),e.removeEventListener("mouseleave",a.hide);}},i={input:function(t){var e=t.parentNode;if("i"!==e.tagName.toLowerCase()||!e.classList.contains("waves-effect")){var l=document.createElement("i");l.className=t.className+" waves-input-wrapper",t.className="waves-button-input",e.replaceChild(l,t),l.appendChild(t);var n=window.getComputedStyle(t,null),s=n.color,o=n.backgroundColor;l.setAttribute("style","color:"+s+";background:"+o),t.setAttribute("style","background-color:rgba(0,0,0,0);");}},img:function(t){var e=t.parentNode;if("i"!==e.tagName.toLowerCase()||!e.classList.contains("waves-effect")){var l=document.createElement("i");e.replaceChild(l,t),l.appendChild(t);}}};function u(t,e,l){if(l){l.classList.remove("waves-rippling");var n=l.getAttribute("data-x"),s=l.getAttribute("data-y"),o=l.getAttribute("data-scale"),c=l.getAttribute("data-translate"),i=350-(Date.now()-Number(l.getAttribute("data-hold")));i<0&&(i=0),"mousemove"===t.type&&(i=150);var u="mousemove"===t.type?2500:a.duration;setTimeout((function(){var t={top:s+"px",left:n+"px",opacity:"0","-webkit-transition-duration":u+"ms","-moz-transition-duration":u+"ms","-o-transition-duration":u+"ms","transition-duration":u+"ms","-webkit-transform":o+" "+c,"-moz-transform":o+" "+c,"-ms-transform":o+" "+c,"-o-transform":o+" "+c,transform:o+" "+c};l.setAttribute("style",r(t)),setTimeout((function(){try{e.removeChild(l);}catch(t){return !1}}),u);}),i);}}var d={touches:0,allowEvent:function(t){var e=!0;return /^(mousedown|mousemove)$/.test(t.type)&&d.touches&&(e=!1),e},registerEvent:function(t){var e=t.type;"touchstart"===e?d.touches+=1:/^(touchend|touchcancel)$/.test(e)&&setTimeout((function(){d.touches&&(d.touches-=1);}),500);}};function p(t){var e=function(t){if(!1===d.allowEvent(t))return null;for(var e=null,l=t.target||t.srcElement;l.parentElement;){if(!(l instanceof SVGElement)&&l.classList.contains("waves-effect")){e=l;break}l=l.parentElement;}return e}(t);if(null!==e){if(e.disabled||e.getAttribute("disabled")||e.classList.contains("disabled"))return;if(d.registerEvent(t),"touchstart"===t.type&&a.delay){var l=!1,s=setTimeout((function(){s=null,a.show(t,e);}),a.delay),o=function(n){s&&(clearTimeout(s),s=null,a.show(t,e)),l||(l=!0,a.hide(n,e)),r();},c=function(t){s&&(clearTimeout(s),s=null),o(t),r();};e.addEventListener("touchmove",c,!1),e.addEventListener("touchend",o,!1),e.addEventListener("touchcancel",o,!1);var r=function(){e.removeEventListener("touchmove",c),e.removeEventListener("touchend",o),e.removeEventListener("touchcancel",o);};}else a.show(t,e),n&&(e.addEventListener("touchend",a.hide,!1),e.addEventListener("touchcancel",a.hide,!1)),e.addEventListener("mouseup",a.hide,!1),e.addEventListener("mouseleave",a.hide,!1);}}return t.init=function(t){var e=document.body;"duration"in(t=t||{})&&(a.duration=t.duration),"delay"in t&&(a.delay=t.delay),n&&(e.addEventListener("touchstart",p,!1),e.addEventListener("touchcancel",d.registerEvent,!1),e.addEventListener("touchend",d.registerEvent,!1)),e.addEventListener("mousedown",p,!1);},t.attach=function(t,e){var n,s;t=o(t),"[object Array]"===l.call(e)&&(e=e.join(" ")),e=e?" "+e:"";for(var c=0,r=t.length;c<r;c++)s=(n=t[c]).tagName.toLowerCase(),-1!==["input","img"].indexOf(s)&&(i[s](n),n=n.parentElement),-1===n.className.indexOf("waves-effect")&&(n.className+=" waves-effect"+e);},t.ripple=function(t,e){var l=(t=o(t)).length;if((e=e||{}).wait=e.wait||0,e.position=e.position||null,l)for(var n,s,r,i={},u=0,d={type:"mousedown",button:1},p=function(t,e){return function(){a.hide(t,e);}};u<l;u++)if(n=t[u],s=e.position||{x:n.clientWidth/2,y:n.clientHeight/2},r=c(n),i.x=r.left+s.x,i.y=r.top+s.y,d.pageX=i.x,d.pageY=i.y,a.show(d,n),e.wait>=0&&null!==e.wait){setTimeout(p({type:"mouseup",button:1},n),e.wait);}},t.calm=function(t){for(var e={type:"mouseup",button:1},l=0,n=(t=o(t)).length;l<n;l++)a.hide(e,t[l]);},t.displayEffect=function(e){console.error("Waves.displayEffect() has been deprecated and will be removed in future version. Please use Waves.init() to initialize Waves effect"),t.init(e);},t}));}));js((function(t){var e,l;e=Vs,l=function(){var t="undefined"==typeof window,e=new Map,l=new Map,n=[];n.total=0;var s=[],o=[];function c(){e.clear(),l.clear(),s=[],o=[];}function r(t){for(var e=-9007199254740991,l=t.length-1;l>=0;--l){var n=t[l];if(null!==n){var s=n.score;s>e&&(e=s);}}return -9007199254740991===e?null:e}function a(t,e){var l=t[e];if(void 0!==l)return l;var n=e;Array.isArray(e)||(n=e.split("."));for(var s=n.length,o=-1;t&&++o<s;)t=t[n[o]];return t}function i(t){return "object"==typeof t}var u=function(){var t=[],e=0,l={};function n(){for(var l=0,n=t[l],s=1;s<e;){var o=s+1;l=s,o<e&&t[o].score<t[s].score&&(l=o),t[l-1>>1]=t[l],s=1+(l<<1);}for(var c=l-1>>1;l>0&&n.score<t[c].score;c=(l=c)-1>>1)t[l]=t[c];t[l]=n;}return l.add=function(l){var n=e;t[e++]=l;for(var s=n-1>>1;n>0&&l.score<t[s].score;s=(n=s)-1>>1)t[n]=t[s];t[n]=l;},l.poll=function(){if(0!==e){var l=t[0];return t[0]=t[--e],n(),l}},l.peek=function(l){if(0!==e)return t[0]},l.replaceTop=function(e){t[0]=e,n();},l},d=u();return function p(f){var h={single:function(t,e,l){return t?(i(t)||(t=h.getPreparedSearch(t)),e?(i(e)||(e=h.getPrepared(e)),((l&&void 0!==l.allowTypo?l.allowTypo:!f||void 0===f.allowTypo||f.allowTypo)?h.algorithm:h.algorithmNoTypo)(t,e,t[0])):null):null},go:function(t,e,l){if(!t)return n;var s=(t=h.prepareSearch(t))[0],o=l&&l.threshold||f&&f.threshold||-9007199254740991,c=l&&l.limit||f&&f.limit||9007199254740991,u=(l&&void 0!==l.allowTypo?l.allowTypo:!f||void 0===f.allowTypo||f.allowTypo)?h.algorithm:h.algorithmNoTypo,p=0,$=0,m=e.length;if(l&&l.keys)for(var g=l.scoreFn||r,v=l.keys,b=v.length,y=m-1;y>=0;--y){for(var x=e[y],w=new Array(b),E=b-1;E>=0;--E)(N=a(x,C=v[E]))?(i(N)||(N=h.getPrepared(N)),w[E]=u(t,N,s)):w[E]=null;w.obj=x;var k=g(w);null!==k&&(k<o||(w.score=k,p<c?(d.add(w),++p):(++$,k>d.peek().score&&d.replaceTop(w))));}else if(l&&l.key){var C=l.key;for(y=m-1;y>=0;--y)(N=a(x=e[y],C))&&(i(N)||(N=h.getPrepared(N)),null!==(z=u(t,N,s))&&(z.score<o||(z={target:z.target,_targetLowerCodes:null,_nextBeginningIndexes:null,score:z.score,indexes:z.indexes,obj:x},p<c?(d.add(z),++p):(++$,z.score>d.peek().score&&d.replaceTop(z)))));}else for(y=m-1;y>=0;--y){var N,z;(N=e[y])&&(i(N)||(N=h.getPrepared(N)),null!==(z=u(t,N,s))&&(z.score<o||(p<c?(d.add(z),++p):(++$,z.score>d.peek().score&&d.replaceTop(z)))));}if(0===p)return n;var L=new Array(p);for(y=p-1;y>=0;--y)L[y]=d.poll();return L.total=p+$,L},goAsync:function(e,l,s){var o=!1,c=new Promise((function(c,d){if(!e)return c(n);var p=(e=h.prepareSearch(e))[0],$=u(),m=l.length-1,g=s&&s.threshold||f&&f.threshold||-9007199254740991,v=s&&s.limit||f&&f.limit||9007199254740991,b=(s&&void 0!==s.allowTypo?s.allowTypo:!f||void 0===f.allowTypo||f.allowTypo)?h.algorithm:h.algorithmNoTypo,y=0,x=0;function w(){if(o)return d("canceled");var u=Date.now();if(s&&s.keys)for(var f=s.scoreFn||r,E=s.keys,k=E.length;m>=0;--m){for(var C=l[m],N=new Array(k),z=k-1;z>=0;--z)(T=a(C,A=E[z]))?(i(T)||(T=h.getPrepared(T)),N[z]=b(e,T,p)):N[z]=null;N.obj=C;var L=f(N);if(null!==L&&!(L<g)&&(N.score=L,y<v?($.add(N),++y):(++x,L>$.peek().score&&$.replaceTop(N)),m%1e3==0&&Date.now()-u>=10))return void(t?setImmediate(w):setTimeout(w))}else if(s&&s.key){for(var A=s.key;m>=0;--m)if((T=a(C=l[m],A))&&(i(T)||(T=h.getPrepared(T)),null!==(O=b(e,T,p))&&!(O.score<g)&&(O={target:O.target,_targetLowerCodes:null,_nextBeginningIndexes:null,score:O.score,indexes:O.indexes,obj:C},y<v?($.add(O),++y):(++x,O.score>$.peek().score&&$.replaceTop(O)),m%1e3==0&&Date.now()-u>=10)))return void(t?setImmediate(w):setTimeout(w))}else for(;m>=0;--m){var T,O;if((T=l[m])&&(i(T)||(T=h.getPrepared(T)),null!==(O=b(e,T,p))&&!(O.score<g)&&(y<v?($.add(O),++y):(++x,O.score>$.peek().score&&$.replaceTop(O)),m%1e3==0&&Date.now()-u>=10)))return void(t?setImmediate(w):setTimeout(w))}if(0===y)return c(n);for(var _=new Array(y),I=y-1;I>=0;--I)_[I]=$.poll();_.total=y+x,c(_);}t?setImmediate(w):w();}));return c.cancel=function(){o=!0;},c},highlight:function(t,e,l){if(null===t)return null;void 0===e&&(e="<b>"),void 0===l&&(l="</b>");for(var n="",s=0,o=!1,c=t.target,r=c.length,a=t.indexes,i=0;i<r;++i){var u=c[i];if(a[s]===i){if(o||(o=!0,n+=e),++s===a.length){n+=u+l+c.substr(i+1);break}}else o&&(o=!1,n+=l);n+=u;}return n},prepare:function(t){if(t)return {target:t,_targetLowerCodes:h.prepareLowerCodes(t),_nextBeginningIndexes:null,score:null,indexes:null,obj:null}},prepareSlow:function(t){if(t)return {target:t,_targetLowerCodes:h.prepareLowerCodes(t),_nextBeginningIndexes:h.prepareNextBeginningIndexes(t),score:null,indexes:null,obj:null}},prepareSearch:function(t){if(t)return h.prepareLowerCodes(t)},getPrepared:function(t){if(t.length>999)return h.prepare(t);var l=e.get(t);return void 0!==l||(l=h.prepare(t),e.set(t,l)),l},getPreparedSearch:function(t){if(t.length>999)return h.prepareSearch(t);var e=l.get(t);return void 0!==e||(e=h.prepareSearch(t),l.set(t,e)),e},algorithm:function(t,e,l){for(var n=e._targetLowerCodes,c=t.length,r=n.length,a=0,i=0,u=0,d=0;;){if(l===n[i]){if(s[d++]=i,++a===c)break;l=t[0===u?a:u===a?a+1:u===a-1?a-1:a];}if(++i>=r)for(;;){if(a<=1)return null;if(0===u){if(l===t[--a])continue;u=a;}else {if(1===u)return null;if((l=t[1+(a=--u)])===t[a])continue}i=s[(d=a)-1]+1;break}}a=0;var p=0,f=!1,$=0,m=e._nextBeginningIndexes;null===m&&(m=e._nextBeginningIndexes=h.prepareNextBeginningIndexes(e.target));var g=i=0===s[0]?0:m[s[0]-1];if(i!==r)for(;;)if(i>=r){if(a<=0){if(++p>c-2)break;if(t[p]===t[p+1])continue;i=g;continue}--a,i=m[o[--$]];}else if(t[0===p?a:p===a?a+1:p===a-1?a-1:a]===n[i]){if(o[$++]=i,++a===c){f=!0;break}++i;}else i=m[i];if(f)var v=o,b=$;else v=s,b=d;for(var y=0,x=-1,w=0;w<c;++w)x!==(i=v[w])-1&&(y-=i),x=i;for(f?0!==p&&(y+=-20):(y*=1e3,0!==u&&(y+=-20)),y-=r-c,e.score=y,e.indexes=new Array(b),w=b-1;w>=0;--w)e.indexes[w]=v[w];return e},algorithmNoTypo:function(t,e,l){for(var n=e._targetLowerCodes,c=t.length,r=n.length,a=0,i=0,u=0;;){if(l===n[i]){if(s[u++]=i,++a===c)break;l=t[a];}if(++i>=r)return null}a=0;var d=!1,p=0,f=e._nextBeginningIndexes;if(null===f&&(f=e._nextBeginningIndexes=h.prepareNextBeginningIndexes(e.target)),(i=0===s[0]?0:f[s[0]-1])!==r)for(;;)if(i>=r){if(a<=0)break;--a,i=f[o[--p]];}else if(t[a]===n[i]){if(o[p++]=i,++a===c){d=!0;break}++i;}else i=f[i];if(d)var $=o,m=p;else $=s,m=u;for(var g=0,v=-1,b=0;b<c;++b)v!==(i=$[b])-1&&(g-=i),v=i;for(d||(g*=1e3),g-=r-c,e.score=g,e.indexes=new Array(m),b=m-1;b>=0;--b)e.indexes[b]=$[b];return e},prepareLowerCodes:function(t){for(var e=t.length,l=[],n=t.toLowerCase(),s=0;s<e;++s)l[s]=n.charCodeAt(s);return l},prepareBeginningIndexes:function(t){for(var e=t.length,l=[],n=0,s=!1,o=!1,c=0;c<e;++c){var r=t.charCodeAt(c),a=r>=65&&r<=90,i=a||r>=97&&r<=122||r>=48&&r<=57,u=a&&!s||!o||!i;s=a,o=i,u&&(l[n++]=c);}return l},prepareNextBeginningIndexes:function(t){for(var e=t.length,l=h.prepareBeginningIndexes(t),n=[],s=l[0],o=0,c=0;c<e;++c)s>c?n[c]=s:(s=l[++o],n[c]=void 0===s?e:s);return n},cleanup:c,new:p};return h}()},t.exports?t.exports=l():e.fuzzysort=l();}));Bs.init();
+
     /* src/CharmList.svelte generated by Svelte v3.38.2 */
     const file$4 = "src/CharmList.svelte";
 
-    // (28:4) {:else}
+    // (31:4) {:else}
     function create_else_block$1(ctx) {
     	let charmtable;
     	let updating_charms;
@@ -16858,32 +16914,49 @@ for (const input of inputs) {
     		block,
     		id: create_else_block$1.name,
     		type: "else",
-    		source: "(28:4) {:else}",
+    		source: "(31:4) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (24:4) {#if charms == null}
+    // (26:4) {#if charms == null}
     function create_if_block$1(ctx) {
     	let div;
+    	let mdbspinner;
+    	let current;
+
+    	mdbspinner = new nn({
+    			props: { color: "primary" },
+    			$$inline: true
+    		});
 
     	const block = {
     		c: function create() {
     			div = element("div");
-    			attr_dev(div, "class", "spinner-border text-info svelte-2qpa7f");
-    			attr_dev(div, "role", "status");
-    			add_location(div, file$4, 24, 6, 597);
+    			create_component(mdbspinner.$$.fragment);
+    			attr_dev(div, "class", "spinner-wrapper svelte-1qwy7na");
+    			add_location(div, file$4, 26, 6, 638);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
+    			mount_component(mdbspinner, div, null);
+    			current = true;
     		},
     		p: noop,
-    		i: noop,
-    		o: noop,
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(mdbspinner.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(mdbspinner.$$.fragment, local);
+    			current = false;
+    		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
+    			destroy_component(mdbspinner);
     		}
     	};
 
@@ -16891,7 +16964,7 @@ for (const input of inputs) {
     		block,
     		id: create_if_block$1.name,
     		type: "if",
-    		source: "(24:4) {#if charms == null}",
+    		source: "(26:4) {#if charms == null}",
     		ctx
     	});
 
@@ -16921,10 +16994,10 @@ for (const input of inputs) {
     			div0 = element("div");
     			if_block.c();
     			attr_dev(div0, "id", "charm-list");
-    			attr_dev(div0, "class", "svelte-2qpa7f");
-    			add_location(div0, file$4, 22, 2, 544);
-    			attr_dev(div1, "class", "tab-content svelte-2qpa7f");
-    			add_location(div1, file$4, 21, 0, 516);
+    			attr_dev(div0, "class", "svelte-1qwy7na");
+    			add_location(div0, file$4, 24, 2, 585);
+    			attr_dev(div1, "class", "tab-content svelte-1qwy7na");
+    			add_location(div1, file$4, 23, 0, 557);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -17018,6 +17091,7 @@ for (const input of inputs) {
     	}
 
     	$$self.$capture_state = () => ({
+    		MDBSpinner: nn,
     		CharmTable,
     		MHRiseCharmManager,
     		skillToSlotLevel,
@@ -18911,7 +18985,7 @@ for (const input of inputs) {
     }
 
     const TITLE = "MHRise Charm Scanner";
-    const VERSION = "0.5.3";
+    const VERSION = "0.5.4";
 
     function instance($$self, $$props, $$invalidate) {
     	let $charmManager;

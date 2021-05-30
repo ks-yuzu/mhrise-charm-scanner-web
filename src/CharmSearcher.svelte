@@ -81,13 +81,42 @@
     isSpinnerShown = false
   }
 
-  //       const {skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3} = row
-  //       return [skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3].join(',')
-  //     })
-  //     .join('\n')
-  // }
+
+  function handleKeydown(event) {
+    if ( event.keyCode === 27 ) { // escape
+      document.body.click()
+      return
+    }
+
+    if ( !( (event.ctrlKey && event.metaKey) || (event.ctrlKey && event.altKey) )) {
+      return
+    }
+
+    let prefix
+    if      ( event.key === 'k' ) { prefix = 'input-skill-' }
+    else if ( event.key === 'l' ) { prefix = 'input-skill-level-' }
+    else if ( event.key === 't' ) { prefix = 'input-slot-' }
+    else {
+      return
+    }
+
+    const focusedId = document.activeElement.id
+    if ( focusedId.startsWith(prefix) ) {
+      const currentSuffix = parseInt(focusedId.replace(prefix, ''))
+      const nextFocus = document.getElementById(`${prefix}${currentSuffix + 1}`)
+                     || document.getElementById(`${prefix}0`)
+      document.body.click()
+      nextFocus.focus()
+    }
+    else {
+      const nextFocus = document.getElementById(`${prefix}0`)
+      document.body.click()
+      nextFocus.focus()
+    }
+	}
 </script>
 
+<svelte:window on:keydown={handleKeydown}/>
 
 <div class="tab-content">
   <div id="charm-searcher">
@@ -98,6 +127,7 @@
         {#each [...Array(skillFilters.filter(i => i).length + 1).keys()] as i}
           <div>
             <AutoComplete items={allSkillDetails}
+                          inputId="input-skill-{i}"
                           bind:selectedItem={skillFilters[i]}
                           labelFieldName="name"
                           valueFieldName="name"
@@ -108,6 +138,7 @@
                           className="autocomplete-skill"
                           />
             <AutoComplete items={SKILL_LEVEL_LIST}
+                          inputId="input-skill-level-{i}"
                           bind:selectedItem={skillLevelFilters[i]}
                           placeholder="Lv"
                           hideArrow
@@ -121,6 +152,7 @@
         {#each [...Array(MAX_SLOTS).keys()] as i}
           <AutoComplete items={[...Array(3).keys()].map(i => i + 1)}
                         placeholder="スロット{i+1}"
+                        inputId="input-slot-{i}"
                         bind:selectedItem={slots[i]}
                         showClear
                         hideArrow
@@ -128,6 +160,18 @@
                         />&nbsp;
         {/each}
       </div>
+      <!-- <div> -->
+      <!--   現在の検索条件: -->
+      <!--   <ul> -->
+      <!--     {#each skillFilters.map((e, idx) => `${e.name} Lv${skillLevelFilters[idx]}`) as skill} -->
+      <!--       <li>{skill}</li> -->
+      <!--     {/each} -->
+      <!--     {#if slots.length > 0} -->
+      <!--       <li>空きスロット {slots.join('-')}</li> -->
+      <!--     {/if} -->
+      <!--   </ul> -->
+      <!-- </div> -->
+
       <!-- <input type="checkbox" checked disabled> 装飾品を使うパターンを含める -->
     </div>
 
