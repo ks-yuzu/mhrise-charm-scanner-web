@@ -39,6 +39,17 @@
         </button>
       </li>
     {/each}
+    <div style="position: fixed; bottom: 0; left: 5px;">
+      <a href="https://twitter.com/share?ref_src=twsrc%5Etfw"
+         class="twitter-share-button"
+         data-text=""
+         data-url="https://mhrise-charm-scanner.yuzu-k.com"
+         data-hashtags="MHRise,護石,ツール"
+         data-show-count="false">
+        Tweet
+      </a>
+      <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    </div>
   </ul>
 
   <div class="navigation-content">
