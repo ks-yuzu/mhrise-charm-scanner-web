@@ -113,6 +113,8 @@
   header {
     display: flex;
     background: #222;
+
+    height: 3rem;
   }
 
 	header h1 {
