@@ -2,7 +2,7 @@
   import {navOptions} from './NavOptions.svelte'
 
   export let isNavigationOpen
-  export let fInitialized
+  export let isInitialized
   export let charmScanner
 
   let currentNavOptionId = 4
@@ -54,7 +54,7 @@
     {#each navOptions as option, i}
       <div class="h-100 {currentNavOptionId == i ? 'd-block' : 'd-none'}">
         <svelte:component this={option.component}
-                          {...{fInitialized, charmScanner}}
+                          {...{isInitialized, charmScanner}}
                           onActivate={onActivate[i]}
                           />
       </div>

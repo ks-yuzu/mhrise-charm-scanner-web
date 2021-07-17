@@ -21823,7 +21823,7 @@ for (const input of inputs) {
     	return block;
     }
 
-    // (122:6) {#if fInitialized}
+    // (122:6) {#if isInitialized}
     function create_if_block(ctx) {
     	let input;
     	let t0;
@@ -21847,13 +21847,13 @@ for (const input of inputs) {
     			attr_dev(input, "accept", ".mp4");
     			input.multiple = true;
     			attr_dev(input, "class", "svelte-18sy7xy");
-    			add_location(input, file$2, 122, 8, 2937);
+    			add_location(input, file$2, 122, 8, 2939);
     			if (img.src !== (img_src_value = "https://static.thenounproject.com/png/625182-200.png")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "");
     			attr_dev(img, "class", "svelte-18sy7xy");
-    			add_location(img, file$2, 129, 8, 3158);
+    			add_location(img, file$2, 129, 8, 3160);
     			attr_dev(div, "class", "svelte-18sy7xy");
-    			add_location(div, file$2, 130, 8, 3274);
+    			add_location(div, file$2, 130, 8, 3276);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -21891,7 +21891,7 @@ for (const input of inputs) {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(122:6) {#if fInitialized}",
+    		source: "(122:6) {#if isInitialized}",
     		ctx
     	});
 
@@ -21935,7 +21935,7 @@ for (const input of inputs) {
     	let if_block0 = current_block_type && current_block_type(ctx);
 
     	function select_block_type_1(ctx, dirty) {
-    		if (/*fInitialized*/ ctx[0]) return create_if_block;
+    		if (/*isInitialized*/ ctx[0]) return create_if_block;
     		return create_else_block;
     	}
 
@@ -21967,24 +21967,24 @@ for (const input of inputs) {
     			if_block1.c();
     			attr_dev(div0, "id", "status");
     			attr_dev(div0, "class", "svelte-18sy7xy");
-    			add_location(div0, file$2, 102, 4, 2427);
+    			add_location(div0, file$2, 102, 4, 2428);
     			attr_dev(div1, "class", "svelte-18sy7xy");
-    			add_location(div1, file$2, 116, 6, 2755);
+    			add_location(div1, file$2, 116, 6, 2756);
     			attr_dev(textarea, "placeholder", "納刀術,2,ひるみ軽減,1,1,0,0");
     			textarea.value = /*exportData*/ ctx[7];
     			attr_dev(textarea, "class", "svelte-18sy7xy");
-    			add_location(textarea, file$2, 117, 6, 2802);
+    			add_location(textarea, file$2, 117, 6, 2803);
     			attr_dev(div2, "id", "result");
     			attr_dev(div2, "class", "svelte-18sy7xy");
-    			add_location(div2, file$2, 115, 4, 2731);
+    			add_location(div2, file$2, 115, 4, 2732);
     			attr_dev(div3, "id", "upload");
     			attr_dev(div3, "class", "svelte-18sy7xy");
-    			add_location(div3, file$2, 120, 4, 2886);
+    			add_location(div3, file$2, 120, 4, 2887);
     			attr_dev(div4, "id", "scanner");
     			attr_dev(div4, "class", "svelte-18sy7xy");
-    			add_location(div4, file$2, 101, 2, 2404);
+    			add_location(div4, file$2, 101, 2, 2405);
     			attr_dev(div5, "class", "tab-content svelte-18sy7xy");
-    			add_location(div5, file$2, 100, 0, 2376);
+    			add_location(div5, file$2, 100, 0, 2377);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -22126,7 +22126,7 @@ for (const input of inputs) {
     	validate_slots("CharmScanner", slots, []);
     	const N_VIDEO_SPLITS = (navigator.hardwareConcurrency || 8) / 2;
     	let { charmScanner } = $$props;
-    	let { fInitialized } = $$props;
+    	let { isInitialized } = $$props;
     	let domInput; // input 要素
     	let files = []; // 選択されたローカルファイル
 
@@ -22227,7 +22227,7 @@ for (const input of inputs) {
     		isVideoReadFinished = true;
     	}
 
-    	const writable_props = ["charmScanner", "fInitialized"];
+    	const writable_props = ["charmScanner", "isInitialized"];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<CharmScanner> was created with unknown prop '${key}'`);
@@ -22255,7 +22255,7 @@ for (const input of inputs) {
 
     	$$self.$$set = $$props => {
     		if ("charmScanner" in $$props) $$invalidate(10, charmScanner = $$props.charmScanner);
-    		if ("fInitialized" in $$props) $$invalidate(0, fInitialized = $$props.fInitialized);
+    		if ("isInitialized" in $$props) $$invalidate(0, isInitialized = $$props.isInitialized);
     	};
 
     	$$self.$capture_state = () => ({
@@ -22264,7 +22264,7 @@ for (const input of inputs) {
     		charmManager,
     		N_VIDEO_SPLITS,
     		charmScanner,
-    		fInitialized,
+    		isInitialized,
     		domInput,
     		files,
     		videoReaderProps,
@@ -22283,7 +22283,7 @@ for (const input of inputs) {
 
     	$$self.$inject_state = $$props => {
     		if ("charmScanner" in $$props) $$invalidate(10, charmScanner = $$props.charmScanner);
-    		if ("fInitialized" in $$props) $$invalidate(0, fInitialized = $$props.fInitialized);
+    		if ("isInitialized" in $$props) $$invalidate(0, isInitialized = $$props.isInitialized);
     		if ("domInput" in $$props) $$invalidate(1, domInput = $$props.domInput);
     		if ("files" in $$props) $$invalidate(2, files = $$props.files);
     		if ("videoReaderProps" in $$props) $$subscribe_videoReaderProps($$invalidate(3, videoReaderProps = $$props.videoReaderProps));
@@ -22300,7 +22300,7 @@ for (const input of inputs) {
     	}
 
     	return [
-    		fInitialized,
+    		isInitialized,
     		domInput,
     		files,
     		videoReaderProps,
@@ -22321,7 +22321,7 @@ for (const input of inputs) {
     class CharmScanner extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { charmScanner: 10, fInitialized: 0 });
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { charmScanner: 10, isInitialized: 0 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -22337,8 +22337,8 @@ for (const input of inputs) {
     			console_1.warn("<CharmScanner> was created without expected prop 'charmScanner'");
     		}
 
-    		if (/*fInitialized*/ ctx[0] === undefined && !("fInitialized" in props)) {
-    			console_1.warn("<CharmScanner> was created without expected prop 'fInitialized'");
+    		if (/*isInitialized*/ ctx[0] === undefined && !("isInitialized" in props)) {
+    			console_1.warn("<CharmScanner> was created without expected prop 'isInitialized'");
     		}
     	}
 
@@ -22350,11 +22350,11 @@ for (const input of inputs) {
     		throw new Error("<CharmScanner>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get fInitialized() {
+    	get isInitialized() {
     		throw new Error("<CharmScanner>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set fInitialized(value) {
+    	set isInitialized(value) {
     		throw new Error("<CharmScanner>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -22432,7 +22432,7 @@ for (const input of inputs) {
     		c: function create() {
     			path = svg_element("path");
     			attr_dev(path, "d", /*iconData*/ ctx[10]);
-    			add_location(path, file$1, 32, 14, 935);
+    			add_location(path, file$1, 32, 14, 936);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, path, anchor);
@@ -22491,10 +22491,10 @@ for (const input of inputs) {
     			attr_dev(svg, "width", "16");
     			attr_dev(svg, "height", "19");
     			attr_dev(svg, "fill", "currentColor");
-    			add_location(svg, file$1, 30, 10, 781);
+    			add_location(svg, file$1, 30, 10, 782);
     			set_style(span, "display", /*isNavigationOpen*/ ctx[0] ? "inline" : "none");
     			attr_dev(span, "class", "svelte-nk63sn");
-    			add_location(span, file$1, 35, 10, 1003);
+    			add_location(span, file$1, 35, 10, 1004);
     			attr_dev(button, "id", /*i*/ ctx[8]);
 
     			attr_dev(button, "class", button_class_value = "" + (null_to_empty(/*currentNavOptionId*/ ctx[3] == /*i*/ ctx[8]
@@ -22502,9 +22502,9 @@ for (const input of inputs) {
     			: "navigation-link") + " svelte-nk63sn"));
 
     			attr_dev(button, "role", "tab");
-    			add_location(button, file$1, 25, 8, 573);
+    			add_location(button, file$1, 25, 8, 574);
     			attr_dev(li, "class", "navigation-item svelte-nk63sn");
-    			add_location(li, file$1, 24, 6, 536);
+    			add_location(li, file$1, 24, 6, 537);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, li, anchor);
@@ -22588,7 +22588,7 @@ for (const input of inputs) {
 
     	const switch_instance_spread_levels = [
     		{
-    			fInitialized: /*fInitialized*/ ctx[1],
+    			isInitialized: /*isInitialized*/ ctx[1],
     			charmScanner: /*charmScanner*/ ctx[2]
     		},
     		{
@@ -22625,7 +22625,7 @@ for (const input of inputs) {
     			? "d-block"
     			: "d-none"));
 
-    			add_location(div, file$1, 54, 6, 1658);
+    			add_location(div, file$1, 54, 6, 1659);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -22638,10 +22638,10 @@ for (const input of inputs) {
     			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			const switch_instance_changes = (dirty & /*fInitialized, charmScanner, onActivate*/ 22)
+    			const switch_instance_changes = (dirty & /*isInitialized, charmScanner, onActivate*/ 22)
     			? get_spread_update(switch_instance_spread_levels, [
-    					dirty & /*fInitialized, charmScanner*/ 6 && {
-    						fInitialized: /*fInitialized*/ ctx[1],
+    					dirty & /*isInitialized, charmScanner*/ 6 && {
+    						isInitialized: /*isInitialized*/ ctx[1],
     						charmScanner: /*charmScanner*/ ctx[2]
     					},
     					dirty & /*onActivate*/ 16 && {
@@ -22766,23 +22766,23 @@ for (const input of inputs) {
     			attr_dev(a, "data-url", "https://mhrise-charm-scanner.yuzu-k.com");
     			attr_dev(a, "data-hashtags", "MHRise,護石,ツール");
     			attr_dev(a, "data-show-count", "false");
-    			add_location(a, file$1, 40, 6, 1195);
+    			add_location(a, file$1, 40, 6, 1196);
     			script.async = true;
     			if (script.src !== (script_src_value = "https://platform.twitter.com/widgets.js")) attr_dev(script, "src", script_src_value);
     			attr_dev(script, "charset", "utf-8");
-    			add_location(script, file$1, 48, 6, 1475);
+    			add_location(script, file$1, 48, 6, 1476);
     			set_style(div0, "position", "fixed");
     			set_style(div0, "bottom", "0");
     			set_style(div0, "left", "5px");
-    			add_location(div0, file$1, 39, 4, 1136);
+    			add_location(div0, file$1, 39, 4, 1137);
     			attr_dev(ul, "class", "navigation svelte-nk63sn");
     			set_style(ul, "width", /*isNavigationOpen*/ ctx[0] ? "14rem" : "3.2rem");
-    			add_location(ul, file$1, 22, 2, 415);
+    			add_location(ul, file$1, 22, 2, 416);
     			attr_dev(div1, "class", "navigation-content svelte-nk63sn");
-    			add_location(div1, file$1, 52, 2, 1583);
+    			add_location(div1, file$1, 52, 2, 1584);
     			attr_dev(div2, "id", "container");
     			attr_dev(div2, "class", "svelte-nk63sn");
-    			add_location(div2, file$1, 21, 0, 392);
+    			add_location(div2, file$1, 21, 0, 393);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -22838,7 +22838,7 @@ for (const input of inputs) {
     				set_style(ul, "width", /*isNavigationOpen*/ ctx[0] ? "14rem" : "3.2rem");
     			}
 
-    			if (dirty & /*currentNavOptionId, navOptions, fInitialized, charmScanner, onActivate*/ 30) {
+    			if (dirty & /*currentNavOptionId, navOptions, isInitialized, charmScanner, onActivate*/ 30) {
     				each_value = navOptions;
     				validate_each_argument(each_value);
     				let i;
@@ -22906,7 +22906,7 @@ for (const input of inputs) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("Nav", slots, []);
     	let { isNavigationOpen } = $$props;
-    	let { fInitialized } = $$props;
+    	let { isInitialized } = $$props;
     	let { charmScanner } = $$props;
     	let currentNavOptionId = 4;
     	let onActivate = {};
@@ -22919,7 +22919,7 @@ for (const input of inputs) {
     		}
     	}
 
-    	const writable_props = ["isNavigationOpen", "fInitialized", "charmScanner"];
+    	const writable_props = ["isNavigationOpen", "isInitialized", "charmScanner"];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Nav> was created with unknown prop '${key}'`);
@@ -22927,14 +22927,14 @@ for (const input of inputs) {
 
     	$$self.$$set = $$props => {
     		if ("isNavigationOpen" in $$props) $$invalidate(0, isNavigationOpen = $$props.isNavigationOpen);
-    		if ("fInitialized" in $$props) $$invalidate(1, fInitialized = $$props.fInitialized);
+    		if ("isInitialized" in $$props) $$invalidate(1, isInitialized = $$props.isInitialized);
     		if ("charmScanner" in $$props) $$invalidate(2, charmScanner = $$props.charmScanner);
     	};
 
     	$$self.$capture_state = () => ({
     		navOptions,
     		isNavigationOpen,
-    		fInitialized,
+    		isInitialized,
     		charmScanner,
     		currentNavOptionId,
     		onActivate,
@@ -22943,7 +22943,7 @@ for (const input of inputs) {
 
     	$$self.$inject_state = $$props => {
     		if ("isNavigationOpen" in $$props) $$invalidate(0, isNavigationOpen = $$props.isNavigationOpen);
-    		if ("fInitialized" in $$props) $$invalidate(1, fInitialized = $$props.fInitialized);
+    		if ("isInitialized" in $$props) $$invalidate(1, isInitialized = $$props.isInitialized);
     		if ("charmScanner" in $$props) $$invalidate(2, charmScanner = $$props.charmScanner);
     		if ("currentNavOptionId" in $$props) $$invalidate(3, currentNavOptionId = $$props.currentNavOptionId);
     		if ("onActivate" in $$props) $$invalidate(4, onActivate = $$props.onActivate);
@@ -22955,7 +22955,7 @@ for (const input of inputs) {
 
     	return [
     		isNavigationOpen,
-    		fInitialized,
+    		isInitialized,
     		charmScanner,
     		currentNavOptionId,
     		onActivate,
@@ -22969,7 +22969,7 @@ for (const input of inputs) {
 
     		init(this, options, instance$1, create_fragment$1, safe_not_equal, {
     			isNavigationOpen: 0,
-    			fInitialized: 1,
+    			isInitialized: 1,
     			charmScanner: 2
     		});
 
@@ -22987,8 +22987,8 @@ for (const input of inputs) {
     			console.warn("<Nav> was created without expected prop 'isNavigationOpen'");
     		}
 
-    		if (/*fInitialized*/ ctx[1] === undefined && !("fInitialized" in props)) {
-    			console.warn("<Nav> was created without expected prop 'fInitialized'");
+    		if (/*isInitialized*/ ctx[1] === undefined && !("isInitialized" in props)) {
+    			console.warn("<Nav> was created without expected prop 'isInitialized'");
     		}
 
     		if (/*charmScanner*/ ctx[2] === undefined && !("charmScanner" in props)) {
@@ -23004,11 +23004,11 @@ for (const input of inputs) {
     		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get fInitialized() {
+    	get isInitialized() {
     		throw new Error("<Nav>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set fInitialized(value) {
+    	set isInitialized(value) {
     		throw new Error("<Nav>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
@@ -23163,7 +23163,7 @@ for (const input of inputs) {
     }
 
     const TITLE = "MHRise Charm Scanner";
-    const VERSION = "0.5.5";
+    const VERSION = "0.5.6";
 
     function instance($$self, $$props, $$invalidate) {
     	let $charmManager;
