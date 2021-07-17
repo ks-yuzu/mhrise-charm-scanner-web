@@ -1,22 +1,21 @@
 <script lang="ts">
-  // import {MDBContainer, MDBBtn, MDBModal, MDBModalBody, MDBModalHeader, MDBModalFooter} from "mdbsvelte"
   import MDBBtn         from 'mdbsvelte/src/MDBBtn.svelte'
   import MDBBtnGroup    from 'mdbsvelte/src/MDBBtnGroup.svelte'
-
-  // import {getContext} from 'svelte';
+  import ConfirmModal   from './ConfirmModal.svelte'
   import {charmManager} from './stores.js'
-  import ConfirmModal from './ConfirmModal.svelte'
+  import type {Charm} from './mhrise-charm'
+
 
   // TYPES
   const IMPORT_MODE = {
     APPEND:    'append',
     OVERWRITE: 'overwrite',
   } as const
-  type IMPORT_MODE = typeof IMPORT_MODE[keyof typeof IMPORT_MODE];
+  type IMPORT_MODE = typeof IMPORT_MODE[keyof typeof IMPORT_MODE]
 
   // VARIABLES
   let textareaValue: string = ''
-  let confirm
+  let confirm: (params: any) => Promise<any>
 
   // FUNCTIONS
   async function importCharms({mode}) {
@@ -30,31 +29,39 @@
       return
     }
 
-    // importMode = mode
-
     const result = await confirm({
-      message:         'kakuninn',
+      message:         mode === IMPORT_MODE.OVERWRITE ? '護石を上書きインポートします。\n既存の護石は削除され、元に戻すことはできません。よろしいですか？' : '護石を追加インポートします。',
       colorOkayButton: 'danger',
-      labelOKayButton: 'Import',
+      // labelOkayButton: 'Import',
 	    onOkay:          () => {},
       onCancel:        () => {},
     })
     console.log(result)
-    // importMode = mode
 
-    // if ( mode === IMPORT_MODE.OVERWRITE ) {
-    //   $charmManager.reset()
-    // }
+    if ( mode === IMPORT_MODE.OVERWRITE ) {
+      await $charmManager.reset()
+    }
 
-    console.log(textareaValue)
+    console.log($charmManager.charms)
 
-    // $charmManager.registerCharms(charms)
+    const charms: Charm[] = textareaValue.trim().split('\n').map(line => {
+      const [s1, sl1, s2, sl2, slot1, slot2, slot3, ...rest] = line.split(/,\s*/)
+
+      return {
+        skills: [s1, s2],
+        skillLevels: [sl1, sl2],
+        slots: [slot1, slot2, slot3],
+      } as Charm
+    })
+    console.log(charms)
+
+    $charmManager.registerCharms(charms)
   }
 
   async function exportCharms() {
     // console.log($charmManager.charmTableName)
 
-    textareaValue = $charmManager.charms.map(row => {
+    textareaValue = $charmManager.charms.map((row: FlatCharm) => {
       const {skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3} = row
       return [skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3].join(',')
     }).join('\n')
@@ -71,13 +78,13 @@
 
     <MDBBtnGroup class="shadow-0">
       {#each [
-        {label: 'エクスポート',     onClick: exportCharms},
-        {label: '追加インポート',   onClick: () => importCharms({mode: IMPORT_MODE.APPEND})},
-        {label: '上書きインポート', onClick: () => importCharms({mode: IMPORT_MODE.OVERWRITE})} ] as p}
+        {label: 'エクスポート',     isDisabled: () => $charmManager == null, onClick: exportCharms},
+        {label: '追加インポート',   isDisabled: () => $charmManager == null || textareaValue.trim().length === 0, onClick: () => importCharms({mode: IMPORT_MODE.APPEND})},
+        {label: '上書きインポート', isDisabled: () => $charmManager == null || textareaValue.trim().length === 0, onClick: () => importCharms({mode: IMPORT_MODE.OVERWRITE})} ] as p}
       <MDBBtn color="primary"
               class="shadow-0 mx-1 px-0"
               style="width: 8rem;"
-              disabled={$charmManager == null}
+              disabled={p.isDisabled()}
               on:click={p.onClick}>
         {p.label}
       </MDBBtn>
