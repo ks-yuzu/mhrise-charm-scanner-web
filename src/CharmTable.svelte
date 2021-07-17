@@ -123,7 +123,7 @@
 
 
   // handlers
-  function onSort(event) {
+  function onSort() {
     // close all accordion
     isScreenshotShown = []
     isSubstitutableCharmsShown = []
@@ -168,7 +168,7 @@
                bind:sliceEnd
                on:clickCol={onSort}
                >
-    <tr slot="row" let:row let:n on:click={(e) => onClickRow({row})}>
+    <tr slot="row" let:row let:n on:click={() => onClickRow({row})}>
       {#each columns as col}
         <td on:click={(e) => { if (col.onClick) {col.onClick({e, row, col, index: n})} }}
             class={[col.class].join(' ')}
@@ -185,7 +185,7 @@
         </td>
       {/each}
     </tr>
-    <div slot="after-row" let:row let:n id="charm-table-row-{row.rowid}" style="width: 100%">
+    <div slot="after-row" let:row id="charm-table-row-{row.rowid}" style="width: 100%">
       {#if isSubstitutableCharmsShown[row.rowid]}
         {#if row.substitutableCharms == null}
           <div style="width: 100%; border-bottom: solid 1px #ddd">searching...</div>

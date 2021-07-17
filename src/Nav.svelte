@@ -5,14 +5,12 @@
   export let fInitialized
   export let charmScanner
 
-  let currentNavOptionId = 3
-  let currentNavOption = navOptions[currentNavOptionId]
+  let currentNavOptionId = 4
 
   let onActivate = {}
 
   function switchComponent(e) {
     currentNavOptionId = e.srcElement.closest('button').id
-    currentNavOption = navOptions[currentNavOptionId]
 
     if ( onActivate[currentNavOptionId] ) {
       onActivate[currentNavOptionId]()
@@ -55,7 +53,7 @@
   <div class="navigation-content">
     {#each navOptions as option, i}
       <div class="h-100 {currentNavOptionId == i ? 'd-block' : 'd-none'}">
-        <svelte:component this={navOptions[i].component}
+        <svelte:component this={option.component}
                           {...{fInitialized, charmScanner}}
                           onActivate={onActivate[i]}
                           />

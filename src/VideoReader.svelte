@@ -43,7 +43,7 @@
     // console.log( {currentTime: domVideo.currentTime, endTime} )
 
     if ( endTime - domVideo.currentTime < 1 / FRAME_RATE ) {
-      const nScanedCharms = charmScanner.countCharms()
+      // const nScanedCharms = charmScanner.countCharms()
       // console.log(nScanedCharms)
       // insertScript = charmScanner.generateInsertScript()
 
@@ -56,7 +56,7 @@
     }
 
     capture.read(frame)
-    const result = charmScanner.scan(frame, videoName) // TODO: コールバックにして汎用クラスにする
+    charmScanner.scan(frame, videoName) // TODO: コールバックにして汎用クラスにする
 
     seekFrames(1, FRAME_RATE)
     progress = ((domVideo.currentTime - beginTime) / (endTime - beginTime))

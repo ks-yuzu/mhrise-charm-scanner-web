@@ -1,27 +1,34 @@
-<script>
+<script lang="ts">
+  interface ConfirmParams {
+    message?:         string
+    colorOkayButton?: string
+    labelOkayButton?: string
+    onOkay?:          (label: string) => void
+    onCancel?:        () => void
+  }
+
   import MDBBtn         from 'mdbsvelte/src/MDBBtn.svelte'
-  import MDBBtnGroup    from 'mdbsvelte/src/MDBBtnGroup.svelte'
   import MDBModal       from 'mdbsvelte/src/MDBModal.svelte'
   import MDBModalBody   from 'mdbsvelte/src/MDBModalBody.svelte'
   import MDBModalHeader from 'mdbsvelte/src/MDBModalHeader.svelte'
   import MDBModalFooter from 'mdbsvelte/src/MDBModalFooter.svelte'
 
-  export let message
-	export let onOkay   = () => {}
-  export let onCancel = () => {}
-  export let colorOkayButton = 'primary'
-  export let labelOkayButton = 'OK'
+  let message
+  let onOkay
+  let onCancel
+  let colorOkayButton = 'primary'
+  let labelOkayButton = 'OK'
 
   let isOpen = false;
 
-  export const confirm = (params) => {
+  export const confirm = (params: ConfirmParams) => {
     return new Promise((resolve, reject) => {
-      message         = params.message || ''
+      message         = params.message         || ''
       colorOkayButton = params.colorOkayButton || 'primary'
       labelOkayButton = params.labelOkayButton || 'OK'
 
-	    onOkay   = () => {
-        (params.onOkay   || (() => {}))()
+      onOkay   = (label: string) => {
+        (params.onOkay   || ((label: string) => {}))(label)
         resolve(true)
       }
       onCancel = () => {
@@ -39,13 +46,13 @@
 
   function _onCancel() {
     isOpen = false
-		onCancel()
-	}
+    onCancel()
+  }
 
-	function _onOkay(param) {
+  function _onOkay(param) {
     isOpen = false
-		onOkay(param)
-	}
+    onOkay(param)
+  }
 </script>
 
 <MDBModal isOpen={isOpen} toggle={toggle}>
