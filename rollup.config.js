@@ -7,10 +7,6 @@ import sveltePreprocess from 'svelte-preprocess';
 import typescript from '@rollup/plugin-typescript';
 import css from 'rollup-plugin-css-only';
 
-// for typescript
-import autoPreprocess from 'svelte-preprocess';
-import typescript from '@rollup/plugin-typescript';
-
 // const path = require('path');
 // import alias from '@rollup/plugin-alias'
 
@@ -48,14 +44,12 @@ export default {
 	},
 	plugins: [
 		svelte({
-      preprocess: autoPreprocess(),
 			preprocess: sveltePreprocess({ sourceMap: !production }),
 			compilerOptions: {
 				// enable run-time checks when not in production
 				dev: !production
 			}
 		}),
-    typescript({ sourceMap: !production }),
     // alias({
     //   entries: [
     //     {find: 'svelte', replacement: path.resolve('node_modules', 'svelte')}
