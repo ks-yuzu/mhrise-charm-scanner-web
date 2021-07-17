@@ -6,20 +6,21 @@
   import {charmManager} from './stores.js'
 
   const TITLE   = 'MHRise Charm Scanner'
-  const VERSION = '0.5.4'
+  const VERSION = '0.5.5'
 
-  let isDemoMode       = false
+  // let isDemoMode       = false
   let isNavigationOpen = true
-  let fInitialized     = false
+  let isInitialized     = false
   let charmScanner
 
   window.addEventListener('load', async () => {
     charmScanner = new MHRiseCharmScanner()
     $charmManager = new MHRiseCharmManager()
     await charmScanner.init()
-    fInitialized = true
+    isInitialized = true
   })
 
+/*
   function onChangeDemoMode() {
     if ( isDemoMode ) {
       $charmManager = new MHRiseCharmManager({isDemoMode: true})
@@ -30,6 +31,7 @@
       console.log(charmScanner.charmTableName)
     }
   }
+*/
 </script>
 
 <main>
@@ -46,13 +48,14 @@
     <!-- </div> -->
   </header>
   <div id="nav-wrapper">
-    <Nav {...{isNavigationOpen, fInitialized, charmScanner}} />
+    <Nav {...{isNavigationOpen, isInitialized, charmScanner}} />
   </div>
   <div id="version">v{VERSION}</div>
 </main>
 
 
 <style>
+/*
   .material-switch > input[type="checkbox"] {
       display: none;
   }
@@ -99,7 +102,7 @@
       background: orange;
       left: 20px;
   }
-
+*/
 	main {
     width:   100%;
     height:  100%;
@@ -113,6 +116,8 @@
   header {
     display: flex;
     background: #222;
+
+    height: 3rem;
   }
 
 	header h1 {

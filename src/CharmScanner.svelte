@@ -4,9 +4,9 @@
   import {charmManager} from './stores.js'
 
 
-  const VIDEO_WIDTH      = 1280 // switch のキャプチャ解像度
-  const VIDEO_HEIGHT     = 720
-  const VIDEO_FRAME_RATE = 29.97
+  // const VIDEO_WIDTH      = 1280 // switch のキャプチャ解像度
+  // const VIDEO_HEIGHT     = 720
+  // const VIDEO_FRAME_RATE = 29.97
   const N_VIDEO_SPLITS = (navigator.hardwareConcurrency || 8) / 2
 
   export let charmScanner

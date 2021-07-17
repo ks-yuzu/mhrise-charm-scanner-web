@@ -1,24 +1,74 @@
-<script>
+<script lang="ts">
+  import MDBBtn         from 'mdbsvelte/src/MDBBtn.svelte'
+  import MDBBtnGroup    from 'mdbsvelte/src/MDBBtnGroup.svelte'
+  import ConfirmModal   from './ConfirmModal.svelte'
   import {charmManager} from './stores.js'
+  import type {Charm} from './mhrise-charm'
 
-  let textareaValue = ''
 
-  async function importCharms() {
-    if ( textareaValue.trim() ) {
+  // TYPES
+  const IMPORT_MODE = {
+    APPEND:    'append',
+    OVERWRITE: 'overwrite',
+  } as const
+  type IMPORT_MODE = typeof IMPORT_MODE[keyof typeof IMPORT_MODE]
+
+  // VARIABLES
+  let textareaValue: string = ''
+  let confirm: (params: any) => Promise<any>
+
+  // FUNCTIONS
+  async function importCharms({mode}) {
+    if ( textareaValue.trim().length <= 0 ) {
       console.log('blank!!')
+      return
     }
+
+    if ( mode !== IMPORT_MODE.APPEND && mode !== IMPORT_MODE.OVERWRITE ) {
+      console.log('internal error')
+      return
+    }
+
+    const result = await confirm({
+      message:         mode === IMPORT_MODE.OVERWRITE ? '護石を上書きインポートします。\n既存の護石は削除され、元に戻すことはできません。よろしいですか？' : '護石を追加インポートします。',
+      colorOkayButton: 'danger',
+      // labelOkayButton: 'Import',
+	    onOkay:          () => {},
+      onCancel:        () => {},
+    })
+    console.log(result)
+
+    if ( mode === IMPORT_MODE.OVERWRITE ) {
+      await $charmManager.reset()
+    }
+
+    console.log($charmManager.charms)
+
+    const charms: Charm[] = textareaValue.trim().split('\n').map(line => {
+      const [s1, sl1, s2, sl2, slot1, slot2, slot3, ...rest] = line.split(/,\s*/)
+
+      return {
+        skills: [s1, s2],
+        skillLevels: [sl1, sl2],
+        slots: [slot1, slot2, slot3],
+      } as Charm
+    })
+    console.log(charms)
+
+    $charmManager.registerCharms(charms)
   }
 
   async function exportCharms() {
     // console.log($charmManager.charmTableName)
 
-    textareaValue = $charmManager.charms.map(row => {
+    textareaValue = $charmManager.charms.map((row: FlatCharm) => {
       const {skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3} = row
       return [skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3].join(',')
     }).join('\n')
 
     // $charmManager.exportIdx()
   }
+
 </script>
 
 
@@ -26,10 +76,41 @@
   <div id="charm-ixporter">
     <textarea id="input" bind:value={textareaValue}></textarea>
 
-    <div>
-      <!-- <button class="btn btn-primary shadow-0 {(String(textareaValue).trim().length && charmManager) ? 'disabled' : 'disabled'}" on:click={importCharms}>import</button> -->
-      <button class="btn btn-primary shadow-0 {$charmManager ? '' : 'disabled'}" on:click={exportCharms}>export</button>
-    </div>
+    <MDBBtnGroup class="shadow-0">
+      {#each [
+        {label: 'エクスポート',     isDisabled: () => $charmManager == null, onClick: exportCharms},
+        {label: '追加インポート',   isDisabled: () => $charmManager == null || textareaValue.trim().length === 0, onClick: () => importCharms({mode: IMPORT_MODE.APPEND})},
+        {label: '上書きインポート', isDisabled: () => $charmManager == null || textareaValue.trim().length === 0, onClick: () => importCharms({mode: IMPORT_MODE.OVERWRITE})} ] as p}
+      <MDBBtn color="primary"
+              class="shadow-0 mx-1 px-0"
+              style="width: 8rem;"
+              disabled={p.isDisabled()}
+              on:click={p.onClick}>
+        {p.label}
+      </MDBBtn>
+      {/each}
+    </MDBBtnGroup>
+
+    <!-- <MDBModal isOpen={isConfirmModalOpen} toggle={toggleConfirmModal}> -->
+    <!--   <MDBModalHeader toggle={toggleConfirmModal}>確認</MDBModalHeader> -->
+    <!--   <MDBModalBody> -->
+    <!--     {#if importMode === IMPORT_MODE.OVERWRITE} -->
+    <!--       上書きインポートを実行すると既存の護石は削除されます。<br> -->
+    <!--       <span class="font-weight-bold"> 一度上書きすると元には戻せません。</span><br> -->
+    <!--     {:else if importMode === IMPORT_MODE.APPEND} -->
+    <!--       追加インポートでは既存の護石は保持されます。<br> -->
+    <!--     {/if} -->
+    <!--     <br> -->
+    <!--     インポートを実行しますか？<br> -->
+    <!--   </MDBModalBody> -->
+    <!--   <MDBModalFooter> -->
+    <!--     <MDBBtn color="danger" on:click={toggleConfirmModal}>Import</MDBBtn> -->
+    <!--     <MDBBtn color="primary" outline on:click={toggleConfirmModal}>Cancel</MDBBtn> -->
+    <!--   </MDBModalFooter> -->
+    <!-- </MDBModal> -->
+
+    <ConfirmModal bind:confirm>
+    </ConfirmModal>
   </div>
 </div>
 

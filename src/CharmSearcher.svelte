@@ -17,7 +17,6 @@
 
   // table pagination
   let currentPage         = 0,
-      previousCurrentPage = 0,
       itemsPerPage        = 10
   $: nPages = Math.ceil((searchResults||[]).length / itemsPerPage)
   $: {
@@ -225,10 +224,6 @@
 
 
 <style>
-  h2 {
-    font-size: x-large;
-  }
-
   .tab-content {
     margin:     0;
     padding:    0;

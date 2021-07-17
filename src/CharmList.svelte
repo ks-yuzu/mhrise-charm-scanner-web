@@ -1,14 +1,7 @@
 <script>
   import CharmTable from './CharmTable.svelte'
-  import MHRiseCharmManager from './mhrise-charm-manager.js'
-  import {skillToSlotLevel} from './mhrise-charm-decorations.js'
   import {charmManager} from './stores.js'
 
-  // export let charmManager
-
-
-  // fields
-  // $: charms = $charmManager?.charms
   let charms
 
   setInterval(() => { // WORKAROUND: charms does not follow charManager.charms...

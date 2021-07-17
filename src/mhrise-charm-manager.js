@@ -58,8 +58,23 @@ export default class MHRiseCharmManager {
 
   async registerCharms(charms) {
     const values = charms
-      .map(c => `("${c.skills[0]}", ${c.skillLevels[0]}, "${c.skills[1]}", ${c.skillLevels[1]}, ${c.slots.replace(/-/g, ', ')}, "${c.imageName}")`)
-      .join(',\n')
+          .map(c => {
+            const slots = Array.isArray(c.slots)      ? c.slots.join(', ')
+                        : typeof c.slots === 'string' ? c.slots.replace(/-/g, ', ')
+                        :                               c.slots
+
+            const image = c.imageName ? `"${c.imageName}"` : 'NULL'
+
+            return '(' + [
+              `"${c.skills[0]}"`,
+              c.skillLevels[0],
+              `"${c.skills[1]}"`,
+              c.skillLevels[1],
+              slots,
+              image,
+            ].join(', ') + ')'
+          })
+          .join(',\n')
 
     console.log(values)
     await this.sql(`insert or ignore into ${this.charmTableName} values ${values}`)
