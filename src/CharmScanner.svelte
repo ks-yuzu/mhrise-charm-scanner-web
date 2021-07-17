@@ -10,7 +10,7 @@
   const N_VIDEO_SPLITS = (navigator.hardwareConcurrency || 8) / 2
 
   export let charmScanner
-  export let fInitialized
+  export let isInitialized
 
   let domInput    // input 要素
   let files = []  // 選択されたローカルファイル
@@ -119,7 +119,7 @@
     </div>
 
     <div id="upload">
-      {#if fInitialized}
+      {#if isInitialized}
         <input style="display:none"
                type="file"
                accept=".mp4"
