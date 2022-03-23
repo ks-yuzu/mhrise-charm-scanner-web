@@ -4,6 +4,7 @@
   import ConfirmModal   from './ConfirmModal.svelte'
   import {charmManager} from './stores.js'
   import type {Charm} from './mhrise-charm'
+  import {zenkaku2hankaku, hankaku2zenkaku} from './string-util'
 
 
   // TYPES
@@ -46,11 +47,12 @@
 
     const charms: Charm[] = textareaValue.trim().split('\n').map(line => {
       const [s1, sl1, s2, sl2, slot1, slot2, slot3, ...rest] = line.split(/,\s*/)
+      console.log({s1, sl1, s2, sl2, slot1, slot2, slot3})
 
       return {
-        skills: [s1, s2],
-        skillLevels: [sl1, sl2],
-        slots: [slot1, slot2, slot3],
+        skills:      [s1, s2].map(i => i === '' ? '無し' : zenkaku2hankaku(i)),
+        skillLevels: [sl1, sl2].map(i => parseInt(i)),
+        slots:       [slot1, slot2, slot3].map(i => parseInt(i)),
       } as Charm
     })
     console.log(charms)
@@ -63,7 +65,11 @@
 
     textareaValue = $charmManager.charms.map((row: FlatCharm) => {
       const {skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3} = row
-      return [skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3].join(',')
+      return [
+        hankaku2zenkaku(skill1 === '無し' ? '' : skill1), skill1Level,
+        hankaku2zenkaku(skill2 === '無し' ? '' : skill2), skill2Level,
+        slot1, slot2, slot3,
+      ].join(',')
     }).join('\n')
 
     // $charmManager.exportIdx()
