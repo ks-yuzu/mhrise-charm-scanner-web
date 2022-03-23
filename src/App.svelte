@@ -6,7 +6,7 @@
   import {charmManager} from './stores.js'
 
   const TITLE   = 'MHRise Charm Scanner'
-  const VERSION = '0.5.6'
+  const VERSION = '0.5.7'
 
   // let isDemoMode       = false
   let isNavigationOpen = true
