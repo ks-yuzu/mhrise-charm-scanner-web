@@ -40,14 +40,14 @@ export function countImageDiffAtPoint(image, templateImage, point, maskBinaryThr
 }
 
 
-export function getMostMatchedImage(image, templates, point, maskBinaryThreshold = 63, diffBinaryThreshold = 63, debug = ()=>{}) {
+export function getMostMatchedImage(image, templates, point, maskBinaryThreshold = 63, diffBinaryThreshold = 63) {
   let minDiffCount = Number.MAX_SAFE_INTEGER
   let candidate = null
 
   // console.log(templates)
   for (const [name, template] of Object.entries(templates)) {
     const diff = countImageDiffAtPoint(image, template, point, maskBinaryThreshold, diffBinaryThreshold)
-    debug(diff, name)
+    // console.log({diff, name})
     const diffCount = cv.countNonZero(diff)
 
     if ( minDiffCount > diffCount ) {
@@ -60,7 +60,6 @@ export function getMostMatchedImage(image, templates, point, maskBinaryThreshold
 
   return candidate;
 }
-
 
 
 export function promiseAllRecursive(value) {
@@ -79,10 +78,10 @@ export function promiseAllRecursive(value) {
   return Promise.resolve(value)
 }
 
-function resolveObject(object) {
-  const promises = Object.keys(object).map(key => {
-    return promiseAllRecursive(object[key]).then(value => ({ key, value }))
-  });
+function resolveObject(obj) {
+  const promises = Object
+    .keys(obj)
+    .map(key => promiseAllRecursive(obj[key]).then(value => ({ key, value }))) // as Promise<{key: any, value: any}>[]
 
   return Promise.all(promises).then(results => {
     return results.reduce((obj, pair) => {

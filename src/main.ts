@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/browser";
-import { BrowserTracing } from "@sentry/tracing";
+import {BrowserTracing} from "@sentry/tracing";
 
 Sentry.init({
   dsn: "https://ae96a41629e040f59f30ad89eb99d4f2@o1178530.ingest.sentry.io/6290379",
