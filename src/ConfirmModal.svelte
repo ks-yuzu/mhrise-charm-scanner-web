@@ -3,8 +3,8 @@
     message?:         string
     colorOkayButton?: string
     labelOkayButton?: string
-    onOkay?:          (label: string) => void
-    onCancel?:        () => void
+    onOkay?:          (event: CustomEvent) => void
+    onCancel?:        (event: CustomEvent) => void
   }
 
   import MDBBtn         from 'mdbsvelte/src/MDBBtn.svelte'
@@ -13,11 +13,11 @@
   import MDBModalHeader from 'mdbsvelte/src/MDBModalHeader.svelte'
   import MDBModalFooter from 'mdbsvelte/src/MDBModalFooter.svelte'
 
-  let message
-  let onOkay
-  let onCancel
-  let colorOkayButton = 'primary'
-  let labelOkayButton = 'OK'
+  let message:         string
+  let onOkay:          (event: CustomEvent) => void
+  let onCancel:        (event: CustomEvent) => void
+  let colorOkayButton: string
+  let labelOkayButton: string
 
   let isOpen = false;
 
@@ -27,12 +27,12 @@
       colorOkayButton = params.colorOkayButton || 'primary'
       labelOkayButton = params.labelOkayButton || 'OK'
 
-      onOkay   = (label: string) => {
-        (params.onOkay   || ((label: string) => {}))(label)
+      onOkay   = (event: CustomEvent) => {
+        (params.onOkay   || (() => {}))(event)
         resolve(true)
       }
-      onCancel = () => {
-        (params.onCancel || (() => {}))()
+      onCancel = (event: CustomEvent) => {
+        (params.onCancel || (() => {}))(event)
         reject('cancel')
       }
 
@@ -44,14 +44,14 @@
     isOpen = !isOpen
   }
 
-  function _onCancel() {
+  function _onCancel(event: CustomEvent) {
     isOpen = false
-    onCancel()
+    onCancel(event as CustomEvent)
   }
 
-  function _onOkay(param) {
+  function _onOkay(event: CustomEvent) {
     isOpen = false
-    onOkay(param)
+    onOkay(event as CustomEvent)
   }
 </script>
 
