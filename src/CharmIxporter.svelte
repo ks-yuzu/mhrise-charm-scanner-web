@@ -3,8 +3,9 @@
   import MDBBtnGroup    from 'mdbsvelte/src/MDBBtnGroup.svelte'
   import ConfirmModal   from './ConfirmModal.svelte'
   import {charmManager} from './stores.js'
-  import type {Charm} from './mhrise-charm'
+  import type {Charm, FlatCharm}            from './mhrise-charm'
   import {zenkaku2hankaku, hankaku2zenkaku} from './string-util'
+
 
 
   // TYPES
@@ -31,11 +32,10 @@
     }
 
     const result = await confirm({
-      message:         mode === IMPORT_MODE.OVERWRITE ? '護石を上書きインポートします。\n既存の護石は削除され、元に戻すことはできません。よろしいですか？' : '護石を追加インポートします。',
-      colorOkayButton: 'danger',
-      // labelOkayButton: 'Import',
-	    onOkay:          () => {},
-      onCancel:        () => {},
+      message:         mode === IMPORT_MODE.OVERWRITE
+                                ? '護石を上書きインポートします。\n既存の護石は削除され、元に戻すことはできません。よろしいですか？'
+                                : '護石を追加インポートします。',
+      colorOkayButton: mode === IMPORT_MODE.OVERWRITE ? 'danger' : 'primary',
     })
     console.log(result)
 
@@ -43,11 +43,10 @@
       await $charmManager.reset()
     }
 
-    console.log($charmManager.charms)
+    // console.log($charmManager.charms)
 
     const charms: Charm[] = textareaValue.trim().split('\n').map(line => {
-      const [s1, sl1, s2, sl2, slot1, slot2, slot3, ...rest] = line.split(/,\s*/)
-      console.log({s1, sl1, s2, sl2, slot1, slot2, slot3})
+      const [s1, sl1, s2, sl2, slot1, slot2, slot3] = line.split(/,\s*/)
 
       return {
         skills:      [s1, s2].map(i => i === '' ? '無し' : zenkaku2hankaku(i)),
