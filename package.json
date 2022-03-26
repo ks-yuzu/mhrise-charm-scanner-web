@@ -27,10 +27,12 @@
     "svelte": "^3.0.0",
     "svelte-check": "^1.0.0",
     "svelte-preprocess": "^4.0.0",
-    "typescript": "^4.0.0",
-    "tslib": "^2.0.0"
+    "tslib": "^2.0.0",
+    "typescript": "^4.0.0"
   },
   "dependencies": {
+    "@sentry/browser": "^6.19.2",
+    "@sentry/tracing": "^6.19.2",
     "buffer": "^6.0.3",
     "dexie": "^3.0.3",
     "dexie-export-import": "^1.0.0",
