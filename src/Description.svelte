@@ -171,6 +171,7 @@ import { Lightbox } from 'svelte-lightbox'
     max-width: 100%;
   }
 
+  /*
   .gray {
     color: gray;
   }
@@ -179,6 +180,7 @@ import { Lightbox } from 'svelte-lightbox'
     font-size: 0.7rem;
     line-height: 0.7rem;
   }
+  */
 
   #description h3 {
     font-size: 1rem;
