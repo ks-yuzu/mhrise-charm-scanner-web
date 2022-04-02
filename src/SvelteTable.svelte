@@ -1,3 +1,5 @@
+// forked from https://github.com/dasDaniel/svelte-table/blob/0982cb390f8e3529922145817e7bd3ba42dba2c1/src/SvelteTable.svelte
+
 <script>
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
@@ -25,7 +27,7 @@
     return c.filterOptions !== undefined || c.searchValue !== undefined
   });
   let filterValues = {};
-  let searchValues = {};
+//let searchValues = {};
   let columnByKey = {};
   columns.forEach(col => {
     columnByKey[col.key] = col;
