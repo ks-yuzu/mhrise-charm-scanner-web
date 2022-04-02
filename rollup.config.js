@@ -89,6 +89,9 @@ export default {
 		// json(),
 	],
 	watch: {
+		chokidar: {
+			paths: 'src/**',
+		},
 		clearScreen: true
 	}
 };
