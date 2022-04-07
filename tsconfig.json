@@ -1,6 +1,15 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
 
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "lib": [
+      "es2017",
+      "esnext.bigint",
+      "dom"
+    ]
+  },
+
   "include": ["src/**/*"],
   "exclude": ["node_modules/*", "__sapper__/*", "public/*"]
 }
