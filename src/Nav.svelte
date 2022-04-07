@@ -33,7 +33,9 @@
               <path d={iconData}/>
             {/each}
           </svg>
-          <span style="display: {isNavigationOpen ? 'inline' : 'none'}">{option.tabTitle}</span>
+          <span style="display: {isNavigationOpen ? 'inline' : 'none'}">
+            {@html option.tabTitle.replace('\n', '<br>')}
+          </span>
         </button>
       </li>
     {/each}
@@ -107,7 +109,10 @@
 
     text-align: left;
 
-    line-height: 3rem;
+    line-height: 1.1rem;
+
+    display: flex;
+    align-items: center;
   }
 
   /* ul.navigation li.navigation-item > button > svg { */
