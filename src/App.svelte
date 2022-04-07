@@ -1,6 +1,6 @@
 <script lang:ts>
   import MHRiseCharmManager from './mhrise-charm-manager.js'
-  import MHRiseCharmScanner from './mhrise-charm-scanner.js'
+  import MHRiseCharmScanner from './mhrise-charm-scanner.ts'
   import Hamburger from './Hamburger.svelte'
   import Nav from './Nav.svelte'
   import {charmManager} from './stores.js'

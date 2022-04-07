@@ -1,5 +1,8 @@
+import cv, {Mat, Point} from 'opencv-ts'
 import Dexie from "dexie";
-import {fetchImage, countImageDiffAtPoint, getMostMatchedImage, promiseAllRecursive} from './util.js'
+import {fetchImage, getMostMatchedImage, promiseAllRecursive} from './util.js'
+import {dumpImage, dumpImageNewline, setNextCanvas, setFirstCanvas} from './util.js'
+
 
 export default class MHRiseCharmScanner {
   MAX_PAGE = 34
@@ -20,7 +23,9 @@ export default class MHRiseCharmScanner {
   indexeddb = null
   nCharms = 0
   charms = {}
-  templates = null
+  templates: null | {[key: string]: {[key: string]: Mat}}
+
+  adjustOffset = {x: 0, y: 0}
 
   // page = -1
   // col = -1
@@ -28,7 +33,9 @@ export default class MHRiseCharmScanner {
 
   async init() {
     this.templates = {
-      frame: fetchImage('img/templates/frame.png'),
+      others: {
+        charmFrame: fetchImage('img/templates/frame.png'),
+      },
       rare: {
         7:                    fetchImage('img/templates/rare/7.jpg'),
         6:                    fetchImage('img/templates/rare/6.jpg'),
@@ -177,7 +184,7 @@ export default class MHRiseCharmScanner {
     this.indexeddb.version(1).stores({images: 'name'})
   }
 
-  reset() {
+  private reset() {
     this.nCharms = 0
     this.charms = {}
     for (let p = 1; p <= this.MAX_PAGE; p++) {
@@ -188,31 +195,53 @@ export default class MHRiseCharmScanner {
     }
   }
 
-  isScaned(page, row, col) {
+  private _isScaned(page: number, row: number, col: number) {
     return this.charms[page][row][col] != null
   }
 
-  store(charmData, metadata) {
+  private store(charmData, metadata) {
     const {page, row, col} = charmData
-    const {screenshot, movieName} = metadata
+    const {screenshot, imageName} = metadata
 
-    const name = `${movieName}_${page}-${row}-${col}`
+    // const name = `${movieName}_${page}-${row}-${col}`
     // console.log({movieName, row, col})
 
     this.indexeddb.images.put({
-      name,
+      name: imageName,
       rows: screenshot.rows,
       cols: screenshot.cols,
       type: screenshot.type(),
       data: screenshot.data.slice(0),
     })
-    this.charms[page][row][col] = {...charmData, imageName: name}
+    this.charms[page][row][col] = {...charmData, imageName}
     this.nCharms++
   }
 
-  scan(screenshot, movieName) {
+  // 事前に Point オブジェクトの調整をする (無駄にヒープを使って GC 誘発を避けたい)
+  public adjustPosition(offset: {x: number, y: number} = {x: 0, y: 0}) {
+    this.POINT_RARITY             .x += (offset.x - this.adjustOffset.x)
+    this.POINT_RARITY             .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SLOTS              .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SLOTS              .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SKILL1             .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SKILL1             .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SKILL2             .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SKILL2             .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SKILL_LEVEL1       .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SKILL_LEVEL1       .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SKILL_LEVEL2       .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SKILL_LEVEL2       .y += (offset.y - this.adjustOffset.y)
+    this.POINT_PAGE               .x += (offset.x - this.adjustOffset.x)
+    this.POINT_PAGE               .y += (offset.y - this.adjustOffset.y)
+    this.POINT_CHARM_AREA_LEFT_TOP.x += (offset.x - this.adjustOffset.x)
+    this.POINT_CHARM_AREA_LEFT_TOP.y += (offset.y - this.adjustOffset.y)
+
+    this.adjustOffset = offset
+  }
+
+  public scan(screenshot: Mat, movieName: string) {
     const page          = this._getCurrentPage(screenshot)
-    const [pos, match]  = this._getCurrentCharmPos(screenshot)
+    const {pos, match}  = this._getCurrentCharmPos(screenshot)
 
     if ( match < 0.35 ) {
       // 放置すると blink するので一致度が低い時はスキップ
@@ -220,11 +249,10 @@ export default class MHRiseCharmScanner {
       return null
     }
 
-    const [col, row]    = pos
-    // this.page = page; this.col = col; this.row = row
-    if (this.isScaned(page, row, col)) {
+    const [col, row] = pos
+    if (this._isScaned(page, row, col)) { // TODO: 直前と同じならスキップにする？
       // console.log(`this charm is already scanned. skip: p${page} (${row}, ${col})`);
-      return null
+      // return null
     }
 
     const rarity        = this._getRarity(screenshot)
@@ -234,50 +262,52 @@ export default class MHRiseCharmScanner {
 
     // console.log(`scaned ${row} ${col}`)
 
-    // console.log({col, row, match, page, rarity, slots, skills, skillLevels})
-    this.store({page, row, col, rarity, slots, skills, skillLevels}, {screenshot, movieName})
+    // console.log(JSON.stringify({col, row, match, page, rarity, slots, skills, skillLevels}, null, 2))
+    const imageName = `${movieName}_${page}-${row}-${col}`
+    this.store({page, row, col, rarity, slots, skills, skillLevels}, {screenshot, imageName}) // TODO: IF 見直し
+    return {page, row, col, rarity, slots: slots.split('-'), skills, skillLevels, imageName}
   }
 
-  countCharms() {
+  public countCharms() {
     return this.nCharms
   }
 
-  generateInsertScript() {
-    const buf = []
+//   private generateInsertScript() {
+//     const buf = []
 
-    for (let p = 1; p <= this.MAX_PAGE; p++) {
-      for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
-        for (let c = 1; c <= this.COLUMNS_PER_PAGE; c++) {
-          const charm = this.charms[p][r][c]
-          if ( charm == null ) { continue }
+//     for (let p = 1; p <= this.MAX_PAGE; p++) {
+//       for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
+//         for (let c = 1; c <= this.COLUMNS_PER_PAGE; c++) {
+//           const charm = this.charms[p][r][c]
+//           if ( charm == null ) { continue }
 
-          // console.log(`${charm.slots} ${charm.skills[0]} ${charm.skillLevels[0]} ${charm.skills[1]} ${charm.skillLevels[1]}`)
-          buf.push({
-            "第一スキル":         charm.skills[0],
-            "第一スキルポイント": charm.skillLevels[0],
-            "第二スキル":         charm.skills[1],
-            "第二スキルポイント": charm.skillLevels[1],
-            "スロット":           charm.slots,
-          })
-        }
-      }
-    }
+//           // console.log(`${charm.slots} ${charm.skills[0]} ${charm.skillLevels[0]} ${charm.skills[1]} ${charm.skillLevels[1]}`)
+//           buf.push({
+//             "第一スキル":         charm.skills[0],
+//             "第一スキルポイント": charm.skillLevels[0],
+//             "第二スキル":         charm.skills[1],
+//             "第二スキルポイント": charm.skillLevels[1],
+//             "スロット":           charm.slots,
+//           })
+//         }
+//       }
+//     }
 
-    return `const inputs = ${JSON.stringify(buf)}
+//     return `const inputs = ${JSON.stringify(buf)}
 
-eval( await (await fetch('https://code.jquery.com/jquery-3.6.0.slim.min.js')).text() )
+// eval( await (await fetch('https://code.jquery.com/jquery-3.6.0.slim.min.js')).text() )
 
-for (const input of inputs) {
-  Object.entries(input).forEach(([key, value]) => {
-    \$(\`select[aria-label="\${key}"]\`).val(value)
-    \$(\`select[aria-label="\${key}"]\`)[0].dispatchEvent(new Event('change', { bubbles: true }))
-  })
+// for (const input of inputs) {
+//   Object.entries(input).forEach(([key, value]) => {
+//     \$(\`select[aria-label="\${key}"]\`).val(value)
+//     \$(\`select[aria-label="\${key}"]\`)[0].dispatchEvent(new Event('change', { bubbles: true }))
+//   })
 
-  \$('button:contains("追加")').click()
-}`
-  }
+//   \$('button:contains("追加")').click()
+// }`
+//   }
 
-  exportAsText() {
+  public exportAsText() {
     const buf = []
 
     for (let p = 1; p <= this.MAX_PAGE; p++) {
@@ -294,7 +324,7 @@ for (const input of inputs) {
     return buf.join('\n')
   }
 
-  getCharms() {
+  public getCharms() {
     const buf = []
 
     for (let p = 1; p <= this.MAX_PAGE; p++) {
@@ -311,43 +341,75 @@ for (const input of inputs) {
     return buf
   }
 
-  _getRarity(screenshot) {
-    return getMostMatchedImage(screenshot, this.templates.rare, this.POINT_RARITY, 63, 63)
+  private _getTrimRect(templates: {[key: string]: Mat}, point: Point) {
+    const template = Object.values(templates).shift()
+    const size = new cv.Size(template.cols, template.rows)
+    const rect = new cv.Rect(point, size)
+    return rect
   }
 
-  _getSlots(screenshot) {
-    return getMostMatchedImage(screenshot, this.templates.slot, this.POINT_SLOTS, 0, 63)
+  private _getRarity(screenshot: Mat) {
+    const templates     = this.templates.rare
+    const rect          = this._getTrimRect(templates, this.POINT_RARITY)
+    const diffThreshold = 63
+    return getMostMatchedImage(screenshot, templates, rect, diffThreshold)
   }
 
-  _getSkills(screenshot) {
+  private _getSlots(screenshot: Mat) {
+    const templates     = this.templates.slot
+    const rect          = this._getTrimRect(templates, this.POINT_SLOTS)
+    const diffThreshold = 63
+    return getMostMatchedImage(screenshot, templates, rect, diffThreshold)
+    // return as string like "X-X-X"
+  }
+
+  private _getSkills(screenshot: Mat) {
+    const templates     = this.templates.skill
+    const rect1         = this._getTrimRect(templates, this.POINT_SKILL1)
+    const rect2         = this._getTrimRect(templates, this.POINT_SKILL2)
+    const diffThreshold = 63
+
     return [
-      getMostMatchedImage(screenshot, this.templates.skill, this.POINT_SKILL1, 0, 63),
-      getMostMatchedImage(screenshot, this.templates.skill, this.POINT_SKILL2, 0, 63),
+      getMostMatchedImage(screenshot, templates, rect1, diffThreshold),
+      getMostMatchedImage(screenshot, templates, rect2, diffThreshold),
     ]
   }
 
-  _getSkillLevels(screenshot) {
-    // const debug = (this.page === "1" && this.row === 1 && this.col === 7)
-    //       ? ((diff, name) => { console.log(`debug${name}`); cv.imshow(document.getElementById(`debug${name}`), diff) })
-    //       : (() => {})
+  private _getSkillLevels(screenshot: Mat) {
+    const templates     = this.templates.lvl
+    const rect1         = this._getTrimRect(templates, this.POINT_SKILL_LEVEL1)
+    const rect2         = this._getTrimRect(templates, this.POINT_SKILL_LEVEL2)
+    const diffThreshold = 127
 
     return [
-      getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL1, 0, 127),
-      getMostMatchedImage(screenshot, this.templates.lvl, this.POINT_SKILL_LEVEL2, 0, 127),
+      getMostMatchedImage(screenshot, templates, rect1, diffThreshold),
+      getMostMatchedImage(screenshot, templates, rect2, diffThreshold),
     ]
   }
 
-  _getCurrentPage(screenshot) {
-    return getMostMatchedImage(screenshot, this.templates.page, this.POINT_PAGE, 31, 63)
+  private _getCurrentPage(screenshot: Mat) {
+    // setFirstCanvas()
+    // const debug = (images: any) => {
+    //   setNextCanvas(); dumpImage(images.trimmed)
+    //   setNextCanvas(); dumpImage(images.templateImage)
+    //   // setNextCanvas(); dumpImage(images.templateMask)
+    //   // setNextCanvas(); dumpImage(images.masked)
+    //   setNextCanvas(); dumpImage(images.diff)
+    //   setNextCanvas(); dumpImage(images.result)
+    //   dumpImageNewline()
+    // }
+    const templates     = this.templates.page
+    const rect          = this._getTrimRect(templates, this.POINT_PAGE)
+    const diffThreshold = 127
+    return getMostMatchedImage(screenshot, templates, rect, diffThreshold)
   }
 
-
-  _getCurrentCharmPos(screenshot) {
+  private _getCurrentCharmPos(screenshot: Mat) {
     const rect = new cv.Rect(this.POINT_CHARM_AREA_LEFT_TOP, this.SIZE_CHARM_AREA)
     const trimmed = screenshot.roi(rect)
 
     const result = new cv.Mat()
-    cv.matchTemplate(trimmed, this.templates.frame, result, cv.TM_CCOEFF_NORMED)
+    cv.matchTemplate(trimmed, this.templates.others.charmFrame, result, cv.TM_CCOEFF_NORMED)
 
     const {maxLoc, maxVal} = cv.minMaxLoc(result)
     // console.log({maxVal, maxLoc})
@@ -355,12 +417,12 @@ for (const input of inputs) {
     result.delete()
     trimmed.delete()
 
-    return [
-      [
+    return {
+      pos: [
         1 + Math.floor(0.5 + maxLoc.x / 36.0),
         1 + Math.floor(0.5 + maxLoc.y / 41.0),
       ],
-      maxVal,
-    ]
+      match: maxVal,
+    }
   }
 }
