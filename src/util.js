@@ -1,3 +1,6 @@
+import cv from 'opencv-ts'
+
+
 export function fetchImage(path) {
   return new Promise((resolve) => {
     const img = new Image()
@@ -12,50 +15,77 @@ export function fetchImage(path) {
 }
 
 
-export function countImageDiffAtPoint(image, templateImage, point, maskBinaryThreshold, diffBinaryThreshold) {
-  const size = new cv.Size(templateImage.cols, templateImage.rows)
-  const rect = new cv.Rect(point, size)
-  const trimmed = image.roi(rect)
+let canvasCount = 0
+export function dumpImage(img) {
+  const canvasId = `canvas${canvasCount}`
+  if (document.querySelector(`#${canvasId}`) == null) {
+    const divDump = document.querySelector('#imgdump')
+    const newCanvas = document.createElement('canvas')
+    newCanvas.id = canvasId
+    divDump.append(newCanvas)
+  }
+  cv.imshow(canvasId, img)
+}
 
-  const templateMask = new cv.Mat()
-  cv.threshold(templateImage, templateMask, maskBinaryThreshold, 255, cv.THRESH_BINARY)
+export function setNextCanvas() {
+  canvasCount++
+}
 
-  const masked = new cv.Mat()
-  trimmed.copyTo(masked, templateMask)
+export function setFirstCanvas() {
+  canvasCount = 0
+}
+
+export function dumpImageNewline(img) {
+  if (document.querySelector('#imgdump')?.lastChild?.tagName?.toLowerCase() === 'p') {
+    return
+  }
+  const divDump = document.querySelector('#imgdump')
+  const newElm = document.createElement('p')
+  divDump.append(newElm)
+}
+
+
+export function countImageDiffAtPoint(image, templateImage, trimRect, diffBinaryThreshold, debug) {
+  const trimmed = image.roi(trimRect)
 
   const diff = new cv.Mat()
-  cv.absdiff(templateImage, masked, diff)
+  cv.absdiff(templateImage, trimmed, diff)
   cv.cvtColor(diff, diff, cv.COLOR_BGR2GRAY)
 
   const result = new cv.Mat()
   cv.threshold(diff, result, diffBinaryThreshold, 255, cv.THRESH_BINARY)
-  // // cv::imwrite("./tmp/debug.png", diff); // for debug
+  debug({trimmed, templateImage, /*templateMask, masked,*/ diff, result})
 
+  const diffCount = cv.countNonZero(result)
+  result.delete()
   diff.delete()
-  masked.delete()
-  templateMask.delete()
   trimmed.delete()
 
-  return result;
+  // const buffer = image.roi(trimRect)
+  // cv.absdiff(templateImage, buffer, buffer)
+  // cv.cvtColor(buffer, buffer, cv.COLOR_BGR2GRAY)
+  // cv.threshold(buffer, buffer, diffBinaryThreshold, 255, cv.THRESH_BINARY)
+  // const diffCount = cv.countNonZero(buffer)
+  // buffer.delete()
+
+  return diffCount
 }
 
 
-export function getMostMatchedImage(image, templates, point, maskBinaryThreshold = 63, diffBinaryThreshold = 63) {
+export function getMostMatchedImage(image, templates, trimRect, diffBinaryThreshold = 63, debug = () => {}) {
   let minDiffCount = Number.MAX_SAFE_INTEGER
   let candidate = null
 
-  // console.log(templates)
   for (const [name, template] of Object.entries(templates)) {
-    const diff = countImageDiffAtPoint(image, template, point, maskBinaryThreshold, diffBinaryThreshold)
-    // console.log({diff, name})
-    const diffCount = cv.countNonZero(diff)
+    const diffCount = countImageDiffAtPoint(image, template, trimRect, diffBinaryThreshold, debug)
 
-    if ( minDiffCount > diffCount ) {
+    if ( diffCount === 0 ) {
+      return name
+    }
+    else if ( minDiffCount > diffCount ) {
       minDiffCount = diffCount;
       candidate = name;
     }
-
-    diff.delete()
   }
 
   return candidate;
