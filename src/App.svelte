@@ -1,9 +1,9 @@
-<script lang:ts>
-  import MHRiseCharmManager from './mhrise-charm-manager.js'
-  import MHRiseCharmScanner from './mhrise-charm-scanner.ts'
-  import Hamburger from './Hamburger.svelte'
-  import Nav from './Nav.svelte'
-  import {charmManager} from './stores.js'
+<script lang="ts">
+  import MHRiseCharmManager from 'assets/mhrise/mhrise-charm-manager.js'
+  import MHRiseCharmScanner from 'assets/mhrise/mhrise-charm-scanner'
+  import Nav                from './components/nav/Nav.svelte'
+  import Hamburger          from './components/parts/Hamburger.svelte'
+  import {charmManager}     from 'stores/stores.js'
 
   const TITLE   = 'MHRise Charm Scanner'
   const VERSION = '0.5.7'

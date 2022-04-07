@@ -1,9 +1,9 @@
 <script>
-  import cv from 'opencv-ts'
-  import {slide} from "svelte/transition"
-  import SvelteTable from "./SvelteTable.svelte"
-  import {getAllSkillNames} from './mhrise-skills.js'
-  import {charmManager} from './stores.js'
+  import cv                 from 'opencv-ts'
+  import {slide}            from "svelte/transition"
+  import SvelteTable        from "./SvelteTable.svelte"
+  import {getAllSkillNames} from 'assets/mhrise/mhrise-skills.js'
+  import {charmManager}     from 'stores/stores.js'
 
   export let headerColor           = 'mediumseagreen'
   export let disableFilterHeader   = false

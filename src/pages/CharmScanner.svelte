@@ -1,7 +1,7 @@
 <script>
   import {writable} from 'svelte/store'
-  import VideoReader from './VideoReader.svelte'
-  import {charmManager} from './stores.js'
+  import VideoReader from '../components/parts/VideoReader.svelte'
+  import {charmManager} from 'stores/stores.js'
 
 
   // const VIDEO_WIDTH      = 1280 // switch のキャプチャ解像度

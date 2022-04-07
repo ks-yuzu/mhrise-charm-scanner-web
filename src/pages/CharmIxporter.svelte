@@ -1,10 +1,10 @@
 <script lang="ts">
   import MDBBtn         from 'mdbsvelte/src/MDBBtn.svelte'
   import MDBBtnGroup    from 'mdbsvelte/src/MDBBtnGroup.svelte'
-  import ConfirmModal   from './ConfirmModal.svelte'
-  import {charmManager} from './stores.js'
-  import type {Charm, FlatCharm}            from './mhrise-charm'
-  import {zenkaku2hankaku, hankaku2zenkaku} from './string-util'
+  import ConfirmModal   from '../components/parts/ConfirmModal.svelte'
+  import {charmManager} from 'stores/stores.js'
+  import type {Charm, FlatCharm}            from 'mhrise-charm'
+  import {zenkaku2hankaku, hankaku2zenkaku} from 'string-util'
 
 
 

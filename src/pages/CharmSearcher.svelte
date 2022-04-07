@@ -1,9 +1,9 @@
 <script lang="ts">
   import AutoComplete      from 'simple-svelte-autocomplete'
-  import CharmTable        from './CharmTable.svelte'
-  import {allSkillDetails} from './mhrise-skills.js'
-  import {charmManager}    from './stores.js'
-  import type {CharmEntry} from './mhrise-charm'
+  import CharmTable        from '../components/parts/CharmTable.svelte'
+  import {charmManager}    from 'stores/stores.js'
+  import {allSkillDetails} from 'assets/mhrise/mhrise-skills.js'
+  import type {CharmEntry} from 'assets/mhrise/mhrise-charm'
 
   const MAX_SKILL_LEVEL  = 7
   const SKILL_LEVEL_LIST = [...Array(MAX_SKILL_LEVEL).keys()].map(i => i + 1) // 補完用

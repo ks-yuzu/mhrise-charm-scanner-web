@@ -3,13 +3,13 @@
   import dayjs              from 'dayjs'
   import {writable}         from 'svelte/store'
   import MDBBtn             from 'mdbsvelte/src/MDBBtn.svelte'
-  import {charmManager}     from './stores.js'
-  import CameraReader       from './CameraReader.svelte'
-  import CharmPositionInput from './components/parts/CharmPositionInput.svelte'
-  import RarityInput        from './components/parts/CharmRarityInput.svelte'
-  import SkillInput         from './components/parts/CharmSkillInput.svelte'
-  import SkillLevelInput    from './components/parts/CharmSkillLevelInput.svelte'
-  import SlotsInput         from './components/parts/CharmSlotsInput.svelte'
+  import {charmManager}     from 'stores/stores.js'
+  import CameraReader       from '../components/parts/CameraReader.svelte'
+  import CharmPositionInput from '../components/parts/CharmPositionInput.svelte'
+  import RarityInput        from '../components/parts/CharmRarityInput.svelte'
+  import SkillInput         from '../components/parts/CharmSkillInput.svelte'
+  import SkillLevelInput    from '../components/parts/CharmSkillLevelInput.svelte'
+  import SlotsInput         from '../components/parts/CharmSlotsInput.svelte'
 
   // const VIDEO_WIDTH      = 1280 // switch のキャプチャ解像度
   // const VIDEO_HEIGHT     = 720
@@ -47,8 +47,8 @@
 
     await domCameraReader.init()
 
-    const offset = {x: 1, y: 1} // TODO: 適当にズレを取得する
-    charmScanner.adjustPosition(offset)
+    // const offset = {x: 1, y: 1} // TODO: 適当にズレを取得する
+    // charmScanner.adjustPosition(offset)
   })()
 </script>
 

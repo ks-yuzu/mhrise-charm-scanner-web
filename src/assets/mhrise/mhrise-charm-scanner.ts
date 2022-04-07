@@ -1,7 +1,7 @@
 import cv, {Mat, Point} from 'opencv-ts'
-import Dexie from "dexie";
-import {fetchImage, getMostMatchedImage, promiseAllRecursive} from './util.js'
-import {dumpImage, dumpImageNewline, setNextCanvas, setFirstCanvas} from './util.js'
+import Dexie from "dexie"
+import {fetchImage, getMostMatchedImage, promiseAllRecursive} from 'util.js'
+import {dumpImage, dumpImageNewline, setNextCanvas, setFirstCanvas} from 'util.js' // for debug
 
 
 export default class MHRiseCharmScanner {
@@ -252,7 +252,7 @@ export default class MHRiseCharmScanner {
     const [col, row] = pos
     if (this._isScaned(page, row, col)) { // TODO: 直前と同じならスキップにする？
       // console.log(`this charm is already scanned. skip: p${page} (${row}, ${col})`);
-      // return null
+      return null
     }
 
     const rarity        = this._getRarity(screenshot)

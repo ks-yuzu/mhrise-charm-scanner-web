@@ -1,6 +1,6 @@
 <script>
-  import CharmTable from './CharmTable.svelte'
-  import {charmManager} from './stores.js'
+  import CharmTable from '../components/parts/CharmTable.svelte'
+  import {charmManager} from 'stores/stores.js'
 
   let charms
 

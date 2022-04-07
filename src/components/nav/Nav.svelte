@@ -5,7 +5,7 @@
   export let isInitialized
   export let charmScanner
 
-  let currentNavOptionId = 4
+  let currentNavOptionId = 1
 
   let onActivate = {}
 

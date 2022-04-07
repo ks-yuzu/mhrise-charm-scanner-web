@@ -1,6 +1,6 @@
 <script lang="ts">
 import AutoComplete      from 'simple-svelte-autocomplete'
-import {allSkillDetails} from 'mhrise-skills.js'
+import {allSkillDetails} from 'assets/mhrise/mhrise-skills.js'
 
 export let inputId     = 'input-skill'
 export let placeholder = 'スキル'
