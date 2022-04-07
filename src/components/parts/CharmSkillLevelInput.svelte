@@ -10,7 +10,7 @@ export let showClear   = false
 export let hideArrow   = true
 export let className   = 'autocomplete-skill-level'
 
-export let value = ''
+export let value = 0
 </script>
 
 <AutoComplete items={SKILL_LEVEL_LIST}

@@ -1,15 +1,16 @@
 <script lang="ts">
-  import cv                 from 'opencv-ts'
+  import type {Mat}         from 'opencv-ts'
   import dayjs              from 'dayjs'
   import {writable}         from 'svelte/store'
   import MDBBtn             from 'mdbsvelte/src/MDBBtn.svelte'
-  import {charmManager}     from 'stores/stores.js'
   import CameraReader       from '../components/parts/CameraReader.svelte'
   import CharmPositionInput from '../components/parts/CharmPositionInput.svelte'
   import RarityInput        from '../components/parts/CharmRarityInput.svelte'
   import SkillInput         from '../components/parts/CharmSkillInput.svelte'
   import SkillLevelInput    from '../components/parts/CharmSkillLevelInput.svelte'
   import SlotsInput         from '../components/parts/CharmSlotsInput.svelte'
+  import type {Charm}       from 'assets/mhrise/mhrise-charm'
+  import {charmManager}     from 'stores/stores.js'
 
   // const VIDEO_WIDTH      = 1280 // switch のキャプチャ解像度
   // const VIDEO_HEIGHT     = 720
@@ -23,11 +24,11 @@
   let exportData = ''
 
   // form to show and fix scanned data
-  let currentCharm = { skills: [], skillLevels: [], slots: [] }
+  let currentCharm: Charm = {skills: [], skillLevels: [], slots: []}
 
   let domCameraReader
 
-  const imageProcessor = async (frame: cv.Mat) => {
+  const imageProcessor = async (frame: Mat) => {
     const charm = charmScanner.scan(frame, dayjs().format())
     if (charm == null) { return }
 
@@ -42,8 +43,6 @@
     do {
       await new Promise(r => setTimeout(r, 1000))
     } while ( !isInitialized )
-    // console.log({isInitialized})
-    // await new Promise(r => setTimeout(r, 5000))
 
     await domCameraReader.init()
 
@@ -63,7 +62,7 @@
         <div id="charm-spec">
           <div id="charm-spec-position">
             位置:
-            <CharmPositionInput inputId="input-position"
+            <CharmPositionInput inputIdPrefix="input-position-"
                                 bind:page={currentCharm.page}
                                 bind:row={currentCharm.row}
                                 bind:col={currentCharm.col}
@@ -91,7 +90,7 @@
           </div>
           <div id="charm-spec-slots">
             スロット:
-            <SlotsInput inputId="input-slot-level-"
+            <SlotsInput inputIdPrefix="input-slot-level-"
                         bind:values={currentCharm.slots}
                         placeholder="スロット"
                         />

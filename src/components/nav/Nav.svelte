@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import {navOptions} from './NavOptions.svelte'
 
   export let isNavigationOpen
@@ -23,7 +23,7 @@
   <ul class="navigation" style="width: {isNavigationOpen ? '14rem' : '3.2rem'}">
     {#each navOptions as option, i}
       <li class="navigation-item">
-        <button id={i}
+        <button id={String(i)}
                 class={currentNavOptionId == i ? "active navigation-link" : "navigation-link"}
                 role="tab"
                 on:click={switchComponent}

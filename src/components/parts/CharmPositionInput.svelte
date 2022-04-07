@@ -1,6 +1,7 @@
 <script lang="ts">
 import AutoComplete from 'simple-svelte-autocomplete'
 
+export let inputIdPrefix
 export let page
 export let row
 export let col
@@ -18,7 +19,7 @@ const COL_LIST = [...Array(MAX_COL).keys()].map(i => i + 1) // 補完用リス�
 <div>
   <AutoComplete items={PAGE_LIST}
                 bind:selectedItem={page}
-                inputId="input-charm-page"
+                inputId="{inputIdPrefix}page"
                 placeholder="ページ"
                 showClear={false}
                 hideArrow={true}
@@ -27,7 +28,7 @@ const COL_LIST = [...Array(MAX_COL).keys()].map(i => i + 1) // 補完用リス�
 
   <AutoComplete items={ROW_LIST}
                 bind:selectedItem={row}
-                inputId="input-charm-row"
+                inputId="{inputIdPrefix}row"
                 placeholder="行"
                 showClear={false}
                 hideArrow={true}
@@ -36,7 +37,7 @@ const COL_LIST = [...Array(MAX_COL).keys()].map(i => i + 1) // 補完用リス�
 
   <AutoComplete items={COL_LIST}
                 bind:selectedItem={col}
-                inputId="input-charm-col"
+                inputId="{inputIdPrefix}col"
                 placeholder="列"
                 showClear={false}
                 hideArrow={true}

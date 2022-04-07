@@ -22,6 +22,10 @@ export interface FlatCharm {    // TODO: remove
 
 
 export interface Charm {
+  rarity?:     number
+  page?:       number
+  row?:        number
+  col?:        number
   skills:      string[]
   skillLevels: number[]
   slots:       number[]

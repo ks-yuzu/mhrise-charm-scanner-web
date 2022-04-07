@@ -10,7 +10,7 @@ export let showClear   = false
 export let hideArrow   = true
 export let className   = 'autocomplete-rarity'
 
-export let value = ''
+export let value = 0
 </script>
 
 <div>

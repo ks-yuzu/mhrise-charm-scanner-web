@@ -5,7 +5,7 @@
   const videoWidth = 1280
   const videoHeight = 720
 
-  export let videoName = 'realtime-capture'
+  // export let videoName = 'realtime-capture'
   export let isVideoVisible = true
   export let imageProcessor
 

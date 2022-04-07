@@ -1,11 +1,10 @@
 <script lang="ts">
-  import MDBBtn         from 'mdbsvelte/src/MDBBtn.svelte'
-  import MDBBtnGroup    from 'mdbsvelte/src/MDBBtnGroup.svelte'
-  import ConfirmModal   from '../components/parts/ConfirmModal.svelte'
-  import {charmManager} from 'stores/stores.js'
-  import type {Charm, FlatCharm}            from 'mhrise-charm'
+  import MDBBtn                             from 'mdbsvelte/src/MDBBtn.svelte'
+  import MDBBtnGroup                        from 'mdbsvelte/src/MDBBtnGroup.svelte'
+  import ConfirmModal                       from '../components/parts/ConfirmModal.svelte'
+  import type {Charm, CharmEntry}           from 'assets/mhrise/mhrise-charm'
+  import {charmManager}                     from 'stores/stores.js'
   import {zenkaku2hankaku, hankaku2zenkaku} from 'string-util'
-
 
 
   // TYPES
@@ -62,7 +61,7 @@
   async function exportCharms() {
     // console.log($charmManager.charmTableName)
 
-    textareaValue = $charmManager.charms.map((row: FlatCharm) => {
+    textareaValue = $charmManager.charms.map((row: CharmEntry) => {
       const {skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3} = row
       return [
         hankaku2zenkaku(skill1 === '無し' ? '' : skill1), skill1Level,

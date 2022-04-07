@@ -13,8 +13,8 @@
   let skillLevelFilters = []
   let slots             = []
 
-  let isSpinnerShown             = false
-  let searchResults: FlatCharm[] = null
+  let isSpinnerShown              = false
+  let searchResults: CharmEntry[] = null
 
   // table pagination
   let currentPage         = 0,
