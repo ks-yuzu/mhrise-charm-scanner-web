@@ -1,4 +1,5 @@
 <script>
+  import cv from 'opencv-ts'
   import {slide} from "svelte/transition"
   import SvelteTable from "./SvelteTable.svelte"
   import {getAllSkillNames} from './mhrise-skills.js'

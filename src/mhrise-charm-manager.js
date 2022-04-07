@@ -1,5 +1,6 @@
-import Dexie from "dexie";
-// import {importDB, exportDB} from "dexie-export-import";
+import Dexie from "dexie"
+// import {importDB, exportDB} from "dexie-export-import"
+import cv from 'opencv-ts'
 import {skillToSlotLevel} from './mhrise-charm-decorations.js'
 
 export default class MHRiseCharmManager {

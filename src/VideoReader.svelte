@@ -1,4 +1,5 @@
-<script lang:ts>
+<script lang="ts">
+  import cv from 'opencv-ts'
   // import {writable} from 'svelte/store'
 
   const FRAME_RATE = 29.97
