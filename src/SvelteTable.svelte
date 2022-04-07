@@ -1,4 +1,4 @@
-// forked from https://github.com/dasDaniel/svelte-table/blob/0982cb390f8e3529922145817e7bd3ba42dba2c1/src/SvelteTable.svelte
+<!-- forked from https://github.com/dasDaniel/svelte-table/blob/0982cb390f8e3529922145817e7bd3ba42dba2c1/src/SvelteTable.svelte -->
 
 <script>
   import { createEventDispatcher } from 'svelte';
