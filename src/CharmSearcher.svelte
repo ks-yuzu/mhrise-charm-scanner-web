@@ -1,19 +1,20 @@
-<script>
-  import AutoComplete from 'simple-svelte-autocomplete'
-  import CharmTable from './CharmTable.svelte'
+<script lang="ts">
+  import AutoComplete      from 'simple-svelte-autocomplete'
+  import CharmTable        from './CharmTable.svelte'
   import {allSkillDetails} from './mhrise-skills.js'
-  import {charmManager} from './stores.js'
+  import {charmManager}    from './stores.js'
+  import type {CharmEntry} from './mhrise-charm'
 
   const MAX_SKILL_LEVEL  = 7
-  const SKILL_LEVEL_LIST = [...Array(MAX_SKILL_LEVEL).keys()].map(i => i + 1)
+  const SKILL_LEVEL_LIST = [...Array(MAX_SKILL_LEVEL).keys()].map(i => i + 1) // 補完用
   const MAX_SLOTS        = 3
 
   let skillFilters      = []
   let skillLevelFilters = []
   let slots             = []
 
-  let isSpinnerShown    = false
-  let searchResults     = null
+  let isSpinnerShown             = false
+  let searchResults: FlatCharm[] = null
 
   // table pagination
   let currentPage         = 0,
@@ -28,9 +29,9 @@
   $: sliceBegin = itemsPerPage * currentPage
   $: sliceEnd   = itemsPerPage * (currentPage+1)
 
-  // form update (skill)
+  // update form (skill)
   $: {
-    for (const i in skillFilters) {
+    for (let i = 0; i < skillFilters.length; i++) { // for ... in だと i が string になるので
       if ( skillFilters[i] && skillLevelFilters[i] == null ) {
         skillLevelFilters[i] = 1
       }
@@ -41,9 +42,10 @@
     }
   }
 
-  // form update (slot)
+  // update form (slot)
   $: slots = slots.sort((a, b) => b - a)
 
+  // update result
   $: {
     isSpinnerShown = true
     slots = slots.filter(i => i)
@@ -65,15 +67,17 @@
         return
       }
 
-      const matchIds = Module.getSubstitutes(
-        JSON.stringify($charmManager.charms.map(i => {
-          const {substitutableCharms, imagename, evaluation, ...rest} = i
-          return rest
+      const result = Module.getSubstitutes(
+        JSON.stringify($charmManager.charms.map((i: CharmEntry) => {
+          // 余分なデータを落としてから渡す
+          // return i
+          const {rowid, skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3} = i
+          return {rowid, skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3}
         })),
         base
       )
-
-      searchResults = JSON.parse(matchIds).map(id => $charmManager.charms.find(i => i.rowid === id))
+      const matchIds = JSON.parse(result) as number[]
+      searchResults = matchIds.map(id => $charmManager.charms.find((i: any) => i.rowid === id))
     }
 
     search()
@@ -81,34 +85,35 @@
   }
 
 
-  function handleKeydown(event) {
-    if ( event.keyCode === 27 ) { // escape
+  function handleKeydown(event: KeyboardEvent) {
+    if ( event.key === 'Escape' ) {
       document.body.click()
       return
     }
 
+    // key combination
     if ( !( (event.ctrlKey && event.metaKey) || (event.ctrlKey && event.altKey) )) {
       return
     }
 
-    let prefix
-    if      ( event.key === 'k' ) { prefix = 'input-skill-' }
-    else if ( event.key === 'l' ) { prefix = 'input-skill-level-' }
-    else if ( event.key === 't' ) { prefix = 'input-slot-' }
+    let elementBasename = ''
+    if      ( event.key === 'k' ) { elementBasename = 'input-skill-' }
+    else if ( event.key === 'l' ) { elementBasename = 'input-skill-level-' }
+    else if ( event.key === 't' ) { elementBasename = 'input-slot-' }
     else {
       return
     }
 
     const focusedId = document.activeElement.id
-    if ( focusedId.startsWith(prefix) ) {
-      const currentSuffix = parseInt(focusedId.replace(prefix, ''))
-      const nextFocus = document.getElementById(`${prefix}${currentSuffix + 1}`)
-                     || document.getElementById(`${prefix}0`)
+    if ( focusedId.startsWith(elementBasename) ) {
+      const currentSuffix = parseInt(focusedId.replace(elementBasename, ''))
+      const nextFocus = document.getElementById(`${elementBasename}${currentSuffix + 1}`)
+                     || document.getElementById(`${elementBasename}0`)
       document.body.click()
       nextFocus.focus()
     }
     else {
-      const nextFocus = document.getElementById(`${prefix}0`)
+      const nextFocus = document.getElementById(`${elementBasename}0`)
       document.body.click()
       nextFocus.focus()
     }
