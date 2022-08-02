@@ -1,17 +1,19 @@
 import cv from 'opencv-ts'
 
+// TODO: 雑に詰め込みすぎなのでいい感じに整理して assets に
 
-export function fetchImage(path) {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.src = path
+export function sleep(msec) {
+  return new Promise(resolve => setTimeout(resolve, msec))
+}
 
-    img.onload = () => {
-      // console.log(`fetched ${path}`)
-      const imgmat = cv.imread(img)
-	    resolve(imgmat)
-    }
-  })
+
+export async function fetchImage(path) {
+  const img = new Image()
+  img.src = path
+
+  await new Promise(resolve => {img.onload = resolve})
+  console.log(`fetched ${path}`)
+  return cv.imread(img)
 }
 
 
@@ -35,7 +37,7 @@ export function setFirstCanvas() {
   canvasCount = 0
 }
 
-export function dumpImageNewline(img) {
+export function dumpImageNewline() {
   if (document.querySelector('#imgdump')?.lastChild?.tagName?.toLowerCase() === 'p') {
     return
   }
@@ -45,8 +47,12 @@ export function dumpImageNewline(img) {
 }
 
 
-export function countImageDiffAtPoint(image, templateImage, trimRect, diffBinaryThreshold, debug) {
+export function countImageDiffAtPoint(image, templateImage, trimRect, diffBinaryThreshold, filter, debug) {
+  // const trimmed = filter != null ? filter(image.roi(trimRect)) : image.roi(trimRect)
   const trimmed = image.roi(trimRect)
+  if (filter != null) {
+    filter(trimmed)
+  }
 
   const diff = new cv.Mat()
   cv.absdiff(templateImage, trimmed, diff)
@@ -54,9 +60,13 @@ export function countImageDiffAtPoint(image, templateImage, trimRect, diffBinary
 
   const result = new cv.Mat()
   cv.threshold(diff, result, diffBinaryThreshold, 255, cv.THRESH_BINARY)
-  debug({trimmed, templateImage, /*templateMask, masked,*/ diff, result})
 
   const diffCount = cv.countNonZero(result)
+
+  if (debug != null) {
+    debug({trimmed, templateImage, diff, result})
+  }
+
   result.delete()
   diff.delete()
   trimmed.delete()
@@ -72,12 +82,12 @@ export function countImageDiffAtPoint(image, templateImage, trimRect, diffBinary
 }
 
 
-export function getMostMatchedImage(image, templates, trimRect, diffBinaryThreshold = 63, debug = () => {}) {
+export function getMostMatchedImage(image, templates, trimRect, diffBinaryThreshold = 63, filter = null, debug = null) {
   let minDiffCount = Number.MAX_SAFE_INTEGER
   let candidate = null
 
   for (const [name, template] of Object.entries(templates)) {
-    const diffCount = countImageDiffAtPoint(image, template, trimRect, diffBinaryThreshold, debug)
+    const diffCount = countImageDiffAtPoint(image, template, trimRect, diffBinaryThreshold, filter, debug)
 
     if ( diffCount === 0 ) {
       return name

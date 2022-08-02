@@ -89,7 +89,12 @@ export default class MHRiseCharmManager {
     console.log(values)
     await this.sql(`insert or ignore into ${this.tableName} values ${values}`)
 
-    this.updateCharmArray()
+    // this.updateCharmArray()
+    ;(() => {
+      clearTimeout(this._timer)
+      const self = this
+      this._timer = setTimeout(() => self.updateCharmArray(), 1000)
+    })()
   }
 
 
