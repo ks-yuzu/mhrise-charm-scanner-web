@@ -1,16 +1,16 @@
 <script lang="ts">
   import {navOptions} from './NavOptions.svelte'
 
-  export let isNavigationOpen
-  export let isInitialized
-  export let charmScanner
+  export let isNavigationOpen: boolean
 
-  let currentNavOptionId = 1
-
+  let currentNavOptionId = 2
   let onActivate = {}
 
-  function switchComponent(e) {
-    currentNavOptionId = e.srcElement.closest('button').id
+  function switchComponent(e: Event) {
+    const selectedComponentId = (e.target as HTMLElement).closest('button')?.id
+    if (selectedComponentId == null) { return }
+
+    currentNavOptionId = parseInt(selectedComponentId)
 
     if ( onActivate[currentNavOptionId] ) {
       onActivate[currentNavOptionId]()
@@ -56,8 +56,7 @@
     {#each navOptions as option, i}
       <div class="h-100 {currentNavOptionId == i ? 'd-block' : 'd-none'}">
         <svelte:component this={option.component}
-                          {...{isInitialized, charmScanner}}
-                          onActivate={onActivate[i]}
+                          bind:onActivate={onActivate[i]}
                           />
       </div>
     {/each}

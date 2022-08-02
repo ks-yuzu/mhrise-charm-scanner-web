@@ -1,41 +1,61 @@
-import cv, {Mat, Point} from 'opencv-ts'
-import Dexie from "dexie"
-import {fetchImage, getMostMatchedImage, promiseAllRecursive} from 'util.js'
+import cv, {Mat, Point}                                             from 'opencv-ts'
+import Dexie                                                        from "dexie"
+import type {Charm}                                                 from 'assets/mhrise/mhrise-charm'
+import {MAX_PAGE, ROWS_PER_PAGE_IN_EQLIST, COLS_PER_PAGE_IN_EQLIST, ROWS_PER_PAGE_IN_RINNE, COLS_PER_PAGE_IN_RINNE}
+                                                                    from 'assets/mhrise/metadata'
+import {fetchImage, getMostMatchedImage, promiseAllRecursive}       from 'util.js'
 import {dumpImage, dumpImageNewline, setNextCanvas, setFirstCanvas} from 'util.js' // for debug
+
+export const SCAN_MODE = {
+  MODE_EQUIP_LIST: 'equip_list',
+  MODE_RINNE: 'rinne',
+} as const
+export type ScanMode = typeof SCAN_MODE[keyof typeof SCAN_MODE]
 
 
 export default class MHRiseCharmScanner {
-  MAX_PAGE = 34
-  COLUMNS_PER_PAGE = 10
-  ROWS_PER_PAGE    = 5
+  private readonly EQUIPMENT_SPEC_HEADER_BASE_X = 1023
+  private readonly EQUIPMENT_SPEC_HEADER_BASE_Y = 88
 
-  POINT_RARITY       = new cv.Point(1190, 176)
-  POINT_SLOTS        = new cv.Point(1160, 200)
-  POINT_SKILL1       = new cv.Point(1033, 266)
-  POINT_SKILL2       = new cv.Point(1033, 317)
-  POINT_SKILL_LEVEL1 = new cv.Point(1190, 290)
-  POINT_SKILL_LEVEL2 = new cv.Point(1190, 340)
-  POINT_PAGE         = new cv.Point(787, 582)
+  private readonly POINT_RARITY                = new cv.Point(1190, 176)
+  private readonly POINT_SLOTS                 = new cv.Point(1160, 200)
+  private readonly POINT_SKILL1                = new cv.Point(1033, 266)
+  private readonly POINT_SKILL2                = new cv.Point(1033, 317)
+  private readonly POINT_SKILL_LEVEL1          = new cv.Point(1190, 290)
+  private readonly POINT_SKILL_LEVEL2          = new cv.Point(1190, 340)
 
-  POINT_CHARM_AREA_LEFT_TOP = new cv.Point(634, 359)
-  SIZE_CHARM_AREA           = new cv.Size(357, 199)
+  // 装備確認画面
+  private readonly POINT_PAGE                  = new cv.Point(787, 582) // ページ番号
+  private readonly POINT_CHARM_AREA            = new cv.Point(634, 359) // アイコンリストの左上座標
+  private readonly SIZE_CHARM_AREA             = new cv.Size(357, 199)  // アイコンリストのサイズ
 
-  indexeddb = null
-  nCharms = 0
-  charms = {}
-  templates: null | {[key: string]: {[key: string]: Mat}}
+  // 輪廻画面 (位置調整する都合で, EQUIPMENT_SPEC_HEADER_BASE に相対位置を足して定義)
+  // offset(-334, 14) で adjust されるはず? 手元のキャプボでは 1px ずれるので (-335, 13) で確認
+  private readonly POINT_PAGE_IN_RINNE         = new cv.Point(796, 532) // ページ番号
+  private readonly POINT_CHARM_AREA_IN_RINNE   = new cv.Point(657, 358) // アイコンリストの左上座標 (-366, 270)
+  private readonly SIZE_CHARM_AREA_IN_RINNE    = new cv.Size(329, 164)  // アイコンリストのサイズ
+
+  private readonly scanMode: ScanMode
+
+  private readonly ROWS_PER_PAGE: number
+  private readonly COLS_PER_PAGE: number
+
+  private          indexeddb = null
+  private          nCharms = 0 // このスキャンで読んだ護石の数
+  private          charms = {} // このスキャンで読んだ護石のスペック
 
   adjustOffset = {x: 0, y: 0}
 
-  // page = -1
-  // col = -1
-  // row = -1
+  static templates: null | {[key: string]: {[key: string]: Mat}}
 
-  async init() {
-    this.templates = {
+  static async init() {
+    const templateFetchPromises = {
       others: {
-        charmFrame: fetchImage('img/templates/frame.png'),
+        charmSelectFrame:         fetchImage('img/templates/others/charm-select-frame.png'),
+        charmSelectFrameForRinne: fetchImage('img/templates/others/charm-select-frame-for-rinne.png'),
+        equipmentSpecHeader:      fetchImage('img/templates/others/equipment-spec-header.png'),
       },
+      page: {},
       rare: {
         7:                    fetchImage('img/templates/rare/7.jpg'),
         6:                    fetchImage('img/templates/rare/6.jpg'),
@@ -172,14 +192,19 @@ export default class MHRiseCharmScanner {
       },
     }
 
-    this.templates.page = {}
-    for (let i = 1; i <= this.MAX_PAGE; i++) {
-      this.templates.page[i] = fetchImage(`img/templates/page/${i}.png`)
+    for (let i = 1; i <= MAX_PAGE; i++) {
+      templateFetchPromises.page[i] = fetchImage(`img/templates/page/${i}.png`)
     }
 
-    this.templates = await promiseAllRecursive(this.templates)
-    this.reset()
+    MHRiseCharmScanner.templates = await promiseAllRecursive(templateFetchPromises)
+  }
 
+  constructor(scanMode: ScanMode = SCAN_MODE.MODE_EQUIP_LIST) {
+    this.scanMode = scanMode
+    this.ROWS_PER_PAGE = (scanMode === SCAN_MODE.MODE_RINNE) ? ROWS_PER_PAGE_IN_RINNE : ROWS_PER_PAGE_IN_EQLIST
+    this.COLS_PER_PAGE = (scanMode === SCAN_MODE.MODE_RINNE) ? COLS_PER_PAGE_IN_RINNE : COLS_PER_PAGE_IN_EQLIST
+
+    this.reset()
     this.indexeddb = new Dexie('charms')
     this.indexeddb.version(1).stores({images: 'name'})
   }
@@ -187,7 +212,7 @@ export default class MHRiseCharmScanner {
   private reset() {
     this.nCharms = 0
     this.charms = {}
-    for (let p = 1; p <= this.MAX_PAGE; p++) {
+    for (let p = 1; p <= MAX_PAGE; p++) {
       this.charms[p] = {}
       for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
         this.charms[p][r] = {}
@@ -195,128 +220,142 @@ export default class MHRiseCharmScanner {
     }
   }
 
+
   private _isScaned(page: number, row: number, col: number) {
-    return this.charms[page][row][col] != null
+    return this._getCache({page, row, col}) != null
   }
 
-  private store(charmData, metadata) {
-    const {page, row, col} = charmData
-    const {screenshot, imageName} = metadata
+  private _setCache({page, row, col}: {page: number, row: number, col: number}, charm: Charm) {
+    this.charms[page][row][col] = charm
+  }
 
-    // const name = `${movieName}_${page}-${row}-${col}`
-    // console.log({movieName, row, col})
+  private _getCache({page, row, col}: {page: number, row: number, col: number}) {
+    return this.charms[page][row][col]
+  }
 
-    this.indexeddb.images.put({
-      name: imageName,
-      rows: screenshot.rows,
-      cols: screenshot.cols,
-      type: screenshot.type(),
-      data: screenshot.data.slice(0),
-    })
-    this.charms[page][row][col] = {...charmData, imageName}
-    this.nCharms++
+
+  public getAdjustOffset(screenshot: Mat) {
+    const template = MHRiseCharmScanner.templates.others.equipmentSpecHeader
+    const result = new cv.Mat()
+    cv.matchTemplate(screenshot, template, result, cv.TM_CCOEFF_NORMED)
+    const {maxLoc, maxVal} = cv.minMaxLoc(result)
+    result.delete()
+
+    return {
+      x: maxLoc.x - this.EQUIPMENT_SPEC_HEADER_BASE_X,
+      y: maxLoc.y - this.EQUIPMENT_SPEC_HEADER_BASE_Y,
+    }
   }
 
   // 事前に Point オブジェクトの調整をする (無駄にヒープを使って GC 誘発を避けたい)
-  public adjustPosition(offset: {x: number, y: number} = {x: 0, y: 0}) {
-    this.POINT_RARITY             .x += (offset.x - this.adjustOffset.x)
-    this.POINT_RARITY             .y += (offset.y - this.adjustOffset.y)
-    this.POINT_SLOTS              .x += (offset.x - this.adjustOffset.x)
-    this.POINT_SLOTS              .y += (offset.y - this.adjustOffset.y)
-    this.POINT_SKILL1             .x += (offset.x - this.adjustOffset.x)
-    this.POINT_SKILL1             .y += (offset.y - this.adjustOffset.y)
-    this.POINT_SKILL2             .x += (offset.x - this.adjustOffset.x)
-    this.POINT_SKILL2             .y += (offset.y - this.adjustOffset.y)
-    this.POINT_SKILL_LEVEL1       .x += (offset.x - this.adjustOffset.x)
-    this.POINT_SKILL_LEVEL1       .y += (offset.y - this.adjustOffset.y)
-    this.POINT_SKILL_LEVEL2       .x += (offset.x - this.adjustOffset.x)
-    this.POINT_SKILL_LEVEL2       .y += (offset.y - this.adjustOffset.y)
-    this.POINT_PAGE               .x += (offset.x - this.adjustOffset.x)
-    this.POINT_PAGE               .y += (offset.y - this.adjustOffset.y)
-    this.POINT_CHARM_AREA_LEFT_TOP.x += (offset.x - this.adjustOffset.x)
-    this.POINT_CHARM_AREA_LEFT_TOP.y += (offset.y - this.adjustOffset.y)
+  public adjustPosition(screenshot: Mat) {
+    const offset = this.getAdjustOffset(screenshot)
+    console.log({offset})
+
+    this.POINT_RARITY              .x += (offset.x - this.adjustOffset.x)
+    this.POINT_RARITY              .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SLOTS               .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SLOTS               .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SKILL1              .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SKILL1              .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SKILL2              .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SKILL2              .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SKILL_LEVEL1        .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SKILL_LEVEL1        .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SKILL_LEVEL2        .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SKILL_LEVEL2        .y += (offset.y - this.adjustOffset.y)
+    this.POINT_PAGE                .x += (offset.x - this.adjustOffset.x)
+    this.POINT_PAGE                .y += (offset.y - this.adjustOffset.y)
+    this.POINT_PAGE_IN_RINNE       .x += (offset.x - this.adjustOffset.x)
+    this.POINT_PAGE_IN_RINNE       .y += (offset.y - this.adjustOffset.y)
+    this.POINT_CHARM_AREA          .x += (offset.x - this.adjustOffset.x)
+    this.POINT_CHARM_AREA          .y += (offset.y - this.adjustOffset.y)
+    this.POINT_CHARM_AREA_IN_RINNE .x += (offset.x - this.adjustOffset.x)
+    this.POINT_CHARM_AREA_IN_RINNE .y += (offset.y - this.adjustOffset.y)
+    console.log({POINT_PAGE_IN_RINNE: this.POINT_PAGE_IN_RINNE})
 
     this.adjustOffset = offset
   }
 
-  public scan(screenshot: Mat, movieName: string) {
-    const page          = this._getCurrentPage(screenshot)
-    const {pos, match}  = this._getCurrentCharmPos(screenshot)
 
-    if ( match < 0.35 ) {
+  public scan(screenshot: Mat, movieName: string): {charm: Charm, isCache: boolean} | null {
+    const page = this._getCurrentPage(screenshot)
+
+    // スキャンモード (装備確認ページと輪廻ページ) でパラメータ設定を分岐
+    const {pos, match, matchThreshold, isCacheEnabled} = (() => {
+      switch (this.scanMode) {
+        case SCAN_MODE.MODE_EQUIP_LIST:
+          return {
+            ...this._getCurrentCharmPos(screenshot),
+            matchThreshold: 0.34,
+            isCacheEnabled: true,
+          }
+        case SCAN_MODE.MODE_RINNE:
+          return {
+            ...this._getCurrentCharmPosForRinne(screenshot),
+            matchThreshold: 0.34,
+            isCacheEnabled: true,
+          }
+        default:
+          throw new Error('[internal error] invalid scan mode')
+      }
+    })()
+
+    if ( match < matchThreshold ) {
       // 放置すると blink するので一致度が低い時はスキップ
       // console.log(`low match degress ${match} for charm position searching. skip`)
       return null
     }
 
     const [col, row] = pos
-    if (this._isScaned(page, row, col)) { // TODO: 直前と同じならスキップにする？
-      // console.log(`this charm is already scanned. skip: p${page} (${row}, ${col})`);
-      return null
+    // console.log(`scaned ${row} ${col}`)
+
+    if ( isCacheEnabled ) {
+      const cache = this._getCache({ page, row, col })
+      if (cache != null) {// TODO: 直前と同じならスキップにする？
+        // console.log(`this charm is already scanned. skip: p${page} (${row}, ${col})`);
+        return { charm: cache, isCache: true }
+      }
     }
 
     const rarity        = this._getRarity(screenshot)
     const slots         = this._getSlots(screenshot)
     const skills        = this._getSkills(screenshot)
     const skillLevels   = this._getSkillLevels(screenshot)
-
-    // console.log(`scaned ${row} ${col}`)
-
+    skills.forEach((i, idx) => {
+      if (i === '無し') { skillLevels[idx] = 0 }
+    })
     // console.log(JSON.stringify({col, row, match, page, rarity, slots, skills, skillLevels}, null, 2))
+
     const imageName = `${movieName}_${page}-${row}-${col}`
-    this.store({page, row, col, rarity, slots, skills, skillLevels}, {screenshot, imageName}) // TODO: IF 見直し
-    return {page, row, col, rarity, slots: slots.split('-'), skills, skillLevels, imageName}
+    const charm = {page, row, col, rarity, slots, skills, skillLevels, imageName}
+    this.nCharms++
+    this._setCache({page, row, col}, charm)
+    return {charm, isCache: false}
   }
+
 
   public countCharms() {
     return this.nCharms
   }
 
-//   private generateInsertScript() {
-//     const buf = []
-
-//     for (let p = 1; p <= this.MAX_PAGE; p++) {
-//       for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
-//         for (let c = 1; c <= this.COLUMNS_PER_PAGE; c++) {
-//           const charm = this.charms[p][r][c]
-//           if ( charm == null ) { continue }
-
-//           // console.log(`${charm.slots} ${charm.skills[0]} ${charm.skillLevels[0]} ${charm.skills[1]} ${charm.skillLevels[1]}`)
-//           buf.push({
-//             "第一スキル":         charm.skills[0],
-//             "第一スキルポイント": charm.skillLevels[0],
-//             "第二スキル":         charm.skills[1],
-//             "第二スキルポイント": charm.skillLevels[1],
-//             "スロット":           charm.slots,
-//           })
-//         }
-//       }
-//     }
-
-//     return `const inputs = ${JSON.stringify(buf)}
-
-// eval( await (await fetch('https://code.jquery.com/jquery-3.6.0.slim.min.js')).text() )
-
-// for (const input of inputs) {
-//   Object.entries(input).forEach(([key, value]) => {
-//     \$(\`select[aria-label="\${key}"]\`).val(value)
-//     \$(\`select[aria-label="\${key}"]\`)[0].dispatchEvent(new Event('change', { bubbles: true }))
-//   })
-
-//   \$('button:contains("追加")').click()
-// }`
-//   }
 
   public exportAsText() {
     const buf = []
 
-    for (let p = 1; p <= this.MAX_PAGE; p++) {
+    for (let p = 1; p <= MAX_PAGE; p++) {
       for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
-        for (let c = 1; c <= this.COLUMNS_PER_PAGE; c++) {
+        for (let c = 1; c <= this.COLS_PER_PAGE; c++) {
           const charm = this.charms[p][r][c]
           if ( charm == null ) { continue }
 
-          buf.push(`${charm.skills[0]},${charm.skillLevels[0]},${charm.skills[1]},${charm.skillLevels[1]},${charm.slots.replace(/-/g, ',')}`)
+          buf.push([
+            charm.skills[0],
+            charm.skillLevels[0],
+            charm.skills[1],
+            charm.skillLevels[1],
+            ...charm.slots,
+          ].join(','))
         }
       }
     }
@@ -324,12 +363,13 @@ export default class MHRiseCharmScanner {
     return buf.join('\n')
   }
 
+
   public getCharms() {
     const buf = []
 
-    for (let p = 1; p <= this.MAX_PAGE; p++) {
+    for (let p = 1; p <= MAX_PAGE; p++) {
       for (let r = 1; r <= this.ROWS_PER_PAGE; r++) {
-        for (let c = 1; c <= this.COLUMNS_PER_PAGE; c++) {
+        for (let c = 1; c <= this.COLS_PER_PAGE; c++) {
           const charm = this.charms[p][r][c]
           if ( charm == null ) { continue }
 
@@ -348,23 +388,25 @@ export default class MHRiseCharmScanner {
     return rect
   }
 
-  private _getRarity(screenshot: Mat) {
-    const templates     = this.templates.rare
+
+  private _getRarity(screenshot: Mat): number {
+    const templates     = MHRiseCharmScanner.templates.rare
     const rect          = this._getTrimRect(templates, this.POINT_RARITY)
     const diffThreshold = 63
     return getMostMatchedImage(screenshot, templates, rect, diffThreshold)
   }
 
-  private _getSlots(screenshot: Mat) {
-    const templates     = this.templates.slot
+
+  private _getSlots(screenshot: Mat): number[] {
+    const templates     = MHRiseCharmScanner.templates.slot
     const rect          = this._getTrimRect(templates, this.POINT_SLOTS)
     const diffThreshold = 63
-    return getMostMatchedImage(screenshot, templates, rect, diffThreshold)
-    // return as string like "X-X-X"
+    return getMostMatchedImage(screenshot, templates, rect, diffThreshold).split('-').map(i => parseInt(i))
   }
 
+
   private _getSkills(screenshot: Mat) {
-    const templates     = this.templates.skill
+    const templates     = MHRiseCharmScanner.templates.skill
     const rect1         = this._getTrimRect(templates, this.POINT_SKILL1)
     const rect2         = this._getTrimRect(templates, this.POINT_SKILL2)
     const diffThreshold = 63
@@ -375,44 +417,70 @@ export default class MHRiseCharmScanner {
     ]
   }
 
-  private _getSkillLevels(screenshot: Mat) {
-    const templates     = this.templates.lvl
+
+  private _getSkillLevels(screenshot: Mat): number[] {
+    setFirstCanvas()
+    const debug = (images: any) => {
+      setNextCanvas(); dumpImage(images.trimmed)
+      setNextCanvas(); dumpImage(images.templateImage)
+      // setNextCanvas(); dumpImage(images.templateMask)
+      // setNextCanvas(); dumpImage(images.masked)
+      setNextCanvas(); dumpImage(images.diff)
+      setNextCanvas(); dumpImage(images.result)
+      dumpImageNewline()
+    }
+
+    const templates     = MHRiseCharmScanner.templates.lvl
     const rect1         = this._getTrimRect(templates, this.POINT_SKILL_LEVEL1)
     const rect2         = this._getTrimRect(templates, this.POINT_SKILL_LEVEL2)
     const diffThreshold = 127
 
+    const filter = (input: Mat) => {
+      const hsv = new cv.Mat()
+      cv.cvtColor(input, hsv, cv.COLOR_BGR2HSV, 3)
+
+      const channels = new cv.MatVector()
+      cv.split(hsv, channels)
+      const brightness = channels.get(2)
+      const binary = new cv.Mat()
+      cv.threshold(brightness, binary, 110, 255, cv.THRESH_OTSU)
+
+      cv.cvtColor(binary, input, cv.COLOR_GRAY2BGRA)
+
+      binary.delete()
+      channels.delete()
+      hsv.delete()
+    }
+
     return [
-      getMostMatchedImage(screenshot, templates, rect1, diffThreshold),
-      getMostMatchedImage(screenshot, templates, rect2, diffThreshold),
-    ]
+      getMostMatchedImage(screenshot, templates, rect1, diffThreshold, filter),
+      getMostMatchedImage(screenshot, templates, rect2, diffThreshold, filter),
+    ].map(i => parseInt(i))
   }
+
 
   private _getCurrentPage(screenshot: Mat) {
-    // setFirstCanvas()
-    // const debug = (images: any) => {
-    //   setNextCanvas(); dumpImage(images.trimmed)
-    //   setNextCanvas(); dumpImage(images.templateImage)
-    //   // setNextCanvas(); dumpImage(images.templateMask)
-    //   // setNextCanvas(); dumpImage(images.masked)
-    //   setNextCanvas(); dumpImage(images.diff)
-    //   setNextCanvas(); dumpImage(images.result)
-    //   dumpImageNewline()
-    // }
-    const templates     = this.templates.page
-    const rect          = this._getTrimRect(templates, this.POINT_PAGE)
+    const templates     = MHRiseCharmScanner.templates.page
+    const rect          = this._getTrimRect(
+      templates,
+      this.scanMode === SCAN_MODE.MODE_RINNE ? this.POINT_PAGE_IN_RINNE : this.POINT_PAGE
+    )
     const diffThreshold = 127
-    return getMostMatchedImage(screenshot, templates, rect, diffThreshold)
+
+    const result = getMostMatchedImage(screenshot, templates, rect, diffThreshold)
+    return parseInt(result)
   }
 
+
   private _getCurrentCharmPos(screenshot: Mat) {
-    const rect = new cv.Rect(this.POINT_CHARM_AREA_LEFT_TOP, this.SIZE_CHARM_AREA)
+    const rect = new cv.Rect(this.POINT_CHARM_AREA, this.SIZE_CHARM_AREA)
     const trimmed = screenshot.roi(rect)
 
+    const template = MHRiseCharmScanner.templates.others.charmSelectFrame
     const result = new cv.Mat()
-    cv.matchTemplate(trimmed, this.templates.others.charmFrame, result, cv.TM_CCOEFF_NORMED)
+    cv.matchTemplate(trimmed, template, result, cv.TM_CCOEFF_NORMED)
 
     const {maxLoc, maxVal} = cv.minMaxLoc(result)
-    // console.log({maxVal, maxLoc})
 
     result.delete()
     trimmed.delete()
@@ -420,6 +488,40 @@ export default class MHRiseCharmScanner {
     return {
       pos: [
         1 + Math.floor(0.5 + maxLoc.x / 36.0),
+        1 + Math.floor(0.5 + maxLoc.y / 41.0),
+      ],
+      match: maxVal,
+    }
+  }
+
+
+  // TODO: 元の関数と統合 (mode で分岐するように)
+  private _getCurrentCharmPosForRinne(screenshot: Mat) {
+    const rect = new cv.Rect(this.POINT_CHARM_AREA_IN_RINNE, this.SIZE_CHARM_AREA_IN_RINNE)
+    const trimmed = screenshot.roi(rect)
+
+    const template = MHRiseCharmScanner.templates.others.charmSelectFrameForRinne
+    const result = new cv.Mat()
+    cv.matchTemplate(trimmed, template, result, cv.TM_CCOEFF_NORMED)
+
+    const {maxLoc, maxVal} = cv.minMaxLoc(result)
+
+    // debug
+    // if (maxVal > 0.3) {
+    //   console.log({ maxLoc, maxVal })
+    //   const color = new cv.Scalar(0, 0, 255)
+    //   const p2 = new cv.Point(maxLoc.x + template.cols, maxLoc.y + template.rows)
+    //   cv.rectangle(trimmed, maxLoc, p2, color, cv.LINE_4)
+    //   setFirstCanvas()
+    //   dumpImage(trimmed)
+    // }
+
+    result.delete()
+    trimmed.delete()
+
+    return {
+      pos: [
+        1 + Math.floor(0.5 + maxLoc.x / 41.0),
         1 + Math.floor(0.5 + maxLoc.y / 41.0),
       ],
       match: maxVal,

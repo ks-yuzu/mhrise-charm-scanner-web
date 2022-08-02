@@ -1,7 +1,9 @@
-<script>
-  import {writable} from 'svelte/store'
-  import VideoReader from '../components/parts/VideoReader.svelte'
-  import {charmManager} from 'stores/stores.js'
+<script lang="ts">
+  import {writable}         from 'svelte/store'
+  import VideoReader        from '../components/parts/VideoReader.svelte'
+  import MHRiseCharmScanner from 'assets/mhrise/mhrise-charm-scanner'
+  import {charmManager}     from 'stores/stores.js'
+  import {isAppReady}       from 'stores/flags.js'
 
 
   // const VIDEO_WIDTH      = 1280 // switch のキャプチャ解像度
@@ -9,16 +11,15 @@
   // const VIDEO_FRAME_RATE = 29.97
   const N_VIDEO_SPLITS = (navigator.hardwareConcurrency || 8) / 2
 
-  export let charmScanner
-  export let isInitialized
+  let charmScanner = new MHRiseCharmScanner()
 
-  let domInput    // input 要素
-  let files = []  // 選択されたローカルファイル
+  let domFileInput // ファイルアップロード用 input 要素
+  let files = []   // 選択されたローカルファイル
 
   // video reader
   let videoReaderProps = writable([])
   let countFinishVideoRead
-  let isVideoReadFinished
+  let isVideoReadFinished = false
 
   // progress
   let currentFileIndex = -1
@@ -37,8 +38,10 @@
 
 
   async function onFileSelected(e) {
-    const files = e.target.files
-    if ( files == null ) { return }
+    if ( e.target.files == null ) { return }
+
+    const filelist = e.target.files as FileList
+    const files: File[] = [...filelist]
 
     isScanFinished = false
 
@@ -59,26 +62,30 @@
         const index = $videoReaderProps.length
 
         $videoReaderProps[index] = {
-          index: index,
-          videoName: file.name,
-          videoData: reader.result,
+          index:        index,
+          videoName:    file.name,
+          videoData:    reader.result,
           charmScanner: charmScanner,
-          nSplits: N_VIDEO_SPLITS,
-          onFinish: onFinishVideoRead,
+          nSplits:      N_VIDEO_SPLITS,
+          onCapture:    onCapture,
+          onFinish:     onFinishVideoRead,
         }
       }
       // console.log($videoReaderProps)
 
+      // wait for movie
       await new Promise((resolve) => requestAnimationFrame(resolve))
 
-      await new Promise((resolve) => {
-        setInterval(() => {
-          nScanedCharms = charmScanner.countCharms()
-          exportData = charmScanner.exportAsText()
-
-          if ( isVideoReadFinished ) { resolve() }
-        }, 1000)
-      })
+      // wait scanning
+      const updateResult = () => {
+        nScanedCharms = charmScanner.countCharms()
+        exportData = charmScanner.exportAsText()
+      }
+      while ( !isVideoReadFinished ) {
+        updateResult()
+        await new Promise(r => setTimeout(r, 1000))
+      }
+      updateResult()
 
       const charms = charmScanner.getCharms()
       await $charmManager.registerCharms(charms)
@@ -88,6 +95,19 @@
     console.log(JSON.stringify(charms))
 
     isScanFinished = true
+  }
+
+
+  function onCapture(frame, videoName) {
+    charmScanner.scan(frame, videoName)
+
+    // const result = charmScanner.scan(frame, videoName)
+    // if ( result == null ) { return }
+
+    // const {charm, isCache} = result
+    // if ( !isCache ) {
+    //   await $charmManager._saveScreenshot(frame, charm.imageName)
+    // }
   }
 
 
@@ -119,16 +139,19 @@
     </div>
 
     <div id="upload">
-      {#if isInitialized}
+      {#if isAppReady}
         <input style="display:none"
                type="file"
                accept=".mp4"
                multiple
                on:change={onFileSelected}
                bind:files
-               bind:this={domInput}>
-        <img src="https://static.thenounproject.com/png/625182-200.png" alt="" on:click={()=>{domInput.click()}} />
-        <div on:click={()=>{domInput.click}}>Click to Select Movie</div>
+               bind:this={domFileInput}>
+        <img src="https://static.thenounproject.com/png/625182-200.png"
+             alt=""
+             on:click={()=>domFileInput.click()}
+             />
+        <div on:click={()=>domFileInput.click()}>Click to Select Movie</div>
       {:else}
         Loading Files...
       {/if}

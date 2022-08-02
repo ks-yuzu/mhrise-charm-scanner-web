@@ -1,6 +1,7 @@
+<!-- ファイルから各フレームの cv.Mat を取り出すやつ -->
+
 <script lang="ts">
   import cv from 'opencv-ts'
-  // import {writable} from 'svelte/store'
 
   const FRAME_RATE = 29.97
   const videoWidth = 1280
@@ -11,7 +12,7 @@
   export let videoName
   export let videoData
   export let isVideoVisible = false
-  export let charmScanner
+  export let onCapture
   export let onFinish
 
   let beginTime, endTime
@@ -44,20 +45,14 @@
     // console.log( {currentTime: domVideo.currentTime, endTime} )
 
     if ( endTime - domVideo.currentTime < 1 / FRAME_RATE ) {
-      // const nScanedCharms = charmScanner.countCharms()
-      // console.log(nScanedCharms)
-      // insertScript = charmScanner.generateInsertScript()
-
       progress = (1)
-      // console.log(charmScanner.charms)
-
       onFinish()
 
       return
     }
 
     capture.read(frame)
-    charmScanner.scan(frame, videoName) // TODO: コールバックにして汎用クラスにする
+    onCapture(frame, videoName)
 
     seekFrames(1, FRAME_RATE)
     progress = ((domVideo.currentTime - beginTime) / (endTime - beginTime))

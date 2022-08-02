@@ -1,23 +1,22 @@
 <script lang="ts">
-  import MHRiseCharmScanner from 'assets/mhrise/mhrise-charm-scanner'
   import Nav                from './components/nav/Nav.svelte'
   import Hamburger          from './components/parts/Hamburger.svelte'
+  import MHRiseCharmScanner from 'assets/mhrise/mhrise-charm-scanner'
   import MHRiseCharmManager from 'assets/mhrise/mhrise-charm-manager'
   import {charmManager}     from 'stores/stores.js'
+  import {isAppReady}       from 'stores/flags'
 
   const TITLE   = 'MHRise Charm Scanner'
   const VERSION = '0.5.7'
 
   // let isDemoMode       = false
   let isNavigationOpen = true
-  let isInitialized     = false
-  let charmScanner
 
   window.addEventListener('load', async () => {
-    charmScanner = new MHRiseCharmScanner()
     $charmManager = new MHRiseCharmManager()
-    await charmScanner.init()
-    isInitialized = true
+    await MHRiseCharmScanner.init()
+
+    $isAppReady = true
   })
 
 /*
@@ -48,7 +47,7 @@
     <!-- </div> -->
   </header>
   <div id="nav-wrapper">
-    <Nav {...{isNavigationOpen, isInitialized, charmScanner}} />
+    <Nav {isNavigationOpen} />
   </div>
   <div id="version">v{VERSION}</div>
 </main>

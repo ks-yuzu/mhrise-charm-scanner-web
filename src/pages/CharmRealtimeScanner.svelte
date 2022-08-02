@@ -9,45 +9,55 @@
   import SkillInput         from '../components/parts/CharmSkillInput.svelte'
   import SkillLevelInput    from '../components/parts/CharmSkillLevelInput.svelte'
   import SlotsInput         from '../components/parts/CharmSlotsInput.svelte'
+  import CharmMinimap       from '../components/parts/CharmMinimap.svelte'
+  import RecordButton       from '../components/parts/RecordButton.svelte'
+  import {MAX_PAGE}         from 'assets/mhrise/metadata'
   import type {Charm}       from 'assets/mhrise/mhrise-charm'
+  import MHRiseCharmScanner, {SCAN_MODE}
+                            from 'assets/mhrise/mhrise-charm-scanner'
   import {charmManager}     from 'stores/stores.js'
+  import {isAppReady}       from 'stores/flags'
 
   // const VIDEO_WIDTH      = 1280 // switch のキャプチャ解像度
   // const VIDEO_HEIGHT     = 720
   // const VIDEO_FRAME_RATE = 29.97
 
-  export let charmScanner
-  export let isInitialized
+  let charmScanner = new MHRiseCharmScanner(SCAN_MODE.MODE_EQUIP_LIST)
 
-  // result
-  let nScanedCharms = 0
-  let exportData = ''
+  let domCameraReader
+  let isRecording              = false
+  let isRegisterEnabled        = true
+  let isPositionAdjustRequired = true
 
   // form to show and fix scanned data
   let currentCharm: Charm = {skills: [], skillLevels: [], slots: []}
 
-  let domCameraReader
-
   const imageProcessor = async (frame: Mat) => {
-    const charm = charmScanner.scan(frame, dayjs().format())
-    if (charm == null) { return }
+    if ( !isRecording ) { return }
 
-    exportData = JSON.stringify(charm, null, 2) // TODO: tmp
+    if ( isPositionAdjustRequired ) {
+      isPositionAdjustRequired = false
+      charmScanner.adjustPosition(frame)
+    }
+
+    const result = charmScanner.scan(frame, dayjs().format())
+    if ( result == null ) { return }
+    const {charm, isCache} = result
+
+    // 表示を更新
     currentCharm = charm
-    nScanedCharms = charmScanner.countCharms()
 
-    await $charmManager.registerCharms([charm])
+    if ( !isCache && isRegisterEnabled ) {
+      // nScanedCharms = charmScanner.countCharms()
+      await $charmManager.registerCharm(charm, frame)
+    }
   }
 
   ;(async () => {
-    do {
+    while ( !$isAppReady ) {
       await new Promise(r => setTimeout(r, 1000))
-    } while ( !isInitialized )
-
+    }
     await domCameraReader.init()
-
-    // const offset = {x: 1, y: 1} // TODO: 適当にズレを取得する
-    // charmScanner.adjustPosition(offset)
   })()
 </script>
 
@@ -60,6 +70,9 @@
         <CameraReader bind:this={domCameraReader}
                       imageProcessor={imageProcessor}/>
         <div id="charm-spec">
+          <RecordButton bind:isRecording
+                        label="スキャン"
+                        />
           <div id="charm-spec-position">
             位置:
             <CharmPositionInput inputIdPrefix="input-position-"
@@ -97,13 +110,15 @@
           </div>
         </div>
       </div>
-      <div id="charmbox-overview">
-      </div>
-    </div>
 
-    <div id="result">
-      <div>Found {nScanedCharms} charms.</div>
-      <textarea placeholder="納刀術,2,ひるみ軽減,1,1,0,0">{exportData}</textarea>
+      <div class="charm-box-overview">
+        {#each [...Array(MAX_PAGE + 1).keys()].slice(1) as page}
+          <CharmMinimap {page}
+                        {currentCharm}
+                        {charmScanner}
+                        />
+                      {/each}
+                    </div>
     </div>
   </div>
 </div>
@@ -119,9 +134,8 @@
 
   #scanner > #status {
 		width:     100%;
+    max-width: calc(1280px + 26rem);
     margin:    0;
-
-    /* text-align: center; */
   }
 
   #scanner > #status > #main {
@@ -136,7 +150,7 @@
 
   #scanner > #status > #main > #charm-spec {
     width:       25rem;
-    margin:      0 0 0 1rem;
+    margin:      0 0 0 1rem; /* TODO: gap */
     flex-grow:   0;
     flex-shrink: 0;
   }
@@ -145,15 +159,9 @@
     margin:      0 0 1rem 0;
   }
 
-  #scanner #result {
-    width:  100%;
-    margin: 1rem 0 0 0;
-  }
-
-  #scanner #result textarea {
-    width:       100%;
-    height:      20rem;
-    font-size:   small;
-    font-family: monospace;
+  #scanner > #status > div.charm-box-overview {
+    display:   flex;
+    flex-wrap: wrap;
+    gap:       0 0.4rem;
   }
 </style>
