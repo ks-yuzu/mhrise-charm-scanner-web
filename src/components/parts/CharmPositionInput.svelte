@@ -7,13 +7,13 @@ export let row
 export let col
 
 const MAX_PAGE = 30
-const PAGE_LIST = [...Array(MAX_PAGE).keys()].map(i => i + 1) // 補完用リスト
+const PAGE_LIST = [...Array(MAX_PAGE + 1).keys()].slice(1) // 補完用リスト
 
 const MAX_ROW = 5
-const ROW_LIST = [...Array(MAX_ROW).keys()].map(i => i + 1) // 補完用リスト
+const ROW_LIST = [...Array(MAX_ROW + 1).keys()].slice(1) // 補完用リスト
 
 const MAX_COL = 8
-const COL_LIST = [...Array(MAX_COL).keys()].map(i => i + 1) // 補完用リスト
+const COL_LIST = [...Array(MAX_COL + 1).keys()].slice(1) // 補完用リスト
 </script>
 
 <div>

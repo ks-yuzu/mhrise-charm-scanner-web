@@ -2,7 +2,7 @@
 import AutoComplete from 'simple-svelte-autocomplete'
 
 const MAX_SKILL_LEVEL  = 7
-const SKILL_LEVEL_LIST = [...Array(MAX_SKILL_LEVEL).keys()].map(i => i + 1) // 補完用リスト
+const SKILL_LEVEL_LIST = [...Array(MAX_SKILL_LEVEL + 1).keys()].slice(1) // 補完用リスト
 
 export let inputId     = 'input-skill-level-0'
 export let placeholder = 'Lv'

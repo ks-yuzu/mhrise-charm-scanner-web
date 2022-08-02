@@ -3,7 +3,7 @@ import AutoComplete from 'simple-svelte-autocomplete'
 
 const MAX_NUM_SLOTS   = 3
 const MAX_SLOT_LEVEL  = 3
-const SLOT_LEVEL_LIST = [...Array(MAX_SLOT_LEVEL).keys()].map(i => i + 1) // 補完用リスト
+const SLOT_LEVEL_LIST = [...Array(MAX_SLOT_LEVEL + 1).keys()].slice(1) // 補完用リスト
 
 export let inputIdPrefix = 'input-slot-'
 export let placeholder   = 'スロット'
