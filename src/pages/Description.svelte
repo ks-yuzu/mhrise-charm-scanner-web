@@ -1,5 +1,5 @@
-<script>
-import { Lightbox } from 'svelte-lightbox'
+<script lang="ts">
+import {Lightbox} from 'svelte-lightbox'
 </script>
 
 <div id="description">
@@ -37,6 +37,28 @@ import { Lightbox } from 'svelte-lightbox'
       <div class="lightboxes">
         <Lightbox thumbnailStyle="width: 24rem; max-width: 90%; border: solid 1px #eee">
           <img src="img/screenshots/charm-scanning.png" alt="charm scanning">
+        </Lightbox>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border border-light shadow-sm">
+    <div class="card-body">
+      <h2>■ 護石リアルタイムスキャン(β)</h2>
+      <p>
+        護石のスキルやスロットを自動読み取りします。<br>
+        Nintendo Switch の映像をキャプチャボードで取り込み、リアルタイムにスキャンを行うことができます。<br>
+        市販のキャプチャボードの購入が必要ですが、キャプチャ動画を用意する必要がなくなります。<br>
+        <br>
+        動画からのスキャン同様、読み込んだ護石は護石管理ページで確認したり、エクスポートすることができます。<br>
+        <br>
+        (注意)<br>
+        <span style="color: red">装飾品をつけたままだと、装飾品分のスキルも読み込まれてしまいます。</span> (一括解除が有用です)<br>
+      </p>
+
+      <div class="lightboxes">
+        <Lightbox thumbnailStyle="width: 24rem; max-width: 90%; border: solid 1px #eee">
+          <img src="img/screenshots/charm-realtime-scan.png" alt="charm realtime scan">
         </Lightbox>
       </div>
     </div>
@@ -83,6 +105,20 @@ import { Lightbox } from 'svelte-lightbox'
       <p>
         スキャンした護石を検索することができます。
         装飾品でスキルが実現できる場合も検索対象に含まれます。
+      </p>
+    </div>
+  </div>
+
+  <div class="card border border-light shadow-sm">
+    <div class="card-body">
+      <h2>■ 輪廻サポート(β)</h2>
+      <p>
+        輪廻錬金を行う際に、表示中の護石の上位互換護石をリアルタイム表示する機能です。<br>
+        <br>
+        <span style="color: red">
+          必ずしもスキャンが正しいとは限りません。<br>
+          輪廻に使う時は記録されているスクリーンショットを確認するなど、十分な確認を行ってください。
+        </span>
       </p>
     </div>
   </div>
