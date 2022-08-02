@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import cv                 from 'opencv-ts'
   import {slide}            from "svelte/transition"
   import SvelteTable        from "./SvelteTable.svelte"
@@ -11,9 +11,10 @@
   export let showSubstitutesColumn = true
   export let charms
 
+  export let initialOpenedScreentshots = []
+
   export let sliceBegin
   export let sliceEnd
-
 
   // constants
   const N_CHARM_SLOT_MAX = 3
@@ -125,9 +126,7 @@
 
   // handlers
   function onSort() {
-    // close all accordion
-    isScreenshotShown = []
-    isSubstitutableCharmsShown = []
+    init()
   }
 
   function onClickRow({row}) {
@@ -136,7 +135,7 @@
   }
 
   async function toggleScreenshot({e, row}) {
-    e.stopPropagation()
+    e?.stopPropagation()
 
     const index = row.rowid
     const toShow = ! isScreenshotShown[index]
@@ -144,10 +143,15 @@
 
     if ( toShow ) {
       // console.log(charms[index].imagename)
+      if (row.imagename == null) {
+        console.log('screenshot is not found')
+        return
+      }
       const screenshot = await $charmManager.getScreenshot(row.imagename)
 
       // await new Promise((resolve) => requestAnimationFrame(resolve))
       cv.imshow(`charm-table-row-${index}-screenshot`, screenshot)
+      // screenshot.delete()
     }
   }
 
@@ -157,13 +161,27 @@
     'table-width': `${61 + (showImageColumn ? 3 : 0) + (showSubstitutesColumn ? 3 : 0)}rem`,
   }).map(([k, v]) => `--${k}:${v}`)
     .join(';')
+
+
+  function init(){
+    // close all accordion
+    isScreenshotShown          = []
+    isSubstitutableCharmsShown = []
+
+    for (let id of initialOpenedScreentshots) {
+      const row = charms.find(i => i.rowid === id)
+      toggleScreenshot({row})
+    }
+  }
+  init()
+  $: { charms; init() }
 </script>
 
 <div class="charm-table" style="{styleVars}">
   <SvelteTable columns="{columns}"
                rows="{charms}"
-               classNameTable={['table table-striped table-hover table-responsible']}
-               classNameThead={['table-dark hide-first-child.disabled']}
+               classNameTable={'table table-striped table-hover table-responsible'}
+               classNameThead={'table-dark hide-first-child.disabled'}
                disableFilterHeader={disableFilterHeader}
                bind:sliceBegin
                bind:sliceEnd
@@ -171,7 +189,7 @@
                >
     <tr slot="row" let:row let:n on:click={() => onClickRow({row})}>
       {#each columns as col}
-        <td on:click={(e) => { if (col.onClick) {col.onClick({e, row, col, index: n})} }}
+        <td on:click={(e) => { if (col.onClick != null) {col.onClick({e, row, col, index: n})} }}
             class={[col.class].join(' ')}
             >
           {#if col.renderComponent}

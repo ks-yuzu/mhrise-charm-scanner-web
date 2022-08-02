@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import CharmTable from '../components/parts/CharmTable.svelte'
   import {charmManager} from 'stores/stores.js'
 
