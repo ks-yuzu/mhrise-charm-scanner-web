@@ -1,8 +1,8 @@
 <script lang="ts">
-  import MHRiseCharmManager from 'assets/mhrise/mhrise-charm-manager.js'
   import MHRiseCharmScanner from 'assets/mhrise/mhrise-charm-scanner'
   import Nav                from './components/nav/Nav.svelte'
   import Hamburger          from './components/parts/Hamburger.svelte'
+  import MHRiseCharmManager from 'assets/mhrise/mhrise-charm-manager'
   import {charmManager}     from 'stores/stores.js'
 
   const TITLE   = 'MHRise Charm Scanner'
