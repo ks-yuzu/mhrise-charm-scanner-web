@@ -6,7 +6,8 @@
     "lib": [
       "es2017",
       "esnext.bigint",
-      "dom"
+      "dom",
+      "dom.iterable"
     ]
   },
 
