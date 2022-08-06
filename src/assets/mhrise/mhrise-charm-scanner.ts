@@ -25,13 +25,15 @@ export default class MHRiseCharmScanner {
   private readonly POINT_SKILL_LEVEL2          = new cv.Point(1190, 340)
 
   // 装備確認画面
-  private readonly POINT_PAGE                  = new cv.Point(787, 582) // ページ番号
+  private readonly POINT_PAGE                  = new cv.Point(787, 582) // ページ番号 (1桁数字 & 2桁数字の1桁目)
+  private readonly POINT_PAGE_SECOND_DIGIT     = new cv.Point(796, 582) // ページ番号 (2桁数字)
   private readonly POINT_CHARM_AREA            = new cv.Point(634, 359) // アイコンリストの左上座標
   private readonly SIZE_CHARM_AREA             = new cv.Size(357, 199)  // アイコンリストのサイズ
 
   // 輪廻画面 (位置調整する都合で, EQUIPMENT_SPEC_HEADER_BASE に相対位置を足して定義)
   // offset(-334, 14) で adjust されるはず? 手元のキャプボでは 1px ずれるので (-335, 13) で確認
   private readonly POINT_PAGE_IN_RINNE         = new cv.Point(796, 532) // ページ番号
+  private readonly POINT_PAGE_SECOND_DIGIT_IN_RINNE = new cv.Point(805, 532) // ページ番号 (2桁数字)
   private readonly POINT_CHARM_AREA_IN_RINNE   = new cv.Point(657, 358) // アイコンリストの左上座標 (-366, 270)
   private readonly SIZE_CHARM_AREA_IN_RINNE    = new cv.Size(329, 164)  // アイコンリストのサイズ
 
@@ -56,7 +58,22 @@ export default class MHRiseCharmScanner {
         equipmentSpecHeader:      fetchImage('img/templates/others/equipment-spec-header.png'),
       },
       page: {},
+      'page-parts': {
+        0:                    fetchImage('img/templates/page-parts/0.png'),
+        1:                    fetchImage('img/templates/page-parts/1.png'),
+        2:                    fetchImage('img/templates/page-parts/2.png'),
+        3:                    fetchImage('img/templates/page-parts/3.png'),
+        4:                    fetchImage('img/templates/page-parts/4.png'),
+        5:                    fetchImage('img/templates/page-parts/5.png'),
+        6:                    fetchImage('img/templates/page-parts/6.png'),
+        7:                    fetchImage('img/templates/page-parts/7.png'),
+        8:                    fetchImage('img/templates/page-parts/8.png'),
+        9:                    fetchImage('img/templates/page-parts/9.png'),
+      },
       rare: {
+        10:                   fetchImage('img/templates/rare/10.jpg'),
+        9:                    fetchImage('img/templates/rare/9.jpg'),
+        8:                    fetchImage('img/templates/rare/8.jpg'),
         7:                    fetchImage('img/templates/rare/7.jpg'),
         6:                    fetchImage('img/templates/rare/6.jpg'),
         5:                    fetchImage('img/templates/rare/5.jpg'),
@@ -85,6 +102,7 @@ export default class MHRiseCharmScanner {
         '3-1-1':              fetchImage('img/templates/slot/311.jpg'),
         '3-2-0':              fetchImage('img/templates/slot/32.jpg'),
         '3-2-1':              fetchImage('img/templates/slot/321.jpg'),
+        '4-0-0':              fetchImage('img/templates/slot/4.jpg'),
       },
       skill: {
         'KO術':               fetchImage('img/templates/skill/KO術.jpg'),
@@ -189,10 +207,21 @@ export default class MHRiseCharmScanner {
         '散弾・拡散矢強化':   fetchImage('img/templates/skill/散弾・拡散矢強化.jpg'),
         '貫通弾・貫通矢強化': fetchImage('img/templates/skill/貫通弾・貫通矢強化.jpg'),
         '通常弾・連射矢強化': fetchImage('img/templates/skill/通常弾・連射矢強化.jpg'),
+        // added in sunbreak
+        'チャージマスター':   fetchImage('img/templates/skill/チャージマスター.jpg'),
+        'チューンアップ':     fetchImage('img/templates/skill/チューンアップ.jpg'),
+        '供応':               fetchImage('img/templates/skill/供応.jpg'),
+        '刃鱗磨き':           fetchImage('img/templates/skill/刃鱗磨き.jpg'),
+        '合気':               fetchImage('img/templates/skill/合気.jpg'),
+        '壁面移動【翔】':     fetchImage('img/templates/skill/壁面移動【翔】.jpg'),
+        '攻勢':               fetchImage('img/templates/skill/攻勢.jpg'),
+        '災禍転福':           fetchImage('img/templates/skill/災禍転福.jpg'),
+        '研磨術【鋭】':       fetchImage('img/templates/skill/研磨術【鋭】.jpg'),
+        '連撃':               fetchImage('img/templates/skill/連撃.jpg'),
       },
     }
 
-    for (let i = 1; i <= MAX_PAGE; i++) {
+    for (let i = 1; i <= 9; i++) {
       templateFetchPromises.page[i] = fetchImage(`img/templates/page/${i}.png`)
     }
 
@@ -266,8 +295,12 @@ export default class MHRiseCharmScanner {
     this.POINT_SKILL_LEVEL2        .y += (offset.y - this.adjustOffset.y)
     this.POINT_PAGE                .x += (offset.x - this.adjustOffset.x)
     this.POINT_PAGE                .y += (offset.y - this.adjustOffset.y)
+    this.POINT_PAGE_SECOND_DIGIT   .x += (offset.x - this.adjustOffset.x)
+    this.POINT_PAGE_SECOND_DIGIT   .y += (offset.y - this.adjustOffset.y)
     this.POINT_PAGE_IN_RINNE       .x += (offset.x - this.adjustOffset.x)
     this.POINT_PAGE_IN_RINNE       .y += (offset.y - this.adjustOffset.y)
+    this.POINT_PAGE_SECOND_DIGIT_IN_RINNE.x += (offset.x - this.adjustOffset.x)
+    this.POINT_PAGE_SECOND_DIGIT_IN_RINNE.y += (offset.y - this.adjustOffset.y)
     this.POINT_CHARM_AREA          .x += (offset.x - this.adjustOffset.x)
     this.POINT_CHARM_AREA          .y += (offset.y - this.adjustOffset.y)
     this.POINT_CHARM_AREA_IN_RINNE .x += (offset.x - this.adjustOffset.x)
@@ -280,6 +313,10 @@ export default class MHRiseCharmScanner {
 
   public scan(screenshot: Mat, movieName: string): {charm: Charm, isCache: boolean} | null {
     const page = this._getCurrentPage(screenshot)
+    // if (page <= 0 || MAX_PAGE < page) {
+    //   console.log(`invalid page number: ${page}`)
+    //   return null
+    // }
 
     // スキャンモード (装備確認ページと輪廻ページ) でパラメータ設定を分岐
     const {pos, match, matchThreshold, isCacheEnabled} = (() => {
@@ -287,13 +324,13 @@ export default class MHRiseCharmScanner {
         case SCAN_MODE.MODE_EQUIP_LIST:
           return {
             ...this._getCurrentCharmPos(screenshot),
-            matchThreshold: 0.34,
+            matchThreshold: 0.31,
             isCacheEnabled: true,
           }
         case SCAN_MODE.MODE_RINNE:
           return {
             ...this._getCurrentCharmPosForRinne(screenshot),
-            matchThreshold: 0.34,
+            matchThreshold: 0.28,
             isCacheEnabled: true,
           }
         default:
@@ -393,7 +430,7 @@ export default class MHRiseCharmScanner {
     const templates     = MHRiseCharmScanner.templates.rare
     const rect          = this._getTrimRect(templates, this.POINT_RARITY)
     const diffThreshold = 63
-    return getMostMatchedImage(screenshot, templates, rect, diffThreshold)
+    return getMostMatchedImage(screenshot, templates, rect, diffThreshold).name
   }
 
 
@@ -401,7 +438,7 @@ export default class MHRiseCharmScanner {
     const templates     = MHRiseCharmScanner.templates.slot
     const rect          = this._getTrimRect(templates, this.POINT_SLOTS)
     const diffThreshold = 63
-    return getMostMatchedImage(screenshot, templates, rect, diffThreshold).split('-').map(i => parseInt(i))
+    return getMostMatchedImage(screenshot, templates, rect, diffThreshold).name.split('-').map(i => parseInt(i))
   }
 
 
@@ -412,24 +449,13 @@ export default class MHRiseCharmScanner {
     const diffThreshold = 63
 
     return [
-      getMostMatchedImage(screenshot, templates, rect1, diffThreshold),
-      getMostMatchedImage(screenshot, templates, rect2, diffThreshold),
+      getMostMatchedImage(screenshot, templates, rect1, diffThreshold).name,
+      getMostMatchedImage(screenshot, templates, rect2, diffThreshold).name,
     ]
   }
 
 
   private _getSkillLevels(screenshot: Mat): number[] {
-    setFirstCanvas()
-    const debug = (images: any) => {
-      setNextCanvas(); dumpImage(images.trimmed)
-      setNextCanvas(); dumpImage(images.templateImage)
-      // setNextCanvas(); dumpImage(images.templateMask)
-      // setNextCanvas(); dumpImage(images.masked)
-      setNextCanvas(); dumpImage(images.diff)
-      setNextCanvas(); dumpImage(images.result)
-      dumpImageNewline()
-    }
-
     const templates     = MHRiseCharmScanner.templates.lvl
     const rect1         = this._getTrimRect(templates, this.POINT_SKILL_LEVEL1)
     const rect2         = this._getTrimRect(templates, this.POINT_SKILL_LEVEL2)
@@ -453,22 +479,69 @@ export default class MHRiseCharmScanner {
     }
 
     return [
-      getMostMatchedImage(screenshot, templates, rect1, diffThreshold, filter),
-      getMostMatchedImage(screenshot, templates, rect2, diffThreshold, filter),
+      getMostMatchedImage(screenshot, templates, rect1, diffThreshold, filter).name,
+      getMostMatchedImage(screenshot, templates, rect2, diffThreshold, filter).name,
     ].map(i => parseInt(i))
   }
 
 
   private _getCurrentPage(screenshot: Mat) {
-    const templates     = MHRiseCharmScanner.templates.page
-    const rect          = this._getTrimRect(
-      templates,
-      this.scanMode === SCAN_MODE.MODE_RINNE ? this.POINT_PAGE_IN_RINNE : this.POINT_PAGE
-    )
-    const diffThreshold = 127
+    // 1桁と仮定してマッチング
+    const candidateForAssumingOneDigitNumber = (() => {
+      const templates = MHRiseCharmScanner.templates.page
+      const rect = this._getTrimRect(
+        templates,
+        this.scanMode === SCAN_MODE.MODE_RINNE ? this.POINT_PAGE_IN_RINNE : this.POINT_PAGE
+      )
+      const diffThreshold = 127
 
-    const result = getMostMatchedImage(screenshot, templates, rect, diffThreshold)
-    return parseInt(result)
+      return getMostMatchedImage(screenshot, templates, rect, diffThreshold)
+    })()
+
+    if (candidateForAssumingOneDigitNumber.diffCount === 0) {
+      return parseInt(candidateForAssumingOneDigitNumber.name)
+    }
+
+    // setFirstCanvas()
+    // const debug = (images: any) => {
+    //   setNextCanvas(); dumpImage(images.trimmed)
+    //   setNextCanvas(); dumpImage(images.templateImage)
+    //   // setNextCanvas(); dumpImage(images.templateMask)
+    //   // setNextCanvas(); dumpImage(images.masked)
+    //   setNextCanvas(); dumpImage(images.diff)
+    //   setNextCanvas(); dumpImage(images.result)
+    //   dumpImageNewline()
+    // }
+
+    // 2桁と仮定してマッチング
+    const candidateForAssumingTwoDigitNumber = (() => {
+      const templates = MHRiseCharmScanner.templates['page-parts']
+      const rectForFirstDigit = this._getTrimRect(
+        templates,
+        this.scanMode === SCAN_MODE.MODE_RINNE ? this.POINT_PAGE_IN_RINNE : this.POINT_PAGE
+      )
+      const rectForSecondDigit = this._getTrimRect(
+        templates,
+        this.scanMode === SCAN_MODE.MODE_RINNE ? this.POINT_PAGE_SECOND_DIGIT_IN_RINNE : this.POINT_PAGE_SECOND_DIGIT
+      )
+      const diffThreshold = 127
+
+      const firstDigitCandidate  = getMostMatchedImage(screenshot, templates, rectForFirstDigit, diffThreshold)
+      const secondDigitCandidate = getMostMatchedImage(screenshot, templates, rectForSecondDigit, diffThreshold)
+
+      return {
+        name: '' + firstDigitCandidate.name + secondDigitCandidate.name,
+        diffCount: firstDigitCandidate.diffCount + secondDigitCandidate.diffCount,
+      }
+    })()
+
+    // 1桁/2桁で一致度が高い方を返す
+    if (candidateForAssumingOneDigitNumber.diffCount < candidateForAssumingTwoDigitNumber.diffCount) {
+      return parseInt(candidateForAssumingOneDigitNumber.name)
+    }
+    else {
+      return parseInt(candidateForAssumingTwoDigitNumber.name)
+    }
   }
 
 

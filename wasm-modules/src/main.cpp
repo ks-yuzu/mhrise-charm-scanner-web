@@ -14,6 +14,7 @@
 
 #include "nlohmann/json.hpp"
 #include "charm.hpp"
+#include "skill.hpp"
 
 
 using JSON = nlohmann::json;
@@ -29,20 +30,8 @@ std::string getSubstitutesAll(const std::string& input) {
     charms.emplace_back(charm);
   }
 
-  // for (const auto& charm : charms) {
-  //   std::cout << charm << std::endl;
-  // }
-
-  // std::cout << std::boolalpha;
-  // std::cout << (charms[0] < charms[304]) << std::endl;
-  // std::cout << (charms[0] < charms[44])  << std::endl;
-  // std::cout << charms[305] << std::endl
-  //           << charms[902] << std::endl;
-  // std::cout << (charms[305] < charms[902])  << std::endl;
-
-
   // 総当たり
-  // ./a.out  5.33s user 0.04s system 91% cpu 5.838 total
+  // ./a.out  28.57s user 0.04s system 99% cpu 28.650 total (for 3070 charms, w/o -O option)
   // {
   //   std::vector<std::pair<int, int>> results;
 
@@ -63,9 +52,8 @@ std::string getSubstitutesAll(const std::string& input) {
 
 
   // スキルで絞り込み
-  // TODO: 同性能ならスキップするように
-  // TOOD: uniq してからチェックをかける
-  // ./a.out  0.39s user 0.02s system 37% cpu 1.104 total
+  // ./a.out  4.14s user 0.00s system 98% cpu 4.196 total (for 3070 charms, w/o -O option)
+  // ./a.out  0.53s user 0.00s system 95% cpu 0.553 total (for 3070 charms, w/ -O2 option)
   {
     std::unordered_map<std::string, std::vector<Charm const*>> charmsGroupedBySkill;
     for (const auto& charm : charms) {
@@ -73,24 +61,12 @@ std::string getSubstitutesAll(const std::string& input) {
         charmsGroupedBySkill[skill].push_back(&charm);
       }
     }
-    // for (const auto& [key, value]: charmsGroupedBySkill) {
-    //   std::cout << key << std::endl;
-    //   for ( const auto& charm : value ) {
-    //     std::cout << *charm << std::endl;
-    //   }
-    // }
 
-    std::unordered_map<int, std::vector<Charm const*>> charmsGroupedBySlotCount;
+    std::unordered_map<int, std::vector<Charm const*>> charmsGroupedBySlotEvaluation;
     for (const auto& charm : charms) {
-      const int nSlots = count_if(ALL(charm.slots), [](const auto& slot){ return slot > 0; });
-      charmsGroupedBySlotCount[nSlots].push_back(&charm);
+      const int slotEvaluation = accumulate(ALL(charm.slots), 0);
+      charmsGroupedBySlotEvaluation[slotEvaluation].push_back(&charm);
     }
-    // for (const auto& [key, value]: charmsGroupedBySlotCount) {
-    //   std::cout << key << std::endl;
-    //   for ( const auto& charm : value ) {
-    //     std::cout << *charm << std::endl;
-    //   }
-    // }
 
     std::vector<std::pair<int, int>> results;
 
@@ -98,8 +74,6 @@ std::string getSubstitutesAll(const std::string& input) {
       // スキル込みで
       for (const auto& skill : base.skills ) {
         for (const auto& target : charmsGroupedBySkill[skill]) {
-          // if ( base == target ) { continue; }
-
           if ( base < *target ) {
             results.emplace_back(base.id, target->id);
           }
@@ -107,29 +81,24 @@ std::string getSubstitutesAll(const std::string& input) {
       }
 
       // スロットのみで
-      const int levelSum = std::accumulate(ALL(base.skillLevels), 0);
-      for (const int i : {1, 2, 3}) {
-        if ( i < levelSum ) { continue; }
+      const int requiredSlotEvaluation = [&base](){ // スキルとスロットの合計評価値
+        int sum = 0;
+        for (const auto i : indices(base.skills)) {
+          sum += evaluateSkill(base.skills[i], base.skillLevels[i]);
+        }
+        return sum + accumulate(ALL(base.slots), 0);
+      }();
 
-        for (const auto& target : charmsGroupedBySlotCount[i]) {
-          // if ( base == target ) { continue; }
+      for (const auto& [slotEvaluation, targets] : charmsGroupedBySlotEvaluation) {
+        if (slotEvaluation < requiredSlotEvaluation) { continue; }
 
+        for (const auto& target : targets) {
           if ( base < *target ) {
             results.emplace_back(base.id, target->id);
           }
         }
       }
     }
-
-    // for (const auto& [i, j] : results) {
-    //   std::cout << i << " < " << j << std::endl;
-    // }
-
-    // std::ostringstream oss;
-    // for (const auto& [i, j] : results) {
-    //   oss << i << " < " << j << std::endl;
-    // }
-    // return oss.str().c_str();
 
     // 出力用に構造化
     std::map<int, std::vector<int>> output;
@@ -177,17 +146,16 @@ std::string getSubstitutes(const std::string& _allCharms, const std::string& _ba
 
 int main(void) {
 #ifndef __EMSCRIPTEN__
-  std::cout << getSubstitutes(
-    #include "../test-data/charms.txt"
-    ,
-    "{\"rowid\": -1, \"skills\": [\"ブレ抑制\", \"業物\"], \"skillLevels\": [1, 1], \"slots\": [1, 0, 0]}"
-    //"{\"rowid\": -1, \"skills\": [\"ブレ抑制\", \"炎\"], \"skillLevels\": [1, 1], \"slots\": [1, 0, 0]}"
-  ) << std::endl;
+ // std::cout << getSubstitutes(
+ //   #include "../test-data/charms.txt"
+ //   ,
+ //   "{\"rowid\": -1, \"skills\": [\"攻撃\"], \"skillLevels\": [2], \"slots\": [1, 0, 0]}"
+ //   //"{\"rowid\": -1, \"skills\": [\"ブレ抑制\", \"炎\"], \"skillLevels\": [1, 1], \"slots\": [1, 0, 0]}"
+ // ) << std::endl;
 
-// std::cout << getSubstitutesAll(
-//   #include "../test-data/charms.txt"
-// ) << std::endl;
-
+std::cout << getSubstitutesAll(
+  #include "../test-data/charms.txt"
+) << std::endl;
 #endif //__EMSCRIPTEN__
 }
 

@@ -106,6 +106,12 @@ import {Lightbox} from 'svelte-lightbox'
         スキャンした護石を検索することができます。
         装飾品でスキルが実現できる場合も検索対象に含まれます。
       </p>
+
+      <div class="lightboxes">
+        <Lightbox thumbnailStyle="width: 24rem; max-width: 90%; border: solid 1px #eee">
+          <img src="img/screenshots/charm-search.png" alt="charm search">
+        </Lightbox>
+      </div>
     </div>
   </div>
 
@@ -120,6 +126,12 @@ import {Lightbox} from 'svelte-lightbox'
           輪廻に使う時は記録されているスクリーンショットを確認するなど、十分な確認を行ってください。
         </span>
       </p>
+
+      <div class="lightboxes">
+        <Lightbox thumbnailStyle="width: 24rem; max-width: 90%; border: solid 1px #eee">
+          <img src="img/screenshots/charm-rinne-support.png" alt="charm rinne support">
+        </Lightbox>
+      </div>
     </div>
   </div>
 

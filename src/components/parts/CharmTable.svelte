@@ -4,6 +4,8 @@
   import SvelteTable        from "./SvelteTable.svelte"
   import {getAllSkillNames} from 'assets/mhrise/mhrise-skills.js'
   import {charmManager}     from 'stores/stores.js'
+  import {MAX_NUM_SLOTS,MAX_SKILL_LEVEL,MAX_SLOT_LEVEL}
+                            from 'assets/mhrise/metadata'
 
   export let headerColor           = 'mediumseagreen'
   export let disableFilterHeader   = false
@@ -15,9 +17,6 @@
 
   export let sliceBegin
   export let sliceEnd
-
-  // constants
-  const N_CHARM_SLOT_MAX = 3
 
   const allSkills = getAllSkillNames()
   const columns = [
@@ -54,7 +53,7 @@
       key:           'skill1Level',
       title:         'スキル1 Lv',
       value:         v => v.skill1Level,
-      filterOptions: [0,1,2,3,4,5,6,7],
+      filterOptions: [...Array(MAX_SKILL_LEVEL + 1).keys()].slice(1),
       sortable:      true,
     },
     {
@@ -68,16 +67,16 @@
       key:           'skill2Level',
       title:         'スキル2 Lv',
       value:         v => v.skill2Level,
-      filterOptions: [0,1,2,3,4,5,6,7],
+      filterOptions: [...Array(MAX_SKILL_LEVEL + 1).keys()].slice(1),
       sortable:      true,
     },
-    ...Array.from({length: N_CHARM_SLOT_MAX}, (_, i) => i + 1).map(i => ({
+    ...Array.from({length: MAX_NUM_SLOTS}, (_, i) => i + 1).map(i => ({
       key:           `slot${i}`,
       title:         `スロット${i}`,
       value:         v => v[`slot${i}`],
       renderValue:   v => v[`slot${i}`] || '-',
       sortable:      true,
-      filterOptions: [0,1,2,3],
+      filterOptions: [...Array(MAX_SLOT_LEVEL + 1).keys()].slice(1),
     })),
     {
       key:           'evaluation',
