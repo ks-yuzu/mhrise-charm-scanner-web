@@ -89,6 +89,10 @@ export default {
 		// json(),
 	],
 	watch: {
+		chokidar: {
+			paths: 'src/**',
+			usePolling: true,
+		},
 		clearScreen: true
 	}
 };
