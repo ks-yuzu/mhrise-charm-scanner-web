@@ -199,19 +199,21 @@ export default class MHRiseCharmManager {
   }
 
   private _applySubstitutableCharmsUpdate(substitutes: (number|number[])[][]) {
-    let currentId = 1
-    for (const [baseId, upperIds] of substitutes) {
-      while (currentId < baseId) {
-        // ID が出現しない護石は互換護石が見付からなかったもの. 明示的に空配列を入れておく
-        if (this.charms.find(i => i.rowid === currentId) != null) {
-          this.charms.find(i => i.rowid === currentId).substitutableCharms = []
-        }
-        currentId++
-      }
+    for (const charm of this.charms) {
+      const [baseId, upperIds] = substitutes[0] ?? [Number.MAX_SAFE_INTEGER, []]
 
-      this.charms.find(i => i.rowid === baseId).substitutableCharms =
-        (upperIds as number[]).map((upperId: number) => this.charms.find(i => i.rowid === upperId))
-      currentId = (baseId as number) + 1
+      if ( charm.rowid > baseId ) {
+        // baseId はソートされているので小さくなることはない
+        console.log('internal error')
+      }
+      else if ( charm.rowid < baseId ) {
+        // ID が出現しない護石は互換護石が見付からなかったもの. 明示的に空配列を入れておく
+        charm.substitutableCharms = []
+      }
+      else {
+        charm.substitutableCharms = (upperIds as number[]).map((upperId: number) => this.charms.find(i => i.rowid === upperId))
+        substitutes.shift()
+      }
     }
 
     this.charms = [...this.charms]

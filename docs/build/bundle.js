@@ -28495,18 +28495,21 @@ var app = (function (cv) {
             // }
         }
         _applySubstitutableCharmsUpdate(substitutes) {
-            let currentId = 1;
-            for (const [baseId, upperIds] of substitutes) {
-                while (currentId < baseId) {
-                    // ID が出現しない護石は互換護石が見付からなかったもの. 明示的に空配列を入れておく
-                    if (this.charms.find(i => i.rowid === currentId) != null) {
-                        this.charms.find(i => i.rowid === currentId).substitutableCharms = [];
-                    }
-                    currentId++;
+            var _a;
+            for (const charm of this.charms) {
+                const [baseId, upperIds] = (_a = substitutes[0]) !== null && _a !== void 0 ? _a : [Number.MAX_SAFE_INTEGER, []];
+                if (charm.rowid > baseId) {
+                    // baseId はソートされているので小さくなることはない
+                    console.log('internal error');
                 }
-                this.charms.find(i => i.rowid === baseId).substitutableCharms =
-                    upperIds.map((upperId) => this.charms.find(i => i.rowid === upperId));
-                currentId = baseId + 1;
+                else if (charm.rowid < baseId) {
+                    // ID が出現しない護石は互換護石が見付からなかったもの. 明示的に空配列を入れておく
+                    charm.substitutableCharms = [];
+                }
+                else {
+                    charm.substitutableCharms = upperIds.map((upperId) => this.charms.find(i => i.rowid === upperId));
+                    substitutes.shift();
+                }
             }
             this.charms = [...this.charms];
         }
