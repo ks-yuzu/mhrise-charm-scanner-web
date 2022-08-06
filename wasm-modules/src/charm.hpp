@@ -46,11 +46,53 @@ const auto& every = static_cast<bool(*)(InputIt1, InputIt1, InputIt2, InputIt2, 
 // }
 
 
+bool isSkillSetRealizable(std::unordered_map<std::string, int> skillShortage,
+                          std::vector<std::vector<CharmDecoration>> availableDecorationsForEachSlots) {
+  // std::cout << availableDecorationsForEachSlots.size() << ": ";
+  // for (const auto& [skill, shortage] : skillShortage) {
+  //   std::cout << skill << shortage << ", ";
+  // }
+  // std::cout << std::endl;
+
+  // すでにスキルが充足していれば OK, スキル不足&空きスロ無しなら NG
+  const bool isRealized = std::all_of(
+    std::begin(skillShortage),
+    std::end(skillShortage),
+    [](const auto& s){ return s.second <= 0; }
+  );
+  if (isRealized) { return true; }
+  if (availableDecorationsForEachSlots.size() == 0) { return false; }
+
+  // 先頭の装飾品のみ決めて, 以降のスロットは再起呼び出し
+  const auto& availableDecorationsForFirstSlot = availableDecorationsForEachSlots[0];
+
+  for (const auto& decoration : availableDecorationsForFirstSlot) {
+    const auto skill = decoration.skill;
+    if (skillShortage[skill] <= 0) { continue; } // 充足しているスキルに対応する装飾品はスキップ
+
+    // 次の呼び出し用のステートを用意する (不足スキルは減算, スロットは [1:] で切り出し)
+    std::unordered_map<std::string, int> newSkillShortage(skillShortage);
+    newSkillShortage[skill] -= decoration.skillLevel;
+
+    const bool isRealizable = isSkillSetRealizable(
+      newSkillShortage,
+      std::vector(std::begin(availableDecorationsForEachSlots) + 1, std::end(availableDecorationsForEachSlots))
+    );
+    if (isRealizable) {
+      // std::cout << decoration.name << std::endl;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
 class Charm {
   friend std::ostream& operator<<(std::ostream&, const Charm&);
 
  public:
-  Charm(): id(), slots(), skills() {}
+  Charm(): id(), slots(), skills(), skillLevels() {}
   Charm(
     const std::vector<std::string>& skills,
     const std::vector<int>& skillLevels,
@@ -79,61 +121,68 @@ class Charm {
   bool operator<(const Charm& another) const {
     if ( this == &another ) { return false; }
 
-    std::vector<int> requiredSlots(this->slots);
+    // スロット同士で比較した時の another 側の余剰を調べる
+    std::vector<int> surplusSlots(another.slots);
+    std::sort(std::begin(surplusSlots), std::end(surplusSlots), std::greater<int>{});
+
+    for (auto it = std::rbegin(this->slots); it != std::rend(this->slots); ++it) {
+      // スロットレベル 0 は表記上のものなのでスキップ (e.g. 3-0-0)
+      if (*it == 0) { continue; }
+
+      // another 側でスロットが不足すれば NG
+      if (surplusSlots.size() == 0) { return false; }
+
+      // ベース側と同等以上のスロットを余剰スロットリストから削除する. 無ければ NG
+      const auto slotToBeRemoved = find_if(
+        std::rbegin(surplusSlots),
+        std::rend(surplusSlots),
+        [&it](int s){ return s >= *it; }
+      );
+      if (slotToBeRemoved == std::rend(surplusSlots)) { return false; }
+      surplusSlots.erase(std::next(slotToBeRemoved).base());
+    }
+
+    // スキル枠同士で比較した時の another 側の不足, 対応する装飾品を調べる
+    std::unordered_map<std::string, int> skillShortage;
+    std::vector<CharmDecoration> decorations;
 
     for ( const auto i : indices(this->skills) ) {
-      int level = this->skillLevels[i];
+      int levelShortage = this->skillLevels[i];
 
+      // 同じスキルが付いていれば, その分要求レベルから差し引く
       for ( const auto j : indices(another.skills) ) {
         if ( this->skills[i] == another.skills[j] ) {
-          level -= another.skillLevels[j];
+          levelShortage -= another.skillLevels[j];
         }
       }
 
-      if ( level <= 0 ) {
-        continue;
-      }
+      // スキル枠のみで同スキルまかなえている
+      if ( levelShortage <= 0 ) { continue; }
 
-      // precheck if decoration exsists becouse wasm does not support exception
-      if ( skillToSlotLevel.count(this->skills[i]) == 0 ) {
-        // skill have to be realized by decoration and decoration not fount
+      // 対応する装飾品が存在しないスキルが不足していれば NG
+      if ( skillToDecorationsMap.count(this->skills[i]) == 0 ) {
         return false;
       }
 
-      const int skillRank = skillToSlotLevel.at(this->skills[i]);
-      // std::cout << "skill rank: " << skillRank << std::endl;
-      // std::cout << "reduced level: " << level << std::endl;
-
-      requiredSlots.insert(std::end(requiredSlots), level, skillRank);
-    }
-    std::sort(std::begin(requiredSlots), std::end(requiredSlots));
-    // std::cout << "required slots: " << requiredSlots << std::endl;
-
-    const auto first = std::upper_bound(ALL(requiredSlots), 0);
-    // std::cout << "pos: " << first - std::begin(requiredSlots) << std::endl;
-
-    const auto rlast = std::make_reverse_iterator(first);
-    // std::cout << "required slot: " << (rlast - std::rbegin(requiredSlots)) << std::endl;
-
-    const int nRequiredSlots = std::end(requiredSlots) - first;
-    if ( nRequiredSlots > static_cast<int>(another.slots.size()) ) {
-      return false;
+      skillShortage[this->skills[i]] = levelShortage;
+      const auto decorationsToBeAppend = skillToDecorationsMap.at(this->skills[i]);
+      decorations.insert(std::end(decorations), std::begin(decorationsToBeAppend), std::end(decorationsToBeAppend));
     }
 
-    const auto anotherLast = std::begin(another.slots) + nRequiredSlots;
+    std::vector<std::vector<CharmDecoration>> availableDecorationsForEachSlots(surplusSlots.size());
+    for (const auto i : indices(surplusSlots)) {
+      const int surplusSlot = surplusSlots[i];
+      std::vector<CharmDecoration> availableDecorations;
+      std::copy_if(
+        std::begin(decorations),
+        std::end(decorations),
+        std::back_inserter(availableDecorations),
+        [&surplusSlot](auto decoration){ return decoration.slot <= surplusSlot; }
+      );
+      availableDecorationsForEachSlots[i] = availableDecorations;
+    }
 
-    // for (auto it = std::rbegin(requiredSlots); it != rlast; it++) {
-    //   std::cout << *it << std::endl;
-    // }
-    // for (auto it = std::begin(another.slots); it != anotherLast; it++) {
-    //   std::cout << *it << std::endl;
-    // }
-
-    return std::equal(
-      std::rbegin(requiredSlots), rlast,
-      std::begin(another.slots),  anotherLast,
-      std::less_equal<int>()
-    );
+    return isSkillSetRealizable(skillShortage, availableDecorationsForEachSlots);
   }
 
 
@@ -163,8 +212,9 @@ std::ostream& operator<<(std::ostream& os, const Charm& charm) {
   // os << charm.name + " " + std::to_string(charm.rarity) + " ";
 
   StringJoin skills(",");
-  skills << charm.skills[0] + std::to_string(charm.skillLevels[0])
-         << charm.skills[1] + std::to_string(charm.skillLevels[1]);
+  for (unsigned int i = 0; i < charm.skills.size(); i++) {
+    skills << charm.skills[i] + std::to_string(charm.skillLevels[i]);
+  }
 
   StringJoin slots("-");
   for ( const auto& slot: charm.slots ) { slots << slot; }

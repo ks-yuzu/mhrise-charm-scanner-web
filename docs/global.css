@@ -17,6 +17,19 @@ body {
   line-height: 1.5;
 }
 
+::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: transparent;
+}
+::-webkit-scrollbar * {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(128, 128, 128, 0.5);
+  border-radius: 0.25rem;
+}
+
 a {
 	color: rgb(0,100,200);
 	text-decoration: none;

@@ -1,66 +1,105 @@
-export function fetchImage(path) {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.src = path
+import cv from 'opencv-ts'
 
-    img.onload = () => {
-      // console.log(`fetched ${path}`)
-      const imgmat = cv.imread(img)
-	    resolve(imgmat)
-    }
-  })
+// TODO: 雑に詰め込みすぎなのでいい感じに整理して assets に
+
+export function sleep(msec) {
+  return new Promise(resolve => setTimeout(resolve, msec))
 }
 
 
-export function countImageDiffAtPoint(image, templateImage, point, maskBinaryThreshold, diffBinaryThreshold) {
-  const size = new cv.Size(templateImage.cols, templateImage.rows)
-  const rect = new cv.Rect(point, size)
-  const trimmed = image.roi(rect)
+export async function fetchImage(path) {
+  const img = new Image()
+  img.src = path
 
-  const templateMask = new cv.Mat()
-  cv.threshold(templateImage, templateMask, maskBinaryThreshold, 255, cv.THRESH_BINARY)
+  await new Promise(resolve => {img.onload = resolve})
+  console.log(`fetched ${path}`)
+  return cv.imread(img)
+}
 
-  const masked = new cv.Mat()
-  trimmed.copyTo(masked, templateMask)
+
+let canvasCount = 0
+export function dumpImage(img) {
+  const canvasId = `canvas${canvasCount}`
+  if (document.querySelector(`#${canvasId}`) == null) {
+    const divDump = document.querySelector('#imgdump')
+    const newCanvas = document.createElement('canvas')
+    newCanvas.id = canvasId
+    divDump.append(newCanvas)
+  }
+  cv.imshow(canvasId, img)
+}
+
+export function setNextCanvas() {
+  canvasCount++
+}
+
+export function setFirstCanvas() {
+  canvasCount = 0
+}
+
+export function dumpImageNewline() {
+  if (document.querySelector('#imgdump')?.lastChild?.tagName?.toLowerCase() === 'p') {
+    return
+  }
+  const divDump = document.querySelector('#imgdump')
+  const newElm = document.createElement('p')
+  divDump.append(newElm)
+}
+
+
+export function countImageDiffAtPoint(image, templateImage, trimRect, diffBinaryThreshold, filter, debug) {
+  // const trimmed = filter != null ? filter(image.roi(trimRect)) : image.roi(trimRect)
+  const trimmed = image.roi(trimRect)
+  if (filter != null) {
+    filter(trimmed)
+  }
 
   const diff = new cv.Mat()
-  cv.absdiff(templateImage, masked, diff)
+  cv.absdiff(templateImage, trimmed, diff)
   cv.cvtColor(diff, diff, cv.COLOR_BGR2GRAY)
 
   const result = new cv.Mat()
   cv.threshold(diff, result, diffBinaryThreshold, 255, cv.THRESH_BINARY)
-  // // cv::imwrite("./tmp/debug.png", diff); // for debug
 
+  const diffCount = cv.countNonZero(result)
+
+  if (debug != null) {
+    debug({trimmed, templateImage, diff, result})
+  }
+
+  result.delete()
   diff.delete()
-  masked.delete()
-  templateMask.delete()
   trimmed.delete()
 
-  return result;
+  // const buffer = image.roi(trimRect)
+  // cv.absdiff(templateImage, buffer, buffer)
+  // cv.cvtColor(buffer, buffer, cv.COLOR_BGR2GRAY)
+  // cv.threshold(buffer, buffer, diffBinaryThreshold, 255, cv.THRESH_BINARY)
+  // const diffCount = cv.countNonZero(buffer)
+  // buffer.delete()
+
+  return diffCount
 }
 
 
-export function getMostMatchedImage(image, templates, point, maskBinaryThreshold = 63, diffBinaryThreshold = 63, debug = ()=>{}) {
+export function getMostMatchedImage(image, templates, trimRect, diffBinaryThreshold = 63, filter = null, debug = null) {
   let minDiffCount = Number.MAX_SAFE_INTEGER
   let candidate = null
 
-  // console.log(templates)
   for (const [name, template] of Object.entries(templates)) {
-    const diff = countImageDiffAtPoint(image, template, point, maskBinaryThreshold, diffBinaryThreshold)
-    debug(diff, name)
-    const diffCount = cv.countNonZero(diff)
+    const diffCount = countImageDiffAtPoint(image, template, trimRect, diffBinaryThreshold, filter, debug)
 
-    if ( minDiffCount > diffCount ) {
+    if ( diffCount === 0 ) {
+      return {name, diffCount}
+    }
+    else if ( minDiffCount > diffCount ) {
       minDiffCount = diffCount;
       candidate = name;
     }
-
-    diff.delete()
   }
 
-  return candidate;
+  return {name: candidate, diffCount: minDiffCount}
 }
-
 
 
 export function promiseAllRecursive(value) {
@@ -79,10 +118,10 @@ export function promiseAllRecursive(value) {
   return Promise.resolve(value)
 }
 
-function resolveObject(object) {
-  const promises = Object.keys(object).map(key => {
-    return promiseAllRecursive(object[key]).then(value => ({ key, value }))
-  });
+function resolveObject(obj) {
+  const promises = Object
+    .keys(obj)
+    .map(key => promiseAllRecursive(obj[key]).then(value => ({ key, value }))) // as Promise<{key: any, value: any}>[]
 
   return Promise.all(promises).then(results => {
     return results.reduce((obj, pair) => {
