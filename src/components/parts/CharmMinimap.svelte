@@ -82,11 +82,13 @@
 
 
   .minimap > table > tbody > tr > td.rare1 {background: #bbb;}
-  .minimap > table > tbody > tr > td.rare2 {background: #bbb }
+  .minimap > table > tbody > tr > td.rare2 {background: #bbb;}
   .minimap > table > tbody > tr > td.rare3 {background: rgb(236, 182, 200);}
   .minimap > table > tbody > tr > td.rare4 {background: rgb(163, 228, 133);}
   .minimap > table > tbody > tr > td.rare5 {background: rgb(54, 206, 255);}
   .minimap > table > tbody > tr > td.rare6 {background: rgb(116, 141, 243);}
   .minimap > table > tbody > tr > td.rare7 {background: rgb(217, 98, 81);}
-
+  .minimap > table > tbody > tr > td.rare8 {background: rgb(194, 244, 255);}
+  .minimap > table > tbody > tr > td.rare9 {background: rgb(164, 138, 255);}
+  .minimap > table > tbody > tr > td.rare10 {background: rgb(255, 177, 84);}
 </style>

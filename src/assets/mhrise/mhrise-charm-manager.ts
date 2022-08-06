@@ -17,6 +17,7 @@ export default class MHRiseCharmManager {
   private indexeddb = null              // IndexedDB
   private charms    = null
 
+  private workers = {}
 
   constructor(options: Partial<Options> = {}) {
     if ( options.isDemoMode ) {
@@ -61,7 +62,7 @@ export default class MHRiseCharmManager {
 
 
   public async registerCharm(charm: Charm, screenshot: Mat) {
-    this._saveScreenshot(screenshot, charm.imageName)
+    this.saveScreenshot(screenshot, charm.imageName)
     this.registerCharms([charm]) // TODO: impl
   }
 
@@ -98,7 +99,7 @@ export default class MHRiseCharmManager {
   }
 
 
-  private _saveScreenshot(screenshot: Mat, imageName: string) {
+  public saveScreenshot(screenshot: Mat, imageName: string) {
     this.indexeddb.images.put({
       name: imageName,
       rows: screenshot.rows,
@@ -157,31 +158,63 @@ export default class MHRiseCharmManager {
   }
 
   async searchSubstitutableCharms() {
-    while ( typeof Module.getSubstitutesAll !== 'function' ) {
-      await new Promise(r => setTimeout(r, 100))
+    // while ( typeof Module.getSubstitutesAll !== 'function' ) {
+    //   await new Promise(r => setTimeout(r, 100))
+    // }
+
+    // const res = Module.getSubstitutesAll( JSON.stringify(this.charms) ) // use wasm module
+    // const substitutes = JSON.parse(res)
+
+    // for (const i in this.charms) {
+    //   const [baseId, upperIds] = substitutes[0] || [Number.MAX_SAFE_INTEGER, []]
+
+    //   if ( this.charms[i].rowid > baseId ) {
+    //     console.log('internal error')
+    //   }
+    //   else if ( this.charms[i].rowid < baseId ) {
+    //     this.charms[i].substitutableCharms = []
+    //   }
+    //   else {
+    //     this.charms[i].substitutableCharms = upperIds.map((u: number) => this.charms[u - 1])
+    //     substitutes.shift()
+    //   }
+    // }
+
+    const workerName = 'substitutable-charm-searcher'
+    if (this.workers[workerName] == null) {
+      this.workers[workerName] = new Worker('mhrise-charm-substitution-search.worker.js')
     }
 
-    const res = Module.getSubstitutesAll( JSON.stringify(this.charms) ) // use wasm module
-    const substitutes = JSON.parse(res)
+    this.workers[workerName].addEventListener('message', (e: MessageEvent) => {
+      console.log(e)
+      const substitutes = JSON.parse(e.data.result)
+      this._applySubstitutableCharmsUpdate(substitutes)
+    })
 
-    for (const i in this.charms) {
-      const [baseId, upperIds] = substitutes[0] || [Number.MAX_SAFE_INTEGER, []]
-
-      if ( this.charms[i].rowid > baseId ) {
-        console.log('internal error')
-      }
-      else if ( this.charms[i].rowid < baseId ) {
-        this.charms[i].substitutableCharms = []
-      }
-      else {
-        this.charms[i].substitutableCharms = upperIds.map((u: number) => this.charms[u - 1])
-        substitutes.shift()
-      }
-    }
+    this.workers[workerName].postMessage({ charmsJson: JSON.stringify(this.charms) })
 
     // for (const [baseId, upperIds] of substitutes) {
     //   charms[baseId - 1].substitutableCharms = upperIds.map(i => charms[i - 1])
     // }
+  }
+
+  private _applySubstitutableCharmsUpdate(substitutes: (number|number[])[][]) {
+    let currentId = 1
+    for (const [baseId, upperIds] of substitutes) {
+      while (currentId < baseId) {
+        // ID が出現しない護石は互換護石が見付からなかったもの. 明示的に空配列を入れておく
+        if (this.charms.find(i => i.rowid === currentId) != null) {
+          this.charms.find(i => i.rowid === currentId).substitutableCharms = []
+        }
+        currentId++
+      }
+
+      this.charms.find(i => i.rowid === baseId).substitutableCharms =
+        (upperIds as number[]).map((upperId: number) => this.charms.find(i => i.rowid === upperId))
+      currentId = (baseId as number) + 1
+    }
+
+    this.charms = [...this.charms]
   }
 
 

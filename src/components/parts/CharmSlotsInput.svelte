@@ -1,8 +1,7 @@
 <script lang="ts">
-import AutoComplete from 'simple-svelte-autocomplete'
+import AutoComplete                    from 'simple-svelte-autocomplete'
+import {MAX_NUM_SLOTS, MAX_SLOT_LEVEL} from 'assets/mhrise/metadata'
 
-const MAX_NUM_SLOTS   = 3
-const MAX_SLOT_LEVEL  = 3
 const SLOT_LEVEL_LIST = [...Array(MAX_SLOT_LEVEL + 1).keys()].slice(1) // 補完用リスト
 
 export let inputIdPrefix = 'input-slot-'

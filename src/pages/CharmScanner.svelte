@@ -65,7 +65,7 @@
           index:        index,
           videoName:    file.name,
           videoData:    reader.result,
-          charmScanner: charmScanner,
+       // charmScanner: charmScanner,
           nSplits:      N_VIDEO_SPLITS,
           onCapture:    onCapture,
           onFinish:     onFinishVideoRead,
@@ -99,15 +99,14 @@
 
 
   function onCapture(frame, videoName) {
-    charmScanner.scan(frame, videoName)
+    const result = charmScanner.scan(frame, videoName)
+    if ( result == null ) { return }
+    const {charm, isCache} = result
 
-    // const result = charmScanner.scan(frame, videoName)
-    // if ( result == null ) { return }
-
-    // const {charm, isCache} = result
-    // if ( !isCache ) {
-    //   await $charmManager._saveScreenshot(frame, charm.imageName)
-    // }
+    if ( !isCache ) {
+      // スクショ保存だけしておく. (護石データの DB 保存は動画単位で)
+      $charmManager.saveScreenshot(frame, charm.imageName)
+    }
   }
 
 

@@ -9,7 +9,7 @@ std::string join(std::vector<std::string> strings, std::string delimiter = ", ")
 
 class StringJoin {
  public:
-  StringJoin(const char* sep) :sep(sep) {};
+  StringJoin(const std::string sep) :sep(sep), buf() {};
 
   template <typename T>
   StringJoin& operator<<(const T& v) {
@@ -29,7 +29,7 @@ class StringJoin {
   }
 
  private:
-  const char* sep;
+  const std::string sep;
   std::ostringstream buf;
   bool isEmpty = true;
 };

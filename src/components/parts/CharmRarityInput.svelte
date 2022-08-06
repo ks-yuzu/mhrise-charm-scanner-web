@@ -1,7 +1,7 @@
 <script lang="ts">
 import AutoComplete from 'simple-svelte-autocomplete'
+import {MAX_RARITY} from 'assets/mhrise/metadata'
 
-const MAX_RARITY = 7
 const RARITY_LIST = [...Array(MAX_RARITY + 1).keys()].slice(1) // 補完用リスト
 
 export let inputId     = 'input-rarity'

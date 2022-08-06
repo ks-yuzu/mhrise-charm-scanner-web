@@ -90,7 +90,7 @@ export function getMostMatchedImage(image, templates, trimRect, diffBinaryThresh
     const diffCount = countImageDiffAtPoint(image, template, trimRect, diffBinaryThreshold, filter, debug)
 
     if ( diffCount === 0 ) {
-      return name
+      return {name, diffCount}
     }
     else if ( minDiffCount > diffCount ) {
       minDiffCount = diffCount;
@@ -98,7 +98,7 @@ export function getMostMatchedImage(image, templates, trimRect, diffBinaryThresh
     }
   }
 
-  return candidate;
+  return {name: candidate, diffCount: minDiffCount}
 }
 
 

@@ -98,7 +98,7 @@
       slots:       slots.map(i => i ?? 0),
     }
     const inputJson = JSON.stringify(input)
-    console.log(input)
+    // console.log(input)
 
     while ( typeof Module.getSubstitutes !== 'function' ) {
       await sleep(100)

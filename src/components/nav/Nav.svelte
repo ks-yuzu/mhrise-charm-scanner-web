@@ -3,7 +3,7 @@
 
   export let isNavigationOpen: boolean
 
-  let currentNavOptionId = 2
+  let currentNavOptionId = 6
   let onActivate = {}
 
   function switchComponent(e: Event) {

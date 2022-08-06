@@ -1,7 +1,7 @@
 <script lang="ts">
 import AutoComplete from 'simple-svelte-autocomplete'
+import {MAX_SKILL_LEVEL} from 'assets/mhrise/metadata'
 
-const MAX_SKILL_LEVEL  = 7
 const SKILL_LEVEL_LIST = [...Array(MAX_SKILL_LEVEL + 1).keys()].slice(1) // 補完用リスト
 
 export let inputId     = 'input-skill-level-0'
