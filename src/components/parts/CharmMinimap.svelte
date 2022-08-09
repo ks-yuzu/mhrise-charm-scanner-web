@@ -13,6 +13,7 @@
 
   // TODO: スキャン毎に全セル分呼ばれないようにする？
   function getClassName({row, col}) {
+   //  console.log(charmScanner.charms)
     return [
       _getCharmClass({row, col}),
       _isCurrentCharm({row, col}) ? 'current' : '',

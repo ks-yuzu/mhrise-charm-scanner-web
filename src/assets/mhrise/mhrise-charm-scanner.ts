@@ -12,6 +12,13 @@ export const SCAN_MODE = {
 } as const
 export type ScanMode = typeof SCAN_MODE[keyof typeof SCAN_MODE]
 
+export const SCAN_SKIP_MODE = {
+  SKIP_SCANNED_CHARM: 'skip_scanned_charm',
+  SKIP_SAME_CHARM_AS_IMMEDIATELY_BEFORE: 'skip_same_charm_as_immediately_before',
+  NO_SKIP: 'no_skip',
+}
+export type ScanSkipMode = typeof SCAN_SKIP_MODE[keyof typeof SCAN_SKIP_MODE]
+
 
 export default class MHRiseCharmScanner {
   private readonly EQUIPMENT_SPEC_HEADER_BASE_X = 1023
@@ -38,9 +45,12 @@ export default class MHRiseCharmScanner {
   private readonly SIZE_CHARM_AREA_IN_RINNE    = new cv.Size(329, 164)  // アイコンリストのサイズ
 
   private readonly scanMode: ScanMode
+  private readonly scanSkipMode: ScanSkipMode
 
   private readonly ROWS_PER_PAGE: number
   private readonly COLS_PER_PAGE: number
+
+  private          prevPosition = {page: -1, row: -1, col: -1}
 
   private          indexeddb = null
   private          nCharms = 0 // このスキャンで読んだ護石の数
@@ -228,8 +238,9 @@ export default class MHRiseCharmScanner {
     MHRiseCharmScanner.templates = await promiseAllRecursive(templateFetchPromises)
   }
 
-  constructor(scanMode: ScanMode = SCAN_MODE.MODE_EQUIP_LIST) {
-    this.scanMode = scanMode
+  constructor({scanMode, scanSkipMode}: {scanMode: ScanMode, scanSkipMode: ScanSkipMode}) {
+    this.scanMode = scanMode ?? SCAN_MODE.MODE_EQUIP_LIST
+    this.scanSkipMode = scanSkipMode ?? SCAN_SKIP_MODE.SKIP_SAME_CHARM_AS_IMMEDIATELY_BEFORE
     this.ROWS_PER_PAGE = (scanMode === SCAN_MODE.MODE_RINNE) ? ROWS_PER_PAGE_IN_RINNE : ROWS_PER_PAGE_IN_EQLIST
     this.COLS_PER_PAGE = (scanMode === SCAN_MODE.MODE_RINNE) ? COLS_PER_PAGE_IN_RINNE : COLS_PER_PAGE_IN_EQLIST
 
@@ -238,7 +249,7 @@ export default class MHRiseCharmScanner {
     this.indexeddb.version(1).stores({images: 'name'})
   }
 
-  private reset() {
+  public reset() {
     this.nCharms = 0
     this.charms = {}
     for (let p = 1; p <= MAX_PAGE; p++) {
@@ -311,7 +322,7 @@ export default class MHRiseCharmScanner {
   }
 
 
-  public scan(screenshot: Mat, movieName: string): {charm: Charm, isCache: boolean} | null {
+  public scan(screenshot: Mat, movieName: string, matchThresholdOverwrite?: number): {charm: Charm, isCache: boolean} | null {
     const page = this._getCurrentPage(screenshot)
     // if (page <= 0 || MAX_PAGE < page) {
     //   console.log(`invalid page number: ${page}`)
@@ -319,19 +330,17 @@ export default class MHRiseCharmScanner {
     // }
 
     // スキャンモード (装備確認ページと輪廻ページ) でパラメータ設定を分岐
-    const {pos, match, matchThreshold, isCacheEnabled} = (() => {
+    const {pos, match, matchThreshold} = (() => {
       switch (this.scanMode) {
         case SCAN_MODE.MODE_EQUIP_LIST:
           return {
             ...this._getCurrentCharmPos(screenshot),
-            matchThreshold: 0.31,
-            isCacheEnabled: true,
+            matchThreshold: matchThresholdOverwrite ?? 0.31,
           }
         case SCAN_MODE.MODE_RINNE:
           return {
             ...this._getCurrentCharmPosForRinne(screenshot),
-            matchThreshold: 0.28,
-            isCacheEnabled: true,
+            matchThreshold: matchThresholdOverwrite ?? 0.28,
           }
         default:
           throw new Error('[internal error] invalid scan mode')
@@ -347,9 +356,21 @@ export default class MHRiseCharmScanner {
     const [col, row] = pos
     // console.log(`scaned ${row} ${col}`)
 
+    const isCacheEnabled = (() => {
+      switch (this.scanSkipMode) {
+        case SCAN_SKIP_MODE.SKIP_SCANNED_CHARM:
+          return true
+        case SCAN_SKIP_MODE.SKIP_SAME_CHARM_AS_IMMEDIATELY_BEFORE:
+          return page === this.prevPosition.page && col === this.prevPosition.col && row === this.prevPosition.row
+        default:
+          return false
+      }
+    })()
+    this.prevPosition = {page, row, col}
+
     if ( isCacheEnabled ) {
       const cache = this._getCache({ page, row, col })
-      if (cache != null) {// TODO: 直前と同じならスキップにする？
+      if (cache != null) {
         // console.log(`this charm is already scanned. skip: p${page} (${row}, ${col})`);
         return { charm: cache, isCache: true }
       }

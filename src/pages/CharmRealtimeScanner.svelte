@@ -13,7 +13,7 @@
   import RecordButton       from '../components/parts/RecordButton.svelte'
   import {MAX_PAGE}         from 'assets/mhrise/metadata'
   import type {Charm}       from 'assets/mhrise/mhrise-charm'
-  import MHRiseCharmScanner, {SCAN_MODE}
+  import MHRiseCharmScanner, {SCAN_MODE, SCAN_SKIP_MODE}
                             from 'assets/mhrise/mhrise-charm-scanner'
   import {charmManager}     from 'stores/stores.js'
   import {isAppReady}       from 'stores/flags'
@@ -22,7 +22,10 @@
   // const VIDEO_HEIGHT     = 720
   // const VIDEO_FRAME_RATE = 29.97
 
-  let charmScanner = new MHRiseCharmScanner(SCAN_MODE.MODE_EQUIP_LIST)
+  let charmScanner = new MHRiseCharmScanner({
+    scanMode: SCAN_MODE.MODE_EQUIP_LIST,
+    scanSkipMode: SCAN_SKIP_MODE.SKIP_SAME_CHARM_AS_IMMEDIATELY_BEFORE,
+  })
 
   let domCameraReader
   let isRecording              = false
