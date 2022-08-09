@@ -1,7 +1,8 @@
 <script lang="ts">
   import {writable}         from 'svelte/store'
   import VideoReader        from '../components/parts/VideoReader.svelte'
-  import MHRiseCharmScanner from 'assets/mhrise/mhrise-charm-scanner'
+  import MHRiseCharmScanner, {SCAN_MODE, SCAN_SKIP_MODE}
+                            from 'assets/mhrise/mhrise-charm-scanner'
   import {charmManager}     from 'stores/stores.js'
   import {isAppReady}       from 'stores/flags.js'
 
@@ -11,7 +12,10 @@
   // const VIDEO_FRAME_RATE = 29.97
   const N_VIDEO_SPLITS = (navigator.hardwareConcurrency || 8) / 2
 
-  let charmScanner = new MHRiseCharmScanner()
+  let charmScanner = new MHRiseCharmScanner({
+    scanMode: SCAN_MODE.MODE_EQUIP_LIST,
+    scanSkipMode: SCAN_SKIP_MODE.SKIP_SCANNED_CHARM,
+  })
 
   let domFileInput // ファイルアップロード用 input 要素
   let files = []   // 選択されたローカルファイル
