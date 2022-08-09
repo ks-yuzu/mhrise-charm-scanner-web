@@ -13,7 +13,7 @@
   import CharmMinimap        from '../components/parts/CharmMinimap.svelte'
   import RecordButton        from '../components/parts/RecordButton.svelte'
   import CharmTableWithPager from '../components/parts/CharmTableWithPager.svelte'
-  import {MAX_PAGE, ROWS_PER_PAGE_IN_RINNE, COLS_PER_PAGE_IN_RINNE}
+  import {MAX_PAGE, ROWS_PER_PAGE_IN_EQLIST, COLS_PER_PAGE_IN_EQLIST}
                              from 'assets/mhrise/metadata'
   import type {Charm}        from 'assets/mhrise/mhrise-charm'
   import {isSameCharm, flatCharm2charm}
@@ -29,7 +29,7 @@
   // const VIDEO_FRAME_RATE = 29.97
 
   let charmScanner = new MHRiseCharmScanner({
-    scanMode: SCAN_MODE.MODE_RINNE,
+    scanMode: SCAN_MODE.MODE_EQUIP_LIST,
     scanSkipMode: SCAN_SKIP_MODE.SKIP_SAME_CHARM_AS_IMMEDIATELY_BEFORE,
   })
 
@@ -94,7 +94,7 @@
 
     const {skills, skillLevels, slots} = baseSpec
 
-    if ( !skills.length && !slots.length) {
+    if (skills.filter(i => i && i !== '無し').length == 0 && slots.filter(i => i !== 0).length == 0) {
       searchResults = null
       isSpinnerShown = false
       return
@@ -199,8 +199,8 @@
       <div class="charm-box-overview">
         {#each [...Array(MAX_PAGE + 1).keys()].slice(1) as page}
           <CharmMinimap {page}
-                        rowsPerPage={ROWS_PER_PAGE_IN_RINNE}
-                        colsPerPage={COLS_PER_PAGE_IN_RINNE}
+                        rowsPerPage={ROWS_PER_PAGE_IN_EQLIST}
+                        colsPerPage={COLS_PER_PAGE_IN_EQLIST}
                         {currentCharm}
                         {charmScanner}
                         />

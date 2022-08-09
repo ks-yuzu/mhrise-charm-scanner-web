@@ -120,6 +120,7 @@ import {Lightbox} from 'svelte-lightbox'
       <h2>■ 輪廻サポート(β)</h2>
       <p>
         輪廻錬金を行う際に、表示中の護石の上位互換護石をリアルタイム表示する機能です。<br>
+        カーソル位置のスキャンがうまくいかない場合、スライダーで感度を調整することができます。<br>
         <br>
         <span style="color: red">
           必ずしもスキャンが正しいとは限りません。<br>
@@ -132,6 +133,21 @@ import {Lightbox} from 'svelte-lightbox'
           <img src="img/screenshots/charm-rinne-support.png" alt="charm rinne support">
         </Lightbox>
       </div>
+    </div>
+  </div>
+
+  <div class="card border border-light shadow-sm">
+    <div class="card-body">
+      <h2>■ 売却サポート(β)</h2>
+      <p>
+        護石の売却を行う際に、表示中の護石の上位互換護石をリアルタイム表示する機能です。<br>
+        カーソル位置のスキャンがうまくいかない場合、スライダーで感度を調整することができます。<br>
+        <br>
+        <span style="color: red">
+          必ずしもスキャンが正しいとは限りません。<br>
+          売却時は記録されているスクリーンショットを確認するなど、十分な確認を行ってください。
+        </span>
+      </p>
     </div>
   </div>
 
