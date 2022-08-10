@@ -23,3 +23,18 @@ apply: $(TARGET)
 
 debug: src/*
 	g++ -std=c++17 -O2 -I./lib src/main.cpp && ./a.out
+
+test:
+	cd test;\
+	  for cpp in {skill,charm}.cpp; do g++ -Wall -Wextra -std=c++17 -Weffc++ -Wsuggest-override -Winline $$cpp -I../lib -lgtest_main -lgtest -lpthread -o test && ./test; done
+
+data: data/skill-evaluation-map.dat data/skill-to-decoration-map.dat ../src/assets/mhrise/mhrise-charm-decorations.js
+data/skill-evaluation-map.dat: scripts/decoration-list.ts
+	cd scripts;\
+		ts-node generate-skill-evaluation.ts | ts-node convert-json-to-initialization-list.ts | perl -pe 's/"(\d+)"/$$1/g' > ../data/skill-evaluation-map.dat
+data/skill-to-decoration-map.dat: scripts/decoration-list.ts
+	cd scripts;\
+		ts-node generate-skill-to-decoration-map.ts | ts-node convert-json-to-initialization-list.ts | perl -pe 's/"(\d+)"/$$1/g' > ../data/skill-to-decoration-map.dat
+../src/assets/mhrise/mhrise-charm-decorations.js: scripts/decoration-list.ts
+	cd scripts;\
+	  (echo -n 'export const skillEvaluationMap = '; ts-node generate-skill-evaluation.ts | jq) > ../../src/assets/mhrise/mhrise-charm-decorations.js
