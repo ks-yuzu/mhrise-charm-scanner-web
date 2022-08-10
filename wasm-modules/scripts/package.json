@@ -11,5 +11,8 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^18.6.4"
+  },
+  "dependencies": {
+    "neatjson": "^0.8.3"
   }
 }

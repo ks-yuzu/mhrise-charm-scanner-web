@@ -19,6 +19,12 @@ TEST(EvaluateSkill, 1) {
   EXPECT_EQ(evaluateSkill("幸運", 1), 3);
   EXPECT_EQ(evaluateSkill("幸運", 2), 4);
   EXPECT_EQ(evaluateSkill("幸運", 3), 7);
+  EXPECT_EQ(evaluateSkill("チューンアップ", 1), 3);
+  EXPECT_EQ(evaluateSkill("研磨術【鋭】", 1), 3);
+  EXPECT_EQ(evaluateSkill("チャージマスター", 1), 2);
+  EXPECT_EQ(evaluateSkill("災禍転福", 1), 2);
+  EXPECT_EQ(evaluateSkill("供応", 1), 1);
+  EXPECT_EQ(evaluateSkill("顕如盤石", 5), 5);
 }
 
 int main(void) {
