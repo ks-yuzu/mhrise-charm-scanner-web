@@ -51,7 +51,7 @@ export function evaluateSkill(skill: string, level: number, currentEvaluationVal
 const skillEvaluationMap: {[key: string]: {[key: number]: any}} = {}
 for (const skill of Object.keys(skillToDecorationMap)) {
   for (let i = 1; i <= MAX_SKILL_LEVEL; i++) {
-    skillEvaluationMap[skill] ??= {}
+    skillEvaluationMap[skill] ??= {0: 0}
     skillEvaluationMap[skill][i] = evaluateSkill(skill, i)
   }
 }

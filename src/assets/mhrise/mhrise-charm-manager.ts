@@ -2,7 +2,7 @@ import Dexie                           from "dexie"
 // import {importDB, exportDB}            from "dexie-export-import"
 import cv, {Mat}                       from 'opencv-ts'
 import type {Charm}                    from 'assets/mhrise/mhrise-charm'
-import {skillToSlotLevel}              from 'assets/mhrise/mhrise-charm-decorations.js'
+import {skillEvaluationMap}            from 'assets/mhrise/mhrise-charm-decorations.js'
 
 
 interface Options {
@@ -146,11 +146,14 @@ export default class MHRiseCharmManager {
     this.charms = [
       ...(await this.searchCharms(`select rowid,* from ${this.tableName}`))
     ].map(row => {
-      row.evaluation = skillToSlotLevel[row.skill1] * row.skill1Level
-                     + skillToSlotLevel[row.skill2] * row.skill2Level
-                     + row.slot1
-                     + row.slot2
-                     + row.slot3
+      if (skillEvaluationMap[row.skill1] != null && skillEvaluationMap[row.skill2] != null) {
+        row.evaluation = skillEvaluationMap[row.skill1][row.skill1Level]
+                       + skillEvaluationMap[row.skill2][row.skill2Level]
+                       + row.slot1
+                       + row.slot2
+                       + row.slot3
+      }
+
       return row
     })
 
