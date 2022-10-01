@@ -207,5 +207,26 @@ export const DECORATION_LIST: CharmDecoration[] = [
   { name: "転福珠",  skill: "災禍転福",          skillLevel: 1, slot: 2 },
   { name: "供応珠",  skill: "供応",              skillLevel: 1, slot: 1 },
   { name: "盤石珠",  skill: "顕如盤石",          skillLevel: 1, slot: 1 },
+
+  // added in v12
+  { name: "火炎珠Ⅳ", skill: "火属性攻撃強化",     skillLevel: 4, slot: 4 },
+  { name: "貫通珠Ⅱ", skill: "貫通弾・貫通矢強化", skillLevel: 2, slot: 4 },
+  { name: "強弾珠Ⅱ", skill: "通常弾・連射矢強化", skillLevel: 2, slot: 4 },
+  { name: "渾身珠Ⅱ", skill: "渾身",               skillLevel: 2, slot: 4 },
+  { name: "散弾珠Ⅱ", skill: "散弾・拡散矢強化",   skillLevel: 2, slot: 4 },
+  { name: "睡眠珠Ⅱ", skill: "睡眠属性強化",       skillLevel: 2, slot: 4 },
+  { name: "匠珠Ⅱ",   skill: "匠",                 skillLevel: 2, slot: 4 },
+  { name: "転福珠Ⅱ", skill: "災禍転福",           skillLevel: 2, slot: 4 },
+  { name: "破龍珠Ⅳ", skill: "龍属性攻撃強化",     skillLevel: 4, slot: 4 },
+  { name: "爆破珠Ⅱ", skill: "爆破属性強化",       skillLevel: 2, slot: 4 },
+  { name: "氷結珠Ⅳ", skill: "氷属性攻撃強化",     skillLevel: 4, slot: 4 },
+  { name: "麻痺珠Ⅱ", skill: "麻痺属性強化",       skillLevel: 2, slot: 4 },
+  { name: "雷光珠Ⅳ", skill: "雷属性攻撃強化",     skillLevel: 4, slot: 4 },
+  { name: "流水珠Ⅳ", skill: "水属性攻撃強化",     skillLevel: 4, slot: 4 },
+
+  { name: "攻勢珠",  skill: "攻勢",               skillLevel: 1, slot: 2 },
+  { name: "連撃珠",  skill: "連撃",               skillLevel: 1, slot: 2 },
+
+  { name: "霞皮珠",  skill: "霞皮の恩恵",         skillLevel: 1, slot: 1 },
 ];
 
