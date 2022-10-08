@@ -1,7 +1,8 @@
 <script lang="ts">
   import cv                 from 'opencv-ts'
-  import {slide}            from "svelte/transition"
-  import SvelteTable        from "./SvelteTable.svelte"
+  import {slide}            from 'svelte/transition'
+  import SvelteTable        from './SvelteTable.svelte'
+  import ConfirmModal       from './ConfirmModal.svelte'
   import {getAllSkillNames} from 'assets/mhrise/mhrise-skills.js'
   import {charmManager}     from 'stores/stores.js'
   import {MAX_NUM_SLOTS,MAX_SKILL_LEVEL,MAX_SLOT_LEVEL}
@@ -11,6 +12,7 @@
   export let disableFilterHeader   = false
   export let showImageColumn       = true
   export let showSubstitutesColumn = true
+  export let showDeleteColumn      = false
   export let charms
 
   export let initialOpenedScreentshots = []
@@ -109,16 +111,30 @@
       sortable:      true,
       filterOptions: ["有り", "無し"],
     },
+    {
+      key:           "delete",
+      title:         "削除",
+      value:         v => 0,
+      renderValue:   v => {
+//      const trashbox = '<span style="color: rgb(255,40,40)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-archive-fill" viewBox="0 0 16 16"> <path d="M12.643 15C13.979 15 15 13.845 15 12.5V5H1v7.5C1 13.845 2.021 15 3.357 15h9.286zM5.5 7h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1zM.8 1a.8.8 0 0 0-.8.8V3a.8.8 0 0 0 .8.8h14.4A.8.8 0 0 0 16 3V1.8a.8.8 0 0 0-.8-.8H.8z"/></svg></span>'
+//      const cross = '<span style="color: rgb(255,80,80)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-square-fill" viewBox="0 0 16 16"> <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708z"/> </svg></span>'
+        const trashbox2 = '<span style="color: rgb(255,80,80)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16"> <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z"/> </svg></span>'
+        return trashbox2
+      },
+      onClick:       deleteCharm,
+    },
   ].filter(i => {
     switch (i.key) {
       case 'image':               return showImageColumn
       case 'substitutableCharms': return showSubstitutesColumn
+      case 'delete':              return showDeleteColumn
       default:                    return true
     }
   })
 
 
   // fields
+  let confirm: (params: any) => Promise<any>
   let isScreenshotShown = []
   let isSubstitutableCharmsShown = []
 
@@ -154,10 +170,23 @@
     }
   }
 
+  async function deleteCharm({e, row}) {
+    e?.stopPropagation()
+
+    await confirm({
+      message:         '護石を削除します。一度削除すると元に戻すことはできません。よろしいですか？',
+      okayButtonColor: 'danger',
+      isCheckboxShown: true,
+      checkboxLabel:   '次回から確認しない',
+    })
+
+    $charmManager.deleteCharm(row.rowid)
+  }
+
 
   $: styleVars = Object.entries({
     'header-background-color': headerColor,
-    'table-width': `${61 + (showImageColumn ? 3 : 0) + (showSubstitutesColumn ? 3 : 0)}rem`,
+    'table-width': `${61 + (showImageColumn ? 3 : 0) + (showSubstitutesColumn ? 3 : 0) + (showDeleteColumn ? 3 : 0)}rem`,
   }).map(([k, v]) => `--${k}:${v}`)
     .join(';')
 
@@ -227,6 +256,9 @@
       {/if}
     </div>
   </SvelteTable>
+
+  <ConfirmModal bind:confirm
+                />
 </div>
 
 
@@ -363,8 +395,20 @@
   }
   :global(
     .charm-table > table > * > tr > *:nth-child(10),
-    .charm-table > table > * > tr > *:nth-child(11)
+    .charm-table > table > * > tr > *:nth-child(11),
+    .charm-table > table > * > tr > *:nth-child(12)
   ) {
-    width: 3rem;
+    width:  3rem;
+  }
+
+  :global(
+    .charm-table > table > * > tr > *:nth-child(10) svg,
+    .charm-table > table > * > tr > *:nth-child(11) svg,
+    .charm-table > table > * > tr > *:nth-child(12) svg,
+    .charm-table > table > * > tr > *:nth-child(10):has(svg),
+    .charm-table > table > * > tr > *:nth-child(11):has(svg),
+    .charm-table > table > * > tr > *:nth-child(12):has(svg)
+  ) {
+    cursor: pointer;
   }
 </style>

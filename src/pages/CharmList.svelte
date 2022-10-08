@@ -20,6 +20,7 @@
       </div>
     {:else}
       <CharmTable bind:charms
+                  showDeleteColumn={true}
                   />
     {/if}
   </div>

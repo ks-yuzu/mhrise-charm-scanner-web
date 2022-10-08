@@ -99,6 +99,12 @@ export default class MHRiseCharmManager {
   }
 
 
+  public async deleteCharm(rowid: number) {
+    await this.sql(`delete from charms where rowid = ${rowid}`)
+    this.updateCharmArray()
+  }
+
+
   public saveScreenshot(screenshot: Mat, imageName: string) {
     this.indexeddb.images.put({
       name: imageName,

@@ -34,7 +34,7 @@
       message:         mode === IMPORT_MODE.OVERWRITE
                                 ? '護石を上書きインポートします。\n既存の護石は削除され、元に戻すことはできません。よろしいですか？'
                                 : '護石を追加インポートします。',
-      colorOkayButton: mode === IMPORT_MODE.OVERWRITE ? 'danger' : 'primary',
+      okayButtonColor: mode === IMPORT_MODE.OVERWRITE ? 'danger' : 'primary',
     })
     console.log(result)
 

@@ -1,67 +1,84 @@
 <script lang="ts">
   interface ConfirmParams {
-    message?:         string
-    colorOkayButton?: string
-    labelOkayButton?: string
-    onOkay?:          (event: CustomEvent) => void
-    onCancel?:        (event: CustomEvent) => void
+    message:         string
+    okayButtonColor: string
+    okayButtonLabel: string
+    isCheckboxShown: boolean
+    checkboxLabel:   string
+    onOkay:          (event: CustomEvent) => void
+    onCancel:        (event: CustomEvent) => void
   }
 
   import MDBBtn         from 'mdbsvelte/src/MDBBtn.svelte'
+  import MDBInput       from 'mdbsvelte/src/MDBInput.svelte'
   import MDBModal       from 'mdbsvelte/src/MDBModal.svelte'
   import MDBModalBody   from 'mdbsvelte/src/MDBModalBody.svelte'
   import MDBModalHeader from 'mdbsvelte/src/MDBModalHeader.svelte'
   import MDBModalFooter from 'mdbsvelte/src/MDBModalFooter.svelte'
 
-  let message:         string
-  let onOkay:          (event: CustomEvent) => void
-  let onCancel:        (event: CustomEvent) => void
-  let colorOkayButton: string
-  let labelOkayButton: string
+  let _isOpen = false;
+  let _params: ConfirmParams
 
-  let isOpen = false;
+  let _resolve
+  let _reject
 
-  export const confirm = (params: ConfirmParams) => {
+  export const confirm = (params: Partial<ConfirmParams>) => {
     return new Promise((resolve, reject) => {
-      message         = params.message         || ''
-      colorOkayButton = params.colorOkayButton || 'primary'
-      labelOkayButton = params.labelOkayButton || 'OK'
+      _resolve = resolve
+      _reject  = reject
 
-      onOkay   = (event: CustomEvent) => {
-        (params.onOkay   || (() => {}))(event)
-        resolve(true)
-      }
-      onCancel = (event: CustomEvent) => {
-        (params.onCancel || (() => {}))(event)
-        reject('cancel')
-      }
+      _params = Object.assign({
+        message:         '',
+        okayButtonColor: 'primary',
+        okayButtonLabel: 'OK',
+        isCheckboxShown: false,
+        checkboxLabel:   '',
+        onOkay:          () => {},
+        onCancel:        () => {},
+      }, params)
 
-      isOpen = true
+      _isOpen = true
     })
   }
 
   function toggle() {
-    isOpen = !isOpen
-  }
-
-  function _onCancel(event: CustomEvent) {
-    isOpen = false
-    onCancel(event as CustomEvent)
+    _isOpen = !_isOpen
   }
 
   function _onOkay(event: CustomEvent) {
-    isOpen = false
-    onOkay(event as CustomEvent)
+    _isOpen = false
+    _params.onOkay(event)
+    _resolve(true)
+  }
+
+  function _onCancel(event: CustomEvent) {
+    _isOpen = false
+    _params.onCancel(event)
+    _reject('cancel')
   }
 </script>
 
-<MDBModal isOpen={isOpen} toggle={toggle}>
+<MDBModal isOpen={_isOpen} toggle={toggle}>
   <MDBModalHeader toggle={toggle}>確認</MDBModalHeader>
   <MDBModalBody>
-    {message}
+    <div id="message-area">{_params.message}</div>
+    <div id="checkbox-area">
+    {#if _params.isCheckboxShown}
+      <label>
+        <input type="checkbox" />
+        {_params.checkboxLabel}
+      </label>
+    {/if}
+    </div>
   </MDBModalBody>
   <MDBModalFooter>
-    <MDBBtn color={colorOkayButton} on:click={_onOkay}>{labelOkayButton}</MDBBtn>
+    <MDBBtn color={_params.okayButtonColor} on:click={_onOkay}>{_params.okayButtonLabel}</MDBBtn>
     <MDBBtn color="primary" outline on:click={_onCancel}>Cancel</MDBBtn>
   </MDBModalFooter>
 </MDBModal>
+
+<style>
+  :global(#checkbox-area) {
+    margin: 0.5rem 0 0 0;
+  }
+</style>
