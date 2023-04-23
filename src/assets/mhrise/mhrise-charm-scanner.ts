@@ -3,7 +3,8 @@ import Dexie                                                        from "dexie"
 import type {Charm}                                                 from 'assets/mhrise/mhrise-charm'
 import {MAX_PAGE, ROWS_PER_PAGE_IN_EQLIST, COLS_PER_PAGE_IN_EQLIST, ROWS_PER_PAGE_IN_RINNE, COLS_PER_PAGE_IN_RINNE}
                                                                     from 'assets/mhrise/metadata'
-import {fetchImage, getMostMatchedImage, promiseAllRecursive}       from 'util.js'
+import {fetchImage, getMostMatchedImage, promiseAllRecursive, maskByColor}
+                                                                    from 'util.js'
 import {dumpImage, dumpImageNewline, setNextCanvas, setFirstCanvas} from 'util.js' // for debug
 
 export const SCAN_MODE = {
@@ -26,16 +27,21 @@ export default class MHRiseCharmScanner {
 
   private readonly POINT_RARITY                = new cv.Point(1190, 176)
   private readonly POINT_SLOTS                 = new cv.Point(1160, 200)
+  private readonly POINT_SLOT1                 = new cv.Point(1166, 200)
+  private readonly POINT_SLOT2                 = new cv.Point(1194, 200)
+  private readonly POINT_SLOT3                 = new cv.Point(1222, 200)
   private readonly POINT_SKILL1                = new cv.Point(1033, 266)
   private readonly POINT_SKILL2                = new cv.Point(1033, 317)
   private readonly POINT_SKILL_LEVEL1          = new cv.Point(1190, 290)
-  private readonly POINT_SKILL_LEVEL2          = new cv.Point(1190, 340)
+  private readonly POINT_SKILL_LEVEL2          = new cv.Point(1190, 341)
 
   // 装備確認画面
   private readonly POINT_PAGE                  = new cv.Point(787, 582) // ページ番号 (1桁数字 & 2桁数字の1桁目)
   private readonly POINT_PAGE_SECOND_DIGIT     = new cv.Point(796, 582) // ページ番号 (2桁数字)
   private readonly POINT_CHARM_AREA            = new cv.Point(634, 359) // アイコンリストの左上座標
-  private readonly SIZE_CHARM_AREA             = new cv.Size(357, 199)  // アイコンリストのサイズ
+  private readonly POINT_CHARM_ICON_BASE       = new cv.Point(634, 360) // アイコンリストの1つ目の場所
+  // private readonly SIZE_CHARM_AREA             = new cv.Size(357, 199)  // アイコンリストのサイズ
+  private readonly SIZE_CHARM_ICON_FRAME       = new cv.Size(35, 34)
 
   // 輪廻画面 (位置調整する都合で, EQUIPMENT_SPEC_HEADER_BASE に相対位置を足して定義)
   // offset(-334, 14) で adjust されるはず? 手元のキャプボでは 1px ずれるので (-335, 13) で確認
@@ -96,23 +102,30 @@ export default class MHRiseCharmScanner {
         3:                    fetchImage('img/templates/lvl/3.jpg'),
         4:                    fetchImage('img/templates/lvl/4.jpg'),
         5:                    fetchImage('img/templates/lvl/5.jpg'),
+        6:                    fetchImage('img/templates/lvl/6.jpg'),
+        7:                    fetchImage('img/templates/lvl/7.jpg'),
       },
       slot: {
-        '0-0-0':              fetchImage('img/templates/slot/0.jpg'),
-        '1-0-0':              fetchImage('img/templates/slot/1.jpg'),
-        '1-1-0':              fetchImage('img/templates/slot/11.jpg'),
-        '1-1-1':              fetchImage('img/templates/slot/111.jpg'),
-        '2-0-0':              fetchImage('img/templates/slot/2.jpg'),
-        '2-1-0':              fetchImage('img/templates/slot/21.jpg'),
-        '2-1-1':              fetchImage('img/templates/slot/211.jpg'),
-        '2-2-0':              fetchImage('img/templates/slot/22.jpg'),
-        '2-2-1':              fetchImage('img/templates/slot/221.jpg'),
-        '3-0-0':              fetchImage('img/templates/slot/3.jpg'),
-        '3-1-0':              fetchImage('img/templates/slot/31.jpg'),
-        '3-1-1':              fetchImage('img/templates/slot/311.jpg'),
-        '3-2-0':              fetchImage('img/templates/slot/32.jpg'),
-        '3-2-1':              fetchImage('img/templates/slot/321.jpg'),
-        '4-0-0':              fetchImage('img/templates/slot/4.jpg'),
+        // '0-0-0':              fetchImage('img/templates/slot/0.jpg'),
+        // '1-0-0':              fetchImage('img/templates/slot/1.jpg'),
+        // '1-1-0':              fetchImage('img/templates/slot/11.jpg'),
+        // '1-1-1':              fetchImage('img/templates/slot/111.jpg'),
+        // '2-0-0':              fetchImage('img/templates/slot/2.jpg'),
+        // '2-1-0':              fetchImage('img/templates/slot/21.jpg'),
+        // '2-1-1':              fetchImage('img/templates/slot/211.jpg'),
+        // '2-2-0':              fetchImage('img/templates/slot/22.jpg'),
+        // '2-2-1':              fetchImage('img/templates/slot/221.jpg'),
+        // '3-0-0':              fetchImage('img/templates/slot/3.jpg'),
+        // '3-1-0':              fetchImage('img/templates/slot/31.jpg'),
+        // '3-1-1':              fetchImage('img/templates/slot/311.jpg'),
+        // '3-2-0':              fetchImage('img/templates/slot/32.jpg'),
+        // '3-2-1':              fetchImage('img/templates/slot/321.jpg'),
+        // '4-0-0':              fetchImage('img/templates/slot/4.jpg'),
+        0:                    fetchImage('img/templates/slot/0.jpg'),
+        1:                    fetchImage('img/templates/slot/1.jpg'),
+        2:                    fetchImage('img/templates/slot/2.jpg'),
+        3:                    fetchImage('img/templates/slot/3.jpg'),
+        4:                    fetchImage('img/templates/slot/4.jpg'),
       },
       skill: {
         'KO術':               fetchImage('img/templates/skill/KO術.jpg'),
@@ -228,6 +241,31 @@ export default class MHRiseCharmScanner {
         '災禍転福':           fetchImage('img/templates/skill/災禍転福.jpg'),
         '研磨術【鋭】':       fetchImage('img/templates/skill/研磨術【鋭】.jpg'),
         '連撃':               fetchImage('img/templates/skill/連撃.jpg'),
+        // added in v15 charm farming
+        '炎鱗の恩恵':         fetchImage('img/templates/skill/炎鱗の恩恵.jpg'),
+        '鋼殻の恩恵':         fetchImage('img/templates/skill/鋼殻の恩恵.jpg'),
+        '霞皮の恩恵':         fetchImage('img/templates/skill/霞皮の恩恵.jpg'),
+        '龍気活性':           fetchImage('img/templates/skill/龍気活性.jpg'),
+        '血氣':               fetchImage('img/templates/skill/血氣.jpg'),
+        '激昂':               fetchImage('img/templates/skill/激昂.jpg'),
+        '伏魔響命':           fetchImage('img/templates/skill/伏魔響命.jpg'),
+        '狂竜症【触】':       fetchImage('img/templates/skill/狂竜症【触】.jpg'),
+        '業鎧【修羅】':       fetchImage('img/templates/skill/業鎧【修羅】.jpg'),
+        '根性':               fetchImage('img/templates/skill/根性.jpg'),
+        '巧撃':               fetchImage('img/templates/skill/巧撃.jpg'),
+        '闇討ち':             fetchImage('img/templates/skill/闇討ち.jpg'),
+        '弱点特効【属性】':   fetchImage('img/templates/skill/弱点特効【属性】.jpg'),
+        '顕如盤石':           fetchImage('img/templates/skill/顕如盤石.jpg'),
+        '状態異常確定蓄積':   fetchImage('img/templates/skill/状態異常確定蓄積.jpg'),
+        '煽衛':               fetchImage('img/templates/skill/煽衛.jpg'),
+        '剛心':               fetchImage('img/templates/skill/剛心.jpg'),
+        '蓄積時攻撃強化':     fetchImage('img/templates/skill/蓄積時攻撃強化.jpg'),
+        '狂化':               fetchImage('img/templates/skill/狂化.jpg'),
+        '奮闘':               fetchImage('img/templates/skill/奮闘.jpg'),
+        '風纏':               fetchImage('img/templates/skill/風纏.jpg'),
+        '粉塵纏':             fetchImage('img/templates/skill/粉塵纏.jpg'),
+        '龍気変換':           fetchImage('img/templates/skill/龍気変換.jpg'),
+        '冰気錬成':           fetchImage('img/templates/skill/冰気錬成.jpg'),
       },
     }
 
@@ -236,6 +274,11 @@ export default class MHRiseCharmScanner {
     }
 
     MHRiseCharmScanner.templates = await promiseAllRecursive(templateFetchPromises)
+
+    const template = MHRiseCharmScanner.templates.others.charmSelectFrame
+    cv.cvtColor(template, template, cv.COLOR_BGR2GRAY)
+    cv.threshold(template, template, 63, 255, cv.THRESH_BINARY)
+
   }
 
   constructor({scanMode, scanSkipMode}: {scanMode: ScanMode, scanSkipMode: ScanSkipMode}) {
@@ -296,6 +339,12 @@ export default class MHRiseCharmScanner {
     this.POINT_RARITY              .y += (offset.y - this.adjustOffset.y)
     this.POINT_SLOTS               .x += (offset.x - this.adjustOffset.x)
     this.POINT_SLOTS               .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SLOT1               .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SLOT1               .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SLOT2               .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SLOT2               .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SLOT3               .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SLOT3               .y += (offset.y - this.adjustOffset.y)
     this.POINT_SKILL1              .x += (offset.x - this.adjustOffset.x)
     this.POINT_SKILL1              .y += (offset.y - this.adjustOffset.y)
     this.POINT_SKILL2              .x += (offset.x - this.adjustOffset.x)
@@ -314,6 +363,8 @@ export default class MHRiseCharmScanner {
     this.POINT_PAGE_SECOND_DIGIT_IN_RINNE.y += (offset.y - this.adjustOffset.y)
     this.POINT_CHARM_AREA          .x += (offset.x - this.adjustOffset.x)
     this.POINT_CHARM_AREA          .y += (offset.y - this.adjustOffset.y)
+    this.POINT_CHARM_ICON_BASE     .x += (offset.x - this.adjustOffset.x)
+    this.POINT_CHARM_ICON_BASE     .y += (offset.y - this.adjustOffset.y)
     this.POINT_CHARM_AREA_IN_RINNE .x += (offset.x - this.adjustOffset.x)
     this.POINT_CHARM_AREA_IN_RINNE .y += (offset.y - this.adjustOffset.y)
     console.log({POINT_PAGE_IN_RINNE: this.POINT_PAGE_IN_RINNE})
@@ -457,9 +508,12 @@ export default class MHRiseCharmScanner {
 
   private _getSlots(screenshot: Mat): number[] {
     const templates     = MHRiseCharmScanner.templates.slot
-    const rect          = this._getTrimRect(templates, this.POINT_SLOTS)
     const diffThreshold = 63
-    return getMostMatchedImage(screenshot, templates, rect, diffThreshold).name.split('-').map(i => parseInt(i))
+    return [
+      getMostMatchedImage(screenshot, templates, this._getTrimRect(templates, this.POINT_SLOT1), diffThreshold).name,
+      getMostMatchedImage(screenshot, templates, this._getTrimRect(templates, this.POINT_SLOT2), diffThreshold).name,
+      getMostMatchedImage(screenshot, templates, this._getTrimRect(templates, this.POINT_SLOT3), diffThreshold).name,
+    ].map(i => parseInt(i))
   }
 
 
@@ -567,24 +621,52 @@ export default class MHRiseCharmScanner {
 
 
   private _getCurrentCharmPos(screenshot: Mat) {
-    const rect = new cv.Rect(this.POINT_CHARM_AREA, this.SIZE_CHARM_AREA)
-    const trimmed = screenshot.roi(rect)
-
     const template = MHRiseCharmScanner.templates.others.charmSelectFrame
-    const result = new cv.Mat()
-    cv.matchTemplate(trimmed, template, result, cv.TM_CCOEFF_NORMED)
+    // cv.cvtColor(template, template, cv.COLOR_BGR2GRAY)
+    // cv.threshold(template, template, 63, 255, cv.THRESH_BINARY)
+    const mask = template
 
-    const {maxLoc, maxVal} = cv.minMaxLoc(result)
+    const masked            = new cv.Mat()
+    const maskedHsv         = new cv.Mat()
+    const yellowInGrayScale = new cv.Mat()
 
-    result.delete()
-    trimmed.delete()
+    let candidate = {
+      row: null,
+      col: null,
+      match: 39, // ignore if less than 40
+    }
+    for (let row = 1; row <= this.ROWS_PER_PAGE; row++) {
+      for (let col = 1; col <= this.COLS_PER_PAGE; col++) {
+        const point = new cv.Point(
+          this.POINT_CHARM_ICON_BASE.x + (col-1) * 36,
+          this.POINT_CHARM_ICON_BASE.y + (row-1) * 41
+        )
+        const rect = new cv.Rect(point, this.SIZE_CHARM_ICON_FRAME)
+        const trimmed = screenshot.roi(rect) // アイコンを抽出
+        trimmed.copyTo(masked, mask)         // フレーム以外をマスク
+
+        // 黄色っぽい色を抽出してカウント
+        cv.cvtColor(masked, maskedHsv, cv.COLOR_BGR2HSV, 3)
+        const yellow = maskByColor(maskedHsv, [70, 100, 100, 0], [120, 255, 255, 255])
+        cv.cvtColor(yellow, yellowInGrayScale, cv.COLOR_RGBA2GRAY, 0)
+        const yellowCount = cv.countNonZero(yellowInGrayScale)
+        yellow.delete()
+
+        // console.log({row, col, match: yellowCount})
+        if (yellowCount > candidate.match) {
+          candidate = {row, col, match: yellowCount}
+        }
+      }
+    }
+    // console.log(candidate)
+
+    yellowInGrayScale.delete()
+    maskedHsv.delete()
+    masked.delete()
 
     return {
-      pos: [
-        1 + Math.floor(0.5 + maxLoc.x / 36.0),
-        1 + Math.floor(0.5 + maxLoc.y / 41.0),
-      ],
-      match: maxVal,
+      pos: [candidate.col, candidate.row],
+      match: candidate.match / 400,
     }
   }
 
