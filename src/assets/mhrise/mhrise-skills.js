@@ -134,6 +134,24 @@ export const allSkillDetails = [
   { name: '連撃',               hiragana: 'れんげき',                         englishCharacters: 'rengeki'                      },
   // 'わ行のスキル',
   { name: '業物',               hiragana: 'わざもの',                         englishCharacters: 'wazamono'                     },
+
+  // added in v15 charm farming
+  { name: '龍気活性',           hiragana: 'りゅうきかっせい',                   englishCharacters: 'ryuukikassei'                },
+  { name: '根性',               hiragana: 'こんじょう',                         englishCharacters: 'konjyou'                     },
+  { name: '巧撃',               hiragana: 'こうげき',                           englishCharacters: 'kougeki'                     },
+  { name: '闇討ち',             hiragana: 'やみうち',                           englishCharacters: 'yamiuti'                     },
+  { name: '弱点特効【属性】',   hiragana: 'じゃくてんとっこうぞくせい',         englishCharacters: 'jakutentokkouzokusei'        },
+  { name: '顕如盤石',           hiragana: 'けんにょばんじゃく',                 englishCharacters: 'kennyobanjaku'               },
+  { name: '状態異常確定蓄積',   hiragana: 'じょうたいいじょうかくていちくせき', englishCharacters: 'jyoutaiijyoukakuteitikuseki' },
+  { name: '煽衛',               hiragana: 'せんえい',                           englishCharacters: 'sennei'                      },
+  { name: '剛心',               hiragana: 'ごうしん',                           englishCharacters: 'gousin'                      },
+  { name: '蓄積時攻撃強化',     hiragana: 'ちくせきじこうげききょうか',         englishCharacters: 'tikusekijikougekikyouka'     },
+  { name: '狂化',               hiragana: 'きょうか',                           englishCharacters: 'kyouka'                      },
+  { name: '奮闘',               hiragana: 'ふんとう',                           englishCharacters: 'huntou'                      },
+  { name: '風纏',               hiragana: 'かぜまとい',                         englishCharacters: 'kazematoi'                   },
+  { name: '粉塵纏',             hiragana: 'ふんじんまとい',                     englishCharacters: 'hunjinmatoi'                 },
+  { name: '龍気変換',           hiragana: 'りゅうきかっせい',                   englishCharacters: 'ryuukihenkan'                },
+  { name: '冰気錬成',           hiragana: 'ひょうきれんせい',                   englishCharacters: 'hyoukirensei'                },
 ]
 
 

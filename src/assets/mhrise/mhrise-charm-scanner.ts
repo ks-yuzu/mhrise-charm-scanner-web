@@ -33,7 +33,7 @@ export default class MHRiseCharmScanner {
   private readonly POINT_SKILL1                = new cv.Point(1033, 266)
   private readonly POINT_SKILL2                = new cv.Point(1033, 317)
   private readonly POINT_SKILL_LEVEL1          = new cv.Point(1190, 290)
-  private readonly POINT_SKILL_LEVEL2          = new cv.Point(1190, 340)
+  private readonly POINT_SKILL_LEVEL2          = new cv.Point(1190, 341)
 
   // 装備確認画面
   private readonly POINT_PAGE                  = new cv.Point(787, 582) // ページ番号 (1桁数字 & 2桁数字の1桁目)
@@ -102,6 +102,8 @@ export default class MHRiseCharmScanner {
         3:                    fetchImage('img/templates/lvl/3.jpg'),
         4:                    fetchImage('img/templates/lvl/4.jpg'),
         5:                    fetchImage('img/templates/lvl/5.jpg'),
+        6:                    fetchImage('img/templates/lvl/6.jpg'),
+        7:                    fetchImage('img/templates/lvl/7.jpg'),
       },
       slot: {
         // '0-0-0':              fetchImage('img/templates/slot/0.jpg'),
@@ -239,6 +241,31 @@ export default class MHRiseCharmScanner {
         '災禍転福':           fetchImage('img/templates/skill/災禍転福.jpg'),
         '研磨術【鋭】':       fetchImage('img/templates/skill/研磨術【鋭】.jpg'),
         '連撃':               fetchImage('img/templates/skill/連撃.jpg'),
+        // added in v15 charm farming
+        '炎鱗の恩恵':         fetchImage('img/templates/skill/炎鱗の恩恵.jpg'),
+        '鋼殻の恩恵':         fetchImage('img/templates/skill/鋼殻の恩恵.jpg'),
+        '霞皮の恩恵':         fetchImage('img/templates/skill/霞皮の恩恵.jpg'),
+        '龍気活性':           fetchImage('img/templates/skill/龍気活性.jpg'),
+        '血氣':               fetchImage('img/templates/skill/血氣.jpg'),
+        '激昂':               fetchImage('img/templates/skill/激昂.jpg'),
+        '伏魔響命':           fetchImage('img/templates/skill/伏魔響命.jpg'),
+        '狂竜症【触】':       fetchImage('img/templates/skill/狂竜症【触】.jpg'),
+        '業鎧【修羅】':       fetchImage('img/templates/skill/業鎧【修羅】.jpg'),
+        '根性':               fetchImage('img/templates/skill/根性.jpg'),
+        '巧撃':               fetchImage('img/templates/skill/巧撃.jpg'),
+        '闇討ち':             fetchImage('img/templates/skill/闇討ち.jpg'),
+        '弱点特効【属性】':   fetchImage('img/templates/skill/弱点特効【属性】.jpg'),
+        '顕如盤石':           fetchImage('img/templates/skill/顕如盤石.jpg'),
+        '状態異常確定蓄積':   fetchImage('img/templates/skill/状態異常確定蓄積.jpg'),
+        '煽衛':               fetchImage('img/templates/skill/煽衛.jpg'),
+        '剛心':               fetchImage('img/templates/skill/剛心.jpg'),
+        '蓄積時攻撃強化':     fetchImage('img/templates/skill/蓄積時攻撃強化.jpg'),
+        '狂化':               fetchImage('img/templates/skill/狂化.jpg'),
+        '奮闘':               fetchImage('img/templates/skill/奮闘.jpg'),
+        '風纏':               fetchImage('img/templates/skill/風纏.jpg'),
+        '粉塵纏':             fetchImage('img/templates/skill/粉塵纏.jpg'),
+        '龍気変換':           fetchImage('img/templates/skill/龍気変換.jpg'),
+        '冰気錬成':           fetchImage('img/templates/skill/冰気錬成.jpg'),
       },
     }
 
