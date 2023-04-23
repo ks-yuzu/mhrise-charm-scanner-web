@@ -3,7 +3,8 @@ import Dexie                                                        from "dexie"
 import type {Charm}                                                 from 'assets/mhrise/mhrise-charm'
 import {MAX_PAGE, ROWS_PER_PAGE_IN_EQLIST, COLS_PER_PAGE_IN_EQLIST, ROWS_PER_PAGE_IN_RINNE, COLS_PER_PAGE_IN_RINNE}
                                                                     from 'assets/mhrise/metadata'
-import {fetchImage, getMostMatchedImage, promiseAllRecursive}       from 'util.js'
+import {fetchImage, getMostMatchedImage, promiseAllRecursive, maskByColor}
+                                                                    from 'util.js'
 import {dumpImage, dumpImageNewline, setNextCanvas, setFirstCanvas} from 'util.js' // for debug
 
 export const SCAN_MODE = {
@@ -35,7 +36,9 @@ export default class MHRiseCharmScanner {
   private readonly POINT_PAGE                  = new cv.Point(787, 582) // ページ番号 (1桁数字 & 2桁数字の1桁目)
   private readonly POINT_PAGE_SECOND_DIGIT     = new cv.Point(796, 582) // ページ番号 (2桁数字)
   private readonly POINT_CHARM_AREA            = new cv.Point(634, 359) // アイコンリストの左上座標
-  private readonly SIZE_CHARM_AREA             = new cv.Size(357, 199)  // アイコンリストのサイズ
+  private readonly POINT_CHARM_ICON_BASE       = new cv.Point(634, 360) // アイコンリストの1つ目の場所
+  // private readonly SIZE_CHARM_AREA             = new cv.Size(357, 199)  // アイコンリストのサイズ
+  private readonly SIZE_CHARM_ICON_FRAME       = new cv.Size(35, 34)
 
   // 輪廻画面 (位置調整する都合で, EQUIPMENT_SPEC_HEADER_BASE に相対位置を足して定義)
   // offset(-334, 14) で adjust されるはず? 手元のキャプボでは 1px ずれるので (-335, 13) で確認
@@ -236,6 +239,11 @@ export default class MHRiseCharmScanner {
     }
 
     MHRiseCharmScanner.templates = await promiseAllRecursive(templateFetchPromises)
+
+    const template = MHRiseCharmScanner.templates.others.charmSelectFrame
+    cv.cvtColor(template, template, cv.COLOR_BGR2GRAY)
+    cv.threshold(template, template, 63, 255, cv.THRESH_BINARY)
+
   }
 
   constructor({scanMode, scanSkipMode}: {scanMode: ScanMode, scanSkipMode: ScanSkipMode}) {
@@ -314,6 +322,8 @@ export default class MHRiseCharmScanner {
     this.POINT_PAGE_SECOND_DIGIT_IN_RINNE.y += (offset.y - this.adjustOffset.y)
     this.POINT_CHARM_AREA          .x += (offset.x - this.adjustOffset.x)
     this.POINT_CHARM_AREA          .y += (offset.y - this.adjustOffset.y)
+    this.POINT_CHARM_ICON_BASE     .x += (offset.x - this.adjustOffset.x)
+    this.POINT_CHARM_ICON_BASE     .y += (offset.y - this.adjustOffset.y)
     this.POINT_CHARM_AREA_IN_RINNE .x += (offset.x - this.adjustOffset.x)
     this.POINT_CHARM_AREA_IN_RINNE .y += (offset.y - this.adjustOffset.y)
     console.log({POINT_PAGE_IN_RINNE: this.POINT_PAGE_IN_RINNE})
@@ -567,24 +577,52 @@ export default class MHRiseCharmScanner {
 
 
   private _getCurrentCharmPos(screenshot: Mat) {
-    const rect = new cv.Rect(this.POINT_CHARM_AREA, this.SIZE_CHARM_AREA)
-    const trimmed = screenshot.roi(rect)
-
     const template = MHRiseCharmScanner.templates.others.charmSelectFrame
-    const result = new cv.Mat()
-    cv.matchTemplate(trimmed, template, result, cv.TM_CCOEFF_NORMED)
+    // cv.cvtColor(template, template, cv.COLOR_BGR2GRAY)
+    // cv.threshold(template, template, 63, 255, cv.THRESH_BINARY)
+    const mask = template
 
-    const {maxLoc, maxVal} = cv.minMaxLoc(result)
+    const masked            = new cv.Mat()
+    const maskedHsv         = new cv.Mat()
+    const yellowInGrayScale = new cv.Mat()
 
-    result.delete()
-    trimmed.delete()
+    let candidate = {
+      row: null,
+      col: null,
+      match: 39, // ignore if less than 40
+    }
+    for (let row = 1; row <= this.ROWS_PER_PAGE; row++) {
+      for (let col = 1; col <= this.COLS_PER_PAGE; col++) {
+        const point = new cv.Point(
+          this.POINT_CHARM_ICON_BASE.x + (col-1) * 36,
+          this.POINT_CHARM_ICON_BASE.y + (row-1) * 41
+        )
+        const rect = new cv.Rect(point, this.SIZE_CHARM_ICON_FRAME)
+        const trimmed = screenshot.roi(rect) // アイコンを抽出
+        trimmed.copyTo(masked, mask)         // フレーム以外をマスク
+
+        // 黄色っぽい色を抽出してカウント
+        cv.cvtColor(masked, maskedHsv, cv.COLOR_BGR2HSV, 3)
+        const yellow = maskByColor(maskedHsv, [70, 100, 100, 0], [120, 255, 255, 255])
+        cv.cvtColor(yellow, yellowInGrayScale, cv.COLOR_RGBA2GRAY, 0)
+        const yellowCount = cv.countNonZero(yellowInGrayScale)
+        yellow.delete()
+
+        // console.log({row, col, match: yellowCount})
+        if (yellowCount > candidate.match) {
+          candidate = {row, col, match: yellowCount}
+        }
+      }
+    }
+    // console.log(candidate)
+
+    yellowInGrayScale.delete()
+    maskedHsv.delete()
+    masked.delete()
 
     return {
-      pos: [
-        1 + Math.floor(0.5 + maxLoc.x / 36.0),
-        1 + Math.floor(0.5 + maxLoc.y / 41.0),
-      ],
-      match: maxVal,
+      pos: [candidate.col, candidate.row],
+      match: candidate.match / 400,
     }
   }
 

@@ -130,3 +130,34 @@ function resolveObject(obj) {
     }, {})
   })
 }
+
+
+// export function bgr2hsv(src) {
+//   const hsv = new cv.Mat()
+//   cv.cvtColor(src, hsv, cv.COLOR_BGR2HSV, 3)
+
+//   return hsv
+// }
+
+// export function rgba2gray(src) {
+//   const gray = new cv.Mat()
+//   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0)
+
+//   return gray
+// }
+
+export function maskByColor(src, min, max) {
+  const mask = new cv.Mat()
+  const sMin = new cv.Mat(src.rows, src.cols, src.type(), min)
+  const sMax = new cv.Mat(src.rows, src.cols, src.type(), max)
+  cv.inRange(src, sMin, sMax, mask)
+
+  const dst = new cv.Mat()
+  src.copyTo(dst, mask)
+
+  sMax.delete()
+  sMin.delete()
+  mask.delete()
+
+  return dst
+}
