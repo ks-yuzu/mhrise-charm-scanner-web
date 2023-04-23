@@ -27,6 +27,9 @@ export default class MHRiseCharmScanner {
 
   private readonly POINT_RARITY                = new cv.Point(1190, 176)
   private readonly POINT_SLOTS                 = new cv.Point(1160, 200)
+  private readonly POINT_SLOT1                 = new cv.Point(1166, 200)
+  private readonly POINT_SLOT2                 = new cv.Point(1194, 200)
+  private readonly POINT_SLOT3                 = new cv.Point(1222, 200)
   private readonly POINT_SKILL1                = new cv.Point(1033, 266)
   private readonly POINT_SKILL2                = new cv.Point(1033, 317)
   private readonly POINT_SKILL_LEVEL1          = new cv.Point(1190, 290)
@@ -101,21 +104,26 @@ export default class MHRiseCharmScanner {
         5:                    fetchImage('img/templates/lvl/5.jpg'),
       },
       slot: {
-        '0-0-0':              fetchImage('img/templates/slot/0.jpg'),
-        '1-0-0':              fetchImage('img/templates/slot/1.jpg'),
-        '1-1-0':              fetchImage('img/templates/slot/11.jpg'),
-        '1-1-1':              fetchImage('img/templates/slot/111.jpg'),
-        '2-0-0':              fetchImage('img/templates/slot/2.jpg'),
-        '2-1-0':              fetchImage('img/templates/slot/21.jpg'),
-        '2-1-1':              fetchImage('img/templates/slot/211.jpg'),
-        '2-2-0':              fetchImage('img/templates/slot/22.jpg'),
-        '2-2-1':              fetchImage('img/templates/slot/221.jpg'),
-        '3-0-0':              fetchImage('img/templates/slot/3.jpg'),
-        '3-1-0':              fetchImage('img/templates/slot/31.jpg'),
-        '3-1-1':              fetchImage('img/templates/slot/311.jpg'),
-        '3-2-0':              fetchImage('img/templates/slot/32.jpg'),
-        '3-2-1':              fetchImage('img/templates/slot/321.jpg'),
-        '4-0-0':              fetchImage('img/templates/slot/4.jpg'),
+        // '0-0-0':              fetchImage('img/templates/slot/0.jpg'),
+        // '1-0-0':              fetchImage('img/templates/slot/1.jpg'),
+        // '1-1-0':              fetchImage('img/templates/slot/11.jpg'),
+        // '1-1-1':              fetchImage('img/templates/slot/111.jpg'),
+        // '2-0-0':              fetchImage('img/templates/slot/2.jpg'),
+        // '2-1-0':              fetchImage('img/templates/slot/21.jpg'),
+        // '2-1-1':              fetchImage('img/templates/slot/211.jpg'),
+        // '2-2-0':              fetchImage('img/templates/slot/22.jpg'),
+        // '2-2-1':              fetchImage('img/templates/slot/221.jpg'),
+        // '3-0-0':              fetchImage('img/templates/slot/3.jpg'),
+        // '3-1-0':              fetchImage('img/templates/slot/31.jpg'),
+        // '3-1-1':              fetchImage('img/templates/slot/311.jpg'),
+        // '3-2-0':              fetchImage('img/templates/slot/32.jpg'),
+        // '3-2-1':              fetchImage('img/templates/slot/321.jpg'),
+        // '4-0-0':              fetchImage('img/templates/slot/4.jpg'),
+        0:                    fetchImage('img/templates/slot/0.jpg'),
+        1:                    fetchImage('img/templates/slot/1.jpg'),
+        2:                    fetchImage('img/templates/slot/2.jpg'),
+        3:                    fetchImage('img/templates/slot/3.jpg'),
+        4:                    fetchImage('img/templates/slot/4.jpg'),
       },
       skill: {
         'KO術':               fetchImage('img/templates/skill/KO術.jpg'),
@@ -304,6 +312,12 @@ export default class MHRiseCharmScanner {
     this.POINT_RARITY              .y += (offset.y - this.adjustOffset.y)
     this.POINT_SLOTS               .x += (offset.x - this.adjustOffset.x)
     this.POINT_SLOTS               .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SLOT1               .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SLOT1               .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SLOT2               .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SLOT2               .y += (offset.y - this.adjustOffset.y)
+    this.POINT_SLOT3               .x += (offset.x - this.adjustOffset.x)
+    this.POINT_SLOT3               .y += (offset.y - this.adjustOffset.y)
     this.POINT_SKILL1              .x += (offset.x - this.adjustOffset.x)
     this.POINT_SKILL1              .y += (offset.y - this.adjustOffset.y)
     this.POINT_SKILL2              .x += (offset.x - this.adjustOffset.x)
@@ -467,9 +481,12 @@ export default class MHRiseCharmScanner {
 
   private _getSlots(screenshot: Mat): number[] {
     const templates     = MHRiseCharmScanner.templates.slot
-    const rect          = this._getTrimRect(templates, this.POINT_SLOTS)
     const diffThreshold = 63
-    return getMostMatchedImage(screenshot, templates, rect, diffThreshold).name.split('-').map(i => parseInt(i))
+    return [
+      getMostMatchedImage(screenshot, templates, this._getTrimRect(templates, this.POINT_SLOT1), diffThreshold).name,
+      getMostMatchedImage(screenshot, templates, this._getTrimRect(templates, this.POINT_SLOT2), diffThreshold).name,
+      getMostMatchedImage(screenshot, templates, this._getTrimRect(templates, this.POINT_SLOT3), diffThreshold).name,
+    ].map(i => parseInt(i))
   }
 
 
