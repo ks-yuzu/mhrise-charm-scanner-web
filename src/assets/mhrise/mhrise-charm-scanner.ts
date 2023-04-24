@@ -249,7 +249,7 @@ export default class MHRiseCharmScanner {
         '血氣':               fetchImage('img/templates/skill/血氣.jpg'),
         '激昂':               fetchImage('img/templates/skill/激昂.jpg'),
         '伏魔響命':           fetchImage('img/templates/skill/伏魔響命.jpg'),
-        '狂竜症【触】':       fetchImage('img/templates/skill/狂竜症【触】.jpg'),
+        '狂竜症【蝕】':       fetchImage('img/templates/skill/狂竜症【蝕】.jpg'),
         '業鎧【修羅】':       fetchImage('img/templates/skill/業鎧【修羅】.jpg'),
         '根性':               fetchImage('img/templates/skill/根性.jpg'),
         '巧撃':               fetchImage('img/templates/skill/巧撃.jpg'),
