@@ -7,7 +7,7 @@
   import {isAppReady}       from 'stores/flags'
 
   const TITLE   = 'MHRise Charm Scanner'
-  const VERSION = '0.8.3'
+  const VERSION = '0.9.0'
 
   // let isDemoMode       = false
   let isNavigationOpen = true
