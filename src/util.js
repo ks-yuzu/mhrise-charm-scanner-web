@@ -61,6 +61,9 @@ export function countImageDiffAtPoint(image, templateImage, trimRect, diffBinary
   const result = new cv.Mat()
   cv.threshold(diff, result, diffBinaryThreshold, 255, cv.THRESH_BINARY)
 
+  // 入力の濃淡で 1px の誤差が出ることがあるので補正
+  cv.morphologyEx(result, result, cv.MORPH_OPEN, cv.Mat.ones(2, 2, cv.CV_8U))
+
   const diffCount = cv.countNonZero(result)
 
   if (debug != null) {
