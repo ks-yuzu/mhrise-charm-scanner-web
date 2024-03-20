@@ -1,3 +1,4 @@
+import sqlite3InitModule               from '@sqlite.org/sqlite-wasm'
 import Dexie                           from "dexie"
 // import {importDB, exportDB}            from "dexie-export-import"
 import cv, {Mat}                       from 'opencv-ts'
@@ -13,7 +14,7 @@ interface Options {
 export default class MHRiseCharmManager {
   private dbName = 'mhrise-charm-manager'
   private tableName = 'charms'
-  private db        = null              // WebSQL
+  private db        = null              // SQLite WASM
   private indexeddb = null              // IndexedDB
   private charms    = null
 
@@ -28,25 +29,27 @@ export default class MHRiseCharmManager {
   }
 
 
-  private sql(query: string, placeholderValues?: string[]): Promise<{tx: any, result: any}> {
-    return new Promise((resolve, reject) => {
-      this.db.transaction(
-        tx => tx.executeSql(
-          query,
-          placeholderValues,
-          (tx, result) => resolve({tx, result}),
-          (...args) => reject(args)
-        )
-      )
-    })
+  private sql(query: string) {
+    const params = !query.startsWith('select') ? {} : {
+      rowMode: 'object',
+      returnValue: 'resultRows',
+    }
+    console.log({query, params})
+    return this.db.exec(query, params)
   }
 
 
   // TODO: use placeholder
   private async _init() {
-    this.db = window.openDatabase(this.dbName, '', 'MHRise charm manager', 5000)
+    // this.db = window.openDatabase(this.dbName, '', 'MHRise charm manager', 5000)
+    const sqlite3 = await sqlite3InitModule()
+    // this.db = new sqlite3.oo1.DB(`${this.dbName}.sqlite3`, 'ct')
+    // this.db = new sqlite3.oo1.DB('file:local?vfs=kvvfs', 'ct')
+    this.db = new sqlite3.oo1.JsStorageDb('local')
+    console.log('DB open: ', this.db.isOpen())
+
     await this._createTable()
-    await this.sql(`alter table ${this.tableName} add column imagename varchar(128)`).catch(() => {}) // for old schema
+    // this.sql(`alter table ${this.tableName} add column imagename varchar(128)`).catch(() => {}) // for old schema
 
     this.indexeddb = new Dexie(this.tableName)
     this.indexeddb.version(1).stores({images: 'name'})
@@ -55,31 +58,30 @@ export default class MHRiseCharmManager {
   }
 
 
-  public async reset() {
-    await this.sql(`drop table if exists ${this.tableName}`)
-    await this._createTable()
+  public reset() {
+    this.sql(`drop table if exists ${this.tableName}`)
+    this._createTable()
   }
 
 
-  public async registerCharm(charm: Charm, screenshot: Mat) {
+  public registerCharm(charm: Charm, screenshot: Mat) {
     this.saveScreenshot(screenshot, charm.imageName)
     this.registerCharms([charm]) // TODO: impl
   }
 
 
   private _timer: number
-  public async registerCharms(charms: Charm[]) {
+  public registerCharms(charms: Charm[]) {
     const values = charms
       .map((c: Charm) => {
         if ( !Array.isArray(c.slots) ) { console.log('!!!!!! slots is not array !!!!!!') }
         const slots = c.slots.join(', ')
-
-        const image = c.imageName ? `"${c.imageName}"` : 'NULL'
+        const image = c.imageName ? `'${c.imageName}'` : 'NULL'
 
         return '(' + [
-          `"${c.skills[0]}"`,
+          `'${c.skills[0]}'`,
           c.skillLevels[0],
-          `"${c.skills[1]}"`,
+          `'${c.skills[1]}'`,
           c.skillLevels[1],
           slots,
           image,
@@ -88,7 +90,12 @@ export default class MHRiseCharmManager {
       .join(',\n')
 
     console.log(values)
-    await this.sql(`insert or ignore into ${this.tableName} values ${values}`)
+    this.sql(`
+      insert or ignore into ${this.tableName}
+      (skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3, imagename)
+      values
+      ${values}
+    `)
 
     // this.updateCharmArray()
     ;(() => {
@@ -110,14 +117,15 @@ export default class MHRiseCharmManager {
   }
 
 
-  async searchCharms(query: string) {
-    const {result} = await this.sql(query)
-    return result.rows
+  public searchCharms(query: string) {
+    const result = this.sql(query)
+    // console.log({result})
+    return result
   }
 
 
-  async _createTable() {
-    await this.sql(`create table if not exists ${this.tableName}(
+  private _createTable() {
+    this.sql(`create table if not exists ${this.tableName}(
                skill1      varchar(20),
                skill1Level int,
                skill2      varchar(20),
@@ -128,9 +136,9 @@ export default class MHRiseCharmManager {
                imagename   varchar(128),
                unique (skill1, skill1Level, skill2, skill2Level, slot1, slot2, slot3))`)
 
-    await this.sql(`create index if not exists '${this.tableName}.skill1' on ${this.tableName}(skill1, skill1Level)`)
-    await this.sql(`create index if not exists '${this.tableName}.skill2' on ${this.tableName}(skill2, skill2Level)`)
-    await this.sql(`create index if not exists '${this.tableName}.slots'  on ${this.tableName}(slot1, slot2, slot3)`)
+    this.sql(`create index if not exists '${this.tableName}.skill1' on ${this.tableName}(skill1, skill1Level)`)
+    this.sql(`create index if not exists '${this.tableName}.skill2' on ${this.tableName}(skill2, skill2Level)`)
+    this.sql(`create index if not exists '${this.tableName}.slots'  on ${this.tableName}(slot1, slot2, slot3)`)
   }
 
 
@@ -142,20 +150,19 @@ export default class MHRiseCharmManager {
   }
 
 
-  async updateCharmArray() {
-    this.charms = [
-      ...(await this.searchCharms(`select rowid,* from ${this.tableName}`))
-    ].map(row => {
-      if (skillEvaluationMap[row.skill1] != null && skillEvaluationMap[row.skill2] != null) {
-        row.evaluation = skillEvaluationMap[row.skill1][row.skill1Level]
-                       + skillEvaluationMap[row.skill2][row.skill2Level]
-                       + row.slot1
-                       + row.slot2
-                       + row.slot3
-      }
+  public updateCharmArray() {
+    this.charms = this.searchCharms(`select rowid,* from ${this.tableName}`)
+      .map(row => {
+        if (skillEvaluationMap[row.skill1] != null && skillEvaluationMap[row.skill2] != null) {
+          row.evaluation = skillEvaluationMap[row.skill1][row.skill1Level]
+                         + skillEvaluationMap[row.skill2][row.skill2Level]
+                         + row.slot1
+                         + row.slot2
+                         + row.slot3
+        }
 
-      return row
-    })
+        return row
+      })
 
     this.searchSubstitutableCharms()
   }
